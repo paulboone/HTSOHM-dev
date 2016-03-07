@@ -1,0 +1,17 @@
+SimulationType                MonteCarlo
+NumberOfCycles                1000
+PrintEvery                    100
+PrintPropertiesEvery          100
+
+Forcefield                    MAT-45
+CutOff                        12.8
+
+Framework 0
+FrameworkName MAT-45
+UnitCells 1 1 1
+ExternalTemperature 298.0
+
+Component 0 MoleculeName             helium
+            MoleculeDefinition       TraPPE
+            WidomProbability         1.0
+            CreateNumberOfMolecules  0

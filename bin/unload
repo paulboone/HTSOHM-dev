@@ -1,0 +1,20 @@
+#!/bin/bash
+
+FF_DIRS=${HOME}/RASPA/share/raspa/forcefield/MAT-*
+CIF_DIRS=${HOME}/RASPA/share/raspa/structures/cif/MAT-*.cif
+
+echo 'removing old forcefields ...'
+rm -rf $FF_DIRS
+echo ' ...done!'
+
+echo 'removing old .cif-files ...'
+rm -rf $CIF_DIRS
+echo ' ...done!'
+
+#echo 'loading new forcefields ...'
+#./mkforcefields
+#echo ' ...done!'
+
+#echo 'loading new .cif-files ...'
+#./cpmat
+#echo ' ...done!'

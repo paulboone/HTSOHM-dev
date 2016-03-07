@@ -1,0 +1,23 @@
+#!/bin/bash
+
+P_DIR=$1
+
+IFS=$'\n' read -d '' -r -a D_LIST < $P_DIR/dummyList.txt
+N_DUMMY=${#D_LIST[@]}
+
+echo 'running cat...'
+
+cd ../data
+
+for ((i=0; i <= N_DUMMY; i++))
+do
+
+	cat dummyCH4-$i.*/*abs_cc_cc.txt >> ../$P_DIR/dummyCH4.txt
+	cat dummySA-$i.*/*cc.txt >> ../$P_DIR/dummySA.txt
+	cat dummyVF-$i.*/*2col.txt >> ../$P_DIR/dummyVF.txt
+
+done
+
+#rm -rf dummy*
+
+echo 'done!'

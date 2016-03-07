@@ -1,0 +1,115 @@
+import subprocess
+import shlex
+import numpy as np
+
+def dummy_test(HTSOHM_dir, gen, tol=0.1):
+ 
+    %cd {HTSOHM_dir}/bin
+
+    subprocess.call( shlex.split( './Dcat ' + gen ))
+
+    %cd {HTSOHM_dir}
+
+    d_cn = np.genfromtxt(gen + '/dummyCH4.txt', usecols=0, dtype=str)
+    d_cv = np.genfromtxt(gen + '/dummyCH4.txt', usecols=1, dtype=float)
+    d_sn = np.genfromtxt(gen + '/dummySA.txt', usecols=0, dtype=str)
+    d_sv = np.genfromtxt(gen + '/dummySA.txt', usecols=1, dtype=float)
+    d_vn = np.genfromtxt(gen + '/dummyVF.txt', usecols=0, dtype=str)
+    d_vv = np.genfromtxt(gen + '/dummyVF.txt', usecols=1, dtype=float)
+
+    p_c = np.genfromtxt(gen + '/ch4_abs_cc_cc.txt', usecols=1, dtype=float)
+    p_s = np.genfromtxt(gen + '/SAdata_m2_cc.txt', usecols=1, dtype=float)
+    p_v = np.genfromtxt(gen + '/HVdata2col.txt', usecols=1, dtype=float)
+
+    pos = [5 * i for i in range( int(len(d_cn) / 5) )]
+   
+    c_od = []
+    s_od = []
+    v_od = []
+
+    for i in pos:
+
+        mat = d_cn[i]
+        c_o = p_c[ int(mat[4:]) ]
+        s_o = p_s[ int(mat[4:]) ]
+        v_o = p_v[ int(mat[4:]) ]
+
+        c_d = []
+        s_d = []
+        v_d = []
+        for j in range(len(d_cn)):
+            if d_cn[j] == mat:
+                c_d.append(d_cv[j]) 
+                s_d.append(d_sv[j])
+                v_d.append(d_vv[j])
+
+        c_od.append([mat, c_o, c_d])
+        s_od.append([mat, s_o, s_d])
+        v_od.append([mat, v_o, v_d])
+
+    bad = []
+    for i in c_od:
+        if abs( np.mean(i[2]) - i[1] ) >= tol * i[1]:
+            bad.append(i[0])
+
+    for i in s_od:
+        if abs( np.mean(i[2]) - i[1] ) >= tol * i[1]:
+            bad.append(i[0])
+
+    for i in v_od:
+        if abs( np.mean(i[2]) - i[1] ) >= tol * i[1]:
+            bad.append(i[0])
+
+    if bad == []:
+        print('All parents have passed the `dummy` test!')
+
+    if bad != []:
+        print('The following materials fail the `dummy` test and have been deleted:')
+        for i in bad:
+            print(i)
+            %rm -rf {gen}/{i}
+
+        c_f = open(gen + "/ch4_abs_cc_cc.txt", "r")
+        s_f = open(gen + "/SAdata_m2_cc.txt", "r")
+        v_f = open(gen + "/HVdata2col.txt", "r")
+        
+        c_lines = c_f.readlines()
+        s_lines = s_f.readlines()
+        v_lines = v_f.readlines()
+
+        c_f.close()
+        s_f.close()
+        v_f.close()
+
+        c_f = open(gen + "/ch4_abs_cc_cc.txt", "w")
+        s_f = open(gen + "/SAdata_m2_cc.txt", "w")
+        v_f = open(gen + "/HVdata2col.txt", "w")
+
+        for line in c_lines:
+            for i in bad:
+                name = i + ' '
+                if name not in line:
+                    c_f.write(line)
+
+        for line in s_lines:
+            for i in bad:
+                name = i + ' '
+                if name not in line:
+                    s_f.write(line)
+
+        for line in v_lines:
+            for i in bad:
+                name = i + ' '
+                if name not in line:
+                    v_f.write(line)
+
+        c_f.close()
+        s_f.close()
+        v_f.close()
+
+        
+
+        
+
+    return c_od, s_od, v_od
+        

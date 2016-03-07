@@ -1,0 +1,46 @@
+#!/bin/bash
+#PBS -N ARK_HV_screen
+#PBS -o ARK_HV_screen.out
+#PBS -e ARK_HV_screen.err
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=03:00:00
+#PBS -q shared
+
+cd $PBS_O_WORKDIR
+# change this for your environment
+export RASPA_DIR=${HOME}/RASPA
+export HTSOHM_DIR=${HOME}/HTSOHM-2.0
+
+	START_FILE=$INITIAL
+	NUM_FILES=$TOTAL
+	#FILE_NAME=$NAME
+	#FILE_LIST=$FILELIST
+
+	cp $HTSOHM_DIR/bin/HVsim $SCRATCH/HVsim
+
+	cd $SCRATCH
+
+	for ((i = START_FILE; i < NUM_FILES + START_FILE; i++))
+	do
+		MAT_NAME="MAT-$i"
+	
+		#copy forcefield data
+		cp $RASPA_DIR/share/raspa/forcefield/$MAT_NAME/* $SCRATCH
+
+	#he simulation	
+		sed -i "s/^Forcefield.*/Forcefield                    $MAT_NAME/" $SCRATCH/HVsim
+		sed -i "s/^FrameworkName.*/FrameworkName $MAT_NAME/" $SCRATCH/HVsim
+		$RASPA_DIR/bin/simulate -i HVsim
+
+	#HV data
+		VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Average Widom:" | awk '{print $4"\t"$6}')
+		echo $MAT_NAME"   "$VALUE >> HVdata2col.txt
+		echo $VALUE >> HVdata.txt
+		rm -rf DLPOLY Movies Output Restart Tinker VTK
+	rm *.def
+
+	mkdir HVdata_MAT-$INITIAL.thru.$TOTAL
+	cp *.txt ./HVdata_MAT-$INITIAL.thru.$TOTAL
+	cp -rf HVdata_MAT-$INITIAL.thru.$TOTAL $HTSOHM_DIR/data
+
+	done

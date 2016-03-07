@@ -1,0 +1,24 @@
+MAT-14
+
+loop_
+_symmetry_equiv_pos_as_xyz
+  x,y,z
+_cell_length_a          31.9743
+_cell_length_b          17.5298
+_cell_length_c          42.5365
+_cell_angle_alpha       90.0000
+_cell_angle_beta        90.0000
+_cell_angle_gamma       90.0000
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+A_3     C     0.3803     0.1507     0.088
+A_0     C     0.6223     0.1644     0.474
+A_3     C     0.3106     0.3109     0.8335
+A_0     C     0.127     0.8132     0.7945
+A_1     C     0.0361     0.0311     0.0165
+A_1     C     0.8226     0.0355     0.5981
+A_3     C     0.3112     0.4686     0.4981

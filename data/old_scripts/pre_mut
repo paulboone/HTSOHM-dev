@@ -1,0 +1,24 @@
+#!/bin/bash
+
+DIR_1=$1
+START=$2
+LENGT=$3
+DIR_0=$4
+DIR_2=$5
+
+echo 'Preparing for mutation...'
+
+./CH4cat $START $LENGT
+./SAcat $START $LENGT
+./HVcat $START $LENGT
+
+mkdir $DIR_1
+mv *.txt $DIR_1
+
+#./rmdata
+
+cd ..
+cp data/$DIR_1/* $DIR_1
+./cat_dirs $DIR_0 $DIR_1 $DIR_2
+
+echo '...done!'

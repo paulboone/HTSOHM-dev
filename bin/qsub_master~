@@ -1,0 +1,48 @@
+#!/bin/bash
+
+P_DIR=$1
+
+MAT_START=$1
+MAT_TOTAL=$2
+NUM_PROCE=$3
+QSUB_FILE=$4
+
+SIM_PERCPU=$((MAT_TOTAL / NUM_PROCE))
+MOD_TEST=$((MAT_TOTAL % NUM_PROCE))
+if [[ $MOD_TEST == 0 ]]; then
+	CPU_NEED=$NUM_PROCE
+else
+	SIM_PERCPU=$((SIM_PERCPU+1))
+	XTRA_CPU=$((MAT_TOTAL - (MAT_TOTAL / SIM_PERCPU) * SIM_PERCPU))
+	CPU_NEED=$((MAT_TOTAL / SIM_PERCPU + 1))
+fi
+
+CPU_USED_COUNT=0
+
+for ((i = 0; i < CPU_NEED; i++))
+do
+	if [[ $MOD_TEST == 0 ]]; then
+		TEMP=$SIM_PERCPU
+	else
+		if [[ $i == $((CPU_NEED -1)) ]]; then
+			TEMP=$((XTRA_CPU))
+		else
+			TEMP=$SIM_PERCPU
+		fi
+
+	fi
+
+	if [[ $TEMP > 0 ]]; then
+	
+		CPU_USED_COUNT=$((CPU_USED_COUNT + 1))
+
+		echo qsub $QSUB_FILE -N arkHT_$((MAT_START + i*SIM_PERCPU)) -v INITIAL=$((MAT_START + i*SIM_PERCPU)),TOTAL=$TEMP
+		qsub $QSUB_FILE -N arkHT_$((MAT_START + i*SIM_PERCPU)) -v INITIAL=$((MAT_START + i*SIM_PERCPU)),TOTAL=$TEMP
+
+	fi
+
+	usleep 250000
+
+done
+
+echo suggested no. CPUs :   $NUM_PROCE -- no. CPUs used :   $CPU_USED_COUNT

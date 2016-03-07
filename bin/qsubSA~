@@ -1,0 +1,49 @@
+#!/bin/bash
+#PBS -N ARK_SA_screen
+#PBS -o ARK_SA_screen.out
+#PBS -e ARK_SA_screen.err
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=03:00:00
+#PBS -q shared
+
+cd $PBS_O_WORKDIR
+export RASPA_DIR=${HOME}/RASPA
+export HTSOHM_DIR=${HOME}/HTSOHM-dev
+
+	START_FILE=$INITIAL
+	NUM_FILES=$TOTAL
+	#FILE_NAME=$NAME
+	#FILE_LIST=$FILELIST
+
+	cp $HTSOHM_DIR/bin/SAsim $SCRATCH/SAsim
+
+	cd $SCRATCH
+
+	for ((i = START_FILE; i < NUM_FILES + START_FILE; i++))
+	do
+		MAT_NAME="MAT-$i"
+	
+		#copy forcefield data
+		cp $RASPA_DIR/share/raspa/forcefield/$MAT_NAME/* $SCRATCH
+
+	#H simulation	
+		sed -i "s/^Forcefield.*/Forcefield                    $MAT_NAME/" $SCRATCH/SAsim
+		sed -i "s/^FrameworkName.*/FrameworkName $MAT_NAME/" $SCRATCH/SAsim
+		$RASPA_DIR/bin/simulate -i SAsim
+
+	#SA data
+		VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Surface area.*.A^2" | awk '{print $3"\t"$5}')
+		echo $MAT_NAME"   "$VALUE >> Nprobe_SA_A2.txt
+		VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Surface area.*.m^2/g" | awk '{print $3"\t"$5}')
+		echo $MAT_NAME"   "$VALUE >> Nprobe_SA_m2_g.txt
+		VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Surface area.*.m^2/cm" | awk '{print $3"\t"$5}')
+		echo $MAT_NAME"   "$VALUE >> Nprobe_SA_m2_cc.txt
+				
+		rm -rf DLPOLY Movies Output Restart Tinker VTK
+	rm *.def
+
+	mkdir Nprobe_SA_MAT-$INITIAL.thru.$TOTAL
+	cp *.txt ./Nprobe_SA_MAT-$INITIAL.thru.$TOTAL
+	cp -rf Nprobe_SA_MAT-$INITIAL.thru.$TOTAL $HTSOHM_DIR/data
+
+	done
