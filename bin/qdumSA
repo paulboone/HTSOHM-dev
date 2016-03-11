@@ -10,43 +10,43 @@ cd $PBS_O_WORKDIR
 export RASPA_DIR=${HOME}/RASPA
 export HTSOHM_DIR=${HOME}/HTSOHM-dev
 
-	P_DIR=$DIR
-	START_FILE=$INITIAL
-	NUM_FILES=$TOTAL
-	#FILE_NAME=$NAME
-	#FILE_LIST=$FILELIST
+    P_DIR=$DIR
+    START_FILE=$INITIAL
+    NUM_FILES=$TOTAL
+    #FILE_NAME=$NAME
+    #FILE_LIST=$FILELIST
 
-	cp $HTSOHM_DIR/bin/SAsim $SCRATCH/SAsim
+    cp $HTSOHM_DIR/bin/SAsim $SCRATCH/SAsim
 
-	cd $SCRATCH
+    cd $SCRATCH
 
         IFS=$'\n' read -d '' -r -a D_LIST < $P_DIR/dummyList.txt
 
-	for ((i = START_FILE; i < NUM_FILES + START_FILE; i++))
-	do
-		MAT_NAME="${D_LIST[i]}"
-	
-		#copy forcefield data
-		cp $RASPA_DIR/share/raspa/forcefield/$MAT_NAME/* $SCRATCH
+    for ((i = START_FILE; i < NUM_FILES + START_FILE; i++))
+    do
+        MAT_NAME="${D_LIST[i]}"
+    
+        #copy forcefield data
+        cp $RASPA_DIR/share/raspa/forcefield/$MAT_NAME/* $SCRATCH
 
-	#H simulation	
-		sed -i "s/^Forcefield.*/Forcefield                    $MAT_NAME/" $SCRATCH/SAsim
-		sed -i "s/^FrameworkName.*/FrameworkName $MAT_NAME/" $SCRATCH/SAsim
-		$RASPA_DIR/bin/simulate -i SAsim
+    #H simulation    
+        sed -i "s/^Forcefield.*/Forcefield                    $MAT_NAME/" $SCRATCH/SAsim
+        sed -i "s/^FrameworkName.*/FrameworkName $MAT_NAME/" $SCRATCH/SAsim
+        $RASPA_DIR/bin/simulate -i SAsim
 
-	#SA data
-		VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Surface area.*.A^2" | awk '{print $3"\t"$5}')
-		echo $MAT_NAME"   "$VALUE >> Nprobe_SA_A2.txt
-		VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Surface area.*.m^2/g" | awk '{print $3"\t"$5}')
-		echo $MAT_NAME"   "$VALUE >> Nprobe_SA_m2_g.txt
-		VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Surface area.*.m^2/cm" | awk '{print $3"\t"$5}')
-		echo $MAT_NAME"   "$VALUE >> Nprobe_SA_m2_cc.txt
-				
-		rm -rf DLPOLY Movies Output Restart Tinker VTK
-	rm *.def
+    #SA data
+        VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Surface area.*.A^2" | awk '{print $3"\t"$5}')
+        echo $MAT_NAME"   "$VALUE >> Nprobe_SA_A2.txt
+        VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Surface area.*.m^2/g" | awk '{print $3"\t"$5}')
+        echo $MAT_NAME"   "$VALUE >> Nprobe_SA_m2_g.txt
+        VALUE=$(cat $SCRATCH/Output/System_0/output* | grep "Surface area.*.m^2/cm" | awk '{print $3"\t"$5}')
+        echo $MAT_NAME"   "$VALUE >> Nprobe_SA_m2_cc.txt
+                
+        rm -rf DLPOLY Movies Output Restart Tinker VTK
+    rm *.def
 
-	mkdir dummySA-$INITIAL.thru.$TOTAL
-	cp *.txt ./dummySA-$INITIAL.thru.$TOTAL
-	cp -rf dummySA-$INITIAL.thru.$TOTAL $HTSOHM_DIR/data
+    mkdir dummySA-$INITIAL.thru.$TOTAL
+    cp *.txt ./dummySA-$INITIAL.thru.$TOTAL
+    cp -rf dummySA-$INITIAL.thru.$TOTAL $HTSOHM_DIR/data
 
-	done
+    done

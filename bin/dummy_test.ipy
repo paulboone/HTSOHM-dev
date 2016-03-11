@@ -2,11 +2,12 @@ import subprocess
 import shlex
 import numpy as np
 
-def dummy_test(HTSOHM_dir, gen, tol=0.1):
- 
-    %cd {HTSOHM_dir}/bin
 
-    subprocess.call( shlex.split( './Dcat ' + gen ))
+def dummy_test(HTSOHM_dir, gen, tol=0.1):
+
+    %cd {HTSOHM_dir} / bin
+
+    subprocess.call(shlex.split('./Dcat ' + gen))
 
     %cd {HTSOHM_dir}
 
@@ -21,8 +22,8 @@ def dummy_test(HTSOHM_dir, gen, tol=0.1):
     p_s = np.genfromtxt(gen + '/SAdata_m2_cc.txt', usecols=1, dtype=float)
     p_v = np.genfromtxt(gen + '/HVdata2col.txt', usecols=1, dtype=float)
 
-    pos = [5 * i for i in range( int(len(d_cn) / 5) )]
-   
+    pos = [5 * i for i in range(int(len(d_cn) / 5))]
+
     c_od = []
     s_od = []
     v_od = []
@@ -30,16 +31,16 @@ def dummy_test(HTSOHM_dir, gen, tol=0.1):
     for i in pos:
 
         mat = d_cn[i]
-        c_o = p_c[ int(mat[4:]) ]
-        s_o = p_s[ int(mat[4:]) ]
-        v_o = p_v[ int(mat[4:]) ]
+        c_o = p_c[int(mat[4:])]
+        s_o = p_s[int(mat[4:])]
+        v_o = p_v[int(mat[4:])]
 
         c_d = []
         s_d = []
         v_d = []
         for j in range(len(d_cn)):
             if d_cn[j] == mat:
-                c_d.append(d_cv[j]) 
+                c_d.append(d_cv[j])
                 s_d.append(d_sv[j])
                 v_d.append(d_vv[j])
 
@@ -49,15 +50,15 @@ def dummy_test(HTSOHM_dir, gen, tol=0.1):
 
     bad = []
     for i in c_od:
-        if abs( np.mean(i[2]) - i[1] ) >= tol * i[1]:
+        if abs(np.mean(i[2]) - i[1]) >= tol * i[1]:
             bad.append(i[0])
 
     for i in s_od:
-        if abs( np.mean(i[2]) - i[1] ) >= tol * i[1]:
+        if abs(np.mean(i[2]) - i[1]) >= tol * i[1]:
             bad.append(i[0])
 
     for i in v_od:
-        if abs( np.mean(i[2]) - i[1] ) >= tol * i[1]:
+        if abs(np.mean(i[2]) - i[1]) >= tol * i[1]:
             bad.append(i[0])
 
     if bad == []:
@@ -67,12 +68,12 @@ def dummy_test(HTSOHM_dir, gen, tol=0.1):
         print('The following materials fail the `dummy` test and have been deleted:')
         for i in bad:
             print(i)
-            %rm -rf {gen}/{i}
+            %rm - rf {gen} / {i}
 
         c_f = open(gen + "/ch4_abs_cc_cc.txt", "r")
         s_f = open(gen + "/SAdata_m2_cc.txt", "r")
         v_f = open(gen + "/HVdata2col.txt", "r")
-        
+
         c_lines = c_f.readlines()
         s_lines = s_f.readlines()
         v_lines = v_f.readlines()

@@ -1,24 +1,24 @@
 import subprocess
 import shlex
 
-def prep_gen0(HTSOHM_dir, lengt):
- 
-    %cd {HTSOHM_dir}/bin
 
-    subprocess.call( shlex.split( './pg1_mut gen0 ' + str(0) + ' ' + str(lengt) ))
+def prep_gen0(HTSOHM_dir, lengt):
+
+    %cd {HTSOHM_dir} / bin
+
+    subprocess.call(shlex.split('./pg1_mut gen0 ' + str(0) + ' ' + str(lengt)))
 
     %cd {HTSOHM_dir}
+
 
 def prep4mut(HTSOHM_dir, d_new, start, lengt, d_old, d_out):
 
-    %cd {HTSOHM_dir}/bin
+    %cd {HTSOHM_dir} / bin
 
-    subprocess.call( shlex.split( './pre_mut ' + d_new
-                                         + ' ' + str(start)
-                                         + ' ' + str(lengt)
-                                         + ' ' + d_old
-                                         + ' ' + d_out
-                                 ))
+    subprocess.call(shlex.split('./pre_mut ' + d_new
+                                + ' ' + str(start)
+                                + ' ' + str(lengt)
+                                + ' ' + d_old
+                                + ' ' + d_out
+                                ))
     %cd {HTSOHM_dir}
-
-

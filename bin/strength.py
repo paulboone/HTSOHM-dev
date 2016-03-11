@@ -3,9 +3,10 @@ import os
 import sys
 #from binning import *
 
-#HTSOHM_dir
-#p_dir
-#bins
+# HTSOHM_dir
+# p_dir
+# bins
+
 
 def calcS(HTSOHM_dir, p_dir, bins):
 
@@ -14,6 +15,3 @@ def calcS(HTSOHM_dir, p_dir, bins):
     from binning import *
 
     gp_dir = 'gen' + str(int(p_dir[4:]) - 1)
-
-    
-

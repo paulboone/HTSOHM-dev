@@ -1,21 +1,21 @@
-trying to remove /scratch/3431297.clusman0a.frank.sam.pitt.edu
+trying to remove /scratch/3480833.clusman0a.frank.sam.pitt.edu
 +---------------------------------------------------------------------+
 |                        JOB INFORMATION                              |
 +---------------------------------------------------------------------+
 |
-|  Date      : Mon Feb 22 14:23:02 EST 2016
-|  Job ID    : 3431297.clusman0a.frank.sam.pitt.edu
+|  Date      : Thu Mar 10 15:44:33 EST 2016
+|  Job ID    : 3480833.clusman0a.frank.sam.pitt.edu
 |  Username  : ark111
 |  Group     : cwilmer
-|  Job Name  : arkHT_50
-|  Session   : 92501
+|  Job Name  : arkHT_10
+|  Session   : 23527
 |  Limits    : neednodes=1:ppn=1,nodes=1:ppn=1,pmem=2666mb,walltime=08:00:00
-|  Resources : cput=00:23:37,energy_used=0,mem=12508kb,vmem=50940kb,walltime=00:23:47
+|  Resources : cput=00:07:57,energy_used=0,mem=45572kb,vmem=86260kb,walltime=00:08:06
 |  Disk      : 84K
 |  Queue     : ishared
 |  Account   : 
 |  Exit code : 0
-|  Local scr : /scratch/3431297.clusman0a.frank.sam.pitt.edu
+|  Local scr : /scratch/3480833.clusman0a.frank.sam.pitt.edu
 |  Node/cores: 7/1 
 |
 [---------------------------------------------------------------------]

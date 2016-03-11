@@ -7,13 +7,13 @@ IFS=$'\n' read -d '' -r -a D_LIST < $LIB_DIR/dummyList.txt
 LIBRARY_SIZE=${#D_LIST[@]}
 
 if ((LIBRARY_SIZE < 5))
-	then
-		NUM_PROC=1
+    then
+        NUM_PROC=1
 fi
 
 if ((LIBRARY_SIZE >= 5))
-	then
-		NUM_PROC=$((LIBRARY_SIZE / 5))
+    then
+        NUM_PROC=$((LIBRARY_SIZE / 5))
 fi
 
 echo $NUM_PROC

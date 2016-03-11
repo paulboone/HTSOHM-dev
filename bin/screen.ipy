@@ -1,15 +1,16 @@
 import subprocess
 import shlex
 
+
 def screen(HTSOHM_dir, gen, start, length):
 
-    %cd {HTSOHM_dir}/bin
-    
+    %cd {HTSOHM_dir} / bin
+
     print('Preparing to submit jobs...')
-    print('See terminal for status.') 
-    subprocess.call( shlex.split( './screen ' + gen
-                                        + ' ' + str(start)
-                                        + ' ' + str(length)
-                                 ))
+    print('See terminal for status.')
+    subprocess.call(shlex.split('./screen ' + gen
+                                + ' ' + str(start)
+                                + ' ' + str(length)
+                                ))
     print('\nJobs submitted!')
     %cd {HTSOHM_dir}

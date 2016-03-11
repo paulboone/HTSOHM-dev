@@ -8,7 +8,7 @@ echo 'running cat...'
 
 for ((i=START_MAT; i <= START_MAT+NUM_MAT; i++))
 do
-	cat HVdata_MAT-$i.*/HVdata.txt >> ./HVdata.txt
-	cat HVdata_MAT-$i.*/HVdata2col.txt >> ./HVdata2col.txt
+    cat HVdata_MAT-$i.*/HVdata.txt >> ./HVdata.txt
+    cat HVdata_MAT-$i.*/HVdata2col.txt >> ./HVdata2col.txt
 done
 echo 'done!'

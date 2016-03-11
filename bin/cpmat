@@ -7,8 +7,8 @@ START_MAT=$2
 export CIF_DIR=${HOME}/RASPA/share/raspa/structures/cif/
 
 for (( i = START_MAT; i <= START_MAT+LIBRARY_SIZE; i++ ))
-do	
-	cd *MAT-$i
-	cp *.cif $CIF_DIR
-	cd ..
+do    
+    cd *MAT-$i
+    cp *.cif $CIF_DIR
+    cd ..
 done

@@ -17,7 +17,7 @@ cd ../data
 mkdir $DIR_1
 mv *.txt $DIR_1
 
-#../bin/rmdata
+../bin/rmdata
 
 cd ..
 cp data/$DIR_1/* $DIR_1

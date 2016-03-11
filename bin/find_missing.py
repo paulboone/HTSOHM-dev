@@ -1,6 +1,7 @@
 import os
 import numpy as np
 
+
 def find_missing(mat_dir):
 
     skip = len(mat_dir) + 1
@@ -21,16 +22,22 @@ def find_missing(mat_dir):
             missing_sa.append(i)
         if i not in vf:
             missing_vf.append(i)
-		
+
         if missing_ml != []:
-            print( 'Missing ' + len(missing_ml) + ' methane loading calculations.' )
-    
+            print(
+                'Missing ' +
+                len(missing_ml) +
+                ' methane loading calculations.')
+
         if missing_sa != []:
-            print( 'Missing ' + len(missing_sa) + ' surface area calculations.' )
-    
+            print('Missing ' + len(missing_sa) + ' surface area calculations.')
+
         if missing_vf != []:
-            print( 'Missing ' + len(missing_vf) + ' void fraction calculations.' )
-    
+            print(
+                'Missing ' +
+                len(missing_vf) +
+                ' void fraction calculations.')
+
         if missing_ml == [] and missing_sa == [] and missing_vf == []:
             print('No missing data points!')
 

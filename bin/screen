@@ -5,13 +5,13 @@ START_MAT=$2
 LIBRARY_SIZE=$3
 
 if ((LIBRARY_SIZE < 10))
-	then
-		NUM_PROC=1
+    then
+        NUM_PROC=1
 fi
 
 if ((LIBRARY_SIZE >= 10))
-	then
-		NUM_PROC=$((LIBRARY_SIZE / 10))
+    then
+        NUM_PROC=$((LIBRARY_SIZE / 10))
 fi
 
 echo $NUM_PROC

@@ -1,729 +1,299 @@
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-0/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-0.cif does not exist.
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-0/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-0.cif does not exist.
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-0/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-0.cif does not exist.
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-0/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-0.cif does not exist.
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-0/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-0.cif does not exist.
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-cat: ./Output/System_0/output_MAT-0_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.282900
-_cell_length_b: 19.873100
-_cell_length_c: 41.343000
+_cell_length_a: 24.366500
+_cell_length_b: 21.725700
+_cell_length_c: 38.785300
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.282900
-_cell_length_b: 19.873100
-_cell_length_c: 41.343000
+_cell_length_a: 24.366500
+_cell_length_b: 21.725700
+_cell_length_c: 38.785300
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.282900
-_cell_length_b: 19.873100
-_cell_length_c: 41.343000
+_cell_length_a: 24.366500
+_cell_length_b: 21.725700
+_cell_length_c: 38.785300
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.282900
-_cell_length_b: 19.873100
-_cell_length_c: 41.343000
+_cell_length_a: 24.366500
+_cell_length_b: 21.725700
+_cell_length_c: 38.785300
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.282900
-_cell_length_b: 19.873100
-_cell_length_c: 41.343000
+_cell_length_a: 24.366500
+_cell_length_b: 21.725700
+_cell_length_c: 38.785300
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.972000
-_cell_length_b: 21.195000
-_cell_length_c: 42.464100
+_cell_length_a: 30.610700
+_cell_length_b: 52.114000
+_cell_length_c: 21.432600
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.972000
-_cell_length_b: 21.195000
-_cell_length_c: 42.464100
+_cell_length_a: 30.610700
+_cell_length_b: 52.114000
+_cell_length_c: 21.432600
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.972000
-_cell_length_b: 21.195000
-_cell_length_c: 42.464100
+_cell_length_a: 30.610700
+_cell_length_b: 52.114000
+_cell_length_c: 21.432600
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.972000
-_cell_length_b: 21.195000
-_cell_length_c: 42.464100
+_cell_length_a: 30.610700
+_cell_length_b: 52.114000
+_cell_length_c: 21.432600
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.972000
-_cell_length_b: 21.195000
-_cell_length_c: 42.464100
+_cell_length_a: 30.610700
+_cell_length_b: 52.114000
+_cell_length_c: 21.432600
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.029600
-_cell_length_b: 34.172900
-_cell_length_c: 48.557900
+_cell_length_a: 15.756000
+_cell_length_b: 15.222200
+_cell_length_c: 35.392100
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.029600
-_cell_length_b: 34.172900
-_cell_length_c: 48.557900
+_cell_length_a: 15.756000
+_cell_length_b: 15.222200
+_cell_length_c: 35.392100
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.029600
-_cell_length_b: 34.172900
-_cell_length_c: 48.557900
+_cell_length_a: 15.756000
+_cell_length_b: 15.222200
+_cell_length_c: 35.392100
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.029600
-_cell_length_b: 34.172900
-_cell_length_c: 48.557900
+_cell_length_a: 15.756000
+_cell_length_b: 15.222200
+_cell_length_c: 35.392100
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 35.029600
-_cell_length_b: 34.172900
-_cell_length_c: 48.557900
+_cell_length_a: 15.756000
+_cell_length_b: 15.222200
+_cell_length_c: 35.392100
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.640700
-_cell_length_b: 19.153000
-_cell_length_c: 48.336100
+_cell_length_a: 27.936200
+_cell_length_b: 34.050100
+_cell_length_c: 29.269700
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.640700
-_cell_length_b: 19.153000
-_cell_length_c: 48.336100
+_cell_length_a: 27.936200
+_cell_length_b: 34.050100
+_cell_length_c: 29.269700
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.640700
-_cell_length_b: 19.153000
-_cell_length_c: 48.336100
+_cell_length_a: 27.936200
+_cell_length_b: 34.050100
+_cell_length_c: 29.269700
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.640700
-_cell_length_b: 19.153000
-_cell_length_c: 48.336100
+_cell_length_a: 27.936200
+_cell_length_b: 34.050100
+_cell_length_c: 29.269700
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.640700
-_cell_length_b: 19.153000
-_cell_length_c: 48.336100
+_cell_length_a: 27.936200
+_cell_length_b: 34.050100
+_cell_length_c: 29.269700
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 29.682400
-_cell_length_b: 41.242800
-_cell_length_c: 37.441200
+_cell_length_a: 34.229500
+_cell_length_b: 33.524700
+_cell_length_c: 35.218400
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 29.682400
-_cell_length_b: 41.242800
-_cell_length_c: 37.441200
+_cell_length_a: 34.229500
+_cell_length_b: 33.524700
+_cell_length_c: 35.218400
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 29.682400
-_cell_length_b: 41.242800
-_cell_length_c: 37.441200
+_cell_length_a: 34.229500
+_cell_length_b: 33.524700
+_cell_length_c: 35.218400
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 29.682400
-_cell_length_b: 41.242800
-_cell_length_c: 37.441200
+_cell_length_a: 34.229500
+_cell_length_b: 33.524700
+_cell_length_c: 35.218400
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 29.682400
-_cell_length_b: 41.242800
-_cell_length_c: 37.441200
+_cell_length_a: 34.229500
+_cell_length_b: 33.524700
+_cell_length_c: 35.218400
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 36.234100
-_cell_length_b: 45.612000
-_cell_length_c: 34.315500
+_cell_length_a: 41.459000
+_cell_length_b: 25.451800
+_cell_length_c: 24.721000
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 36.234100
-_cell_length_b: 45.612000
-_cell_length_c: 34.315500
+_cell_length_a: 41.459000
+_cell_length_b: 25.451800
+_cell_length_c: 24.721000
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 36.234100
-_cell_length_b: 45.612000
-_cell_length_c: 34.315500
+_cell_length_a: 41.459000
+_cell_length_b: 25.451800
+_cell_length_c: 24.721000
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 36.234100
-_cell_length_b: 45.612000
-_cell_length_c: 34.315500
+_cell_length_a: 41.459000
+_cell_length_b: 25.451800
+_cell_length_c: 24.721000
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
 space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 36.234100
-_cell_length_b: 45.612000
-_cell_length_c: 34.315500
+_cell_length_a: 41.459000
+_cell_length_b: 25.451800
+_cell_length_c: 24.721000
 _cell_length_alpha: 90.000000
 _cell_length_beta: 90.000000
 _cell_length_gamma: 90.000000
 End reading cif-file
 Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-45/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-45.cif does not exist.
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-45/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-45.cif does not exist.
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-45/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-45.cif does not exist.
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-45/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-45.cif does not exist.
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-45/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-45.cif does not exist.
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-cat: ./Output/System_0/output_MAT-45_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 30.784400
-_cell_length_b: 22.956700
-_cell_length_c: 42.327800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 30.784400
-_cell_length_b: 22.956700
-_cell_length_c: 42.327800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 30.784400
-_cell_length_b: 22.956700
-_cell_length_c: 42.327800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 30.784400
-_cell_length_b: 22.956700
-_cell_length_c: 42.327800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 30.784400
-_cell_length_b: 22.956700
-_cell_length_c: 42.327800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-3/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-3.cif does not exist.
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-3/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-3.cif does not exist.
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-3/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-3.cif does not exist.
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-3/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-3.cif does not exist.
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-3/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-3.cif does not exist.
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-cat: ./Output/System_0/output_MAT-3_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.024100
-_cell_length_b: 42.061800
-_cell_length_c: 37.324300
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.024100
-_cell_length_b: 42.061800
-_cell_length_c: 37.324300
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.024100
-_cell_length_b: 42.061800
-_cell_length_c: 37.324300
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.024100
-_cell_length_b: 42.061800
-_cell_length_c: 37.324300
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 27.024100
-_cell_length_b: 42.061800
-_cell_length_c: 37.324300
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-14/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-14.cif does not exist.
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-14/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-14.cif does not exist.
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-14/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-14.cif does not exist.
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-14/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-14.cif does not exist.
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-cp: cannot stat `/ihome/cwilmer/ark111/RASPA/share/raspa/forcefield/MAT-14/*': No such file or directory
-'pseudo_atoms.def' file not found and therefore not used
-Error:  file /ihome/cwilmer/ark111/RASPA/share/raspa/structures/cif/MAT-14.cif does not exist.
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-cat: ./Output/System_0/output_MAT-14_*: No such file or directory
-rm: cannot remove `*.def': No such file or directory
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.176000
-_cell_length_b: 22.928300
-_cell_length_c: 43.348800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.176000
-_cell_length_b: 22.928300
-_cell_length_c: 43.348800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.176000
-_cell_length_b: 22.928300
-_cell_length_c: 43.348800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.176000
-_cell_length_b: 22.928300
-_cell_length_c: 43.348800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
-space group found from symmetry elements: 1 (nr elements: 1)
-_cell_length_a: 33.176000
-_cell_length_b: 22.928300
-_cell_length_c: 43.348800
-_cell_length_alpha: 90.000000
-_cell_length_beta: 90.000000
-_cell_length_gamma: 90.000000
-End reading cif-file
-Shift all potentials
-mkdir: cannot create directory `dummyCH4-0.thru.65': File exists
+mkdir: cannot create directory `dummyCH4-0.thru.30': File exists
