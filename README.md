@@ -9,34 +9,34 @@ mutating rare materials--in an iterative process.
 ## Getting started
 
 The HSTOHM-dev libraries were written predominantly in Python3 and Bash. It   
-also requires `RASPA-2.0`, available : <find Dubbledam link>.   
-In order to run `workflow-*.ipynb` one must also have the Jupyter Notebook   
-installed (`$ pip install notebook`).   
-   
-In order to run this package as-is, the users `$HOME` directory must be   
-contain the following:   
-```
- ${HOME}/RASPA/bin/simulate
- ${HOME}/RASPA/share/raspa/structures/cif/
- ${HOME}/RASPA/share/raspa/forcefield/
- #created by default RASPA installation
+also requires `RASPA-2.0`, available :   
 
- ${HOME}/HTSOHM-dev/data/
- ${HOME}/HTSOHM-dev/bin/*
- ${HOME}/HTSOHM-dev/workflow-*.ipynb
- #after git cloning repo into $HOME 
+https://github.com/numat/RASPA2   
+
+To configure HTSOHM, you may run `configure.sh`, which exports    
+`$HTSOHM_DIR` to the directory in which the package was cloned.    
+The RASPA directory (`$RASPA_DIR`) assumes a default installation   
+in `$HOME`. The shell script also writes the following to `~/.bashrc`:    
 ```
-   
-A Jupyter notebook `workflow-*.ipynb` walks the user through the various   
-steps involved in this computational method. To get started:   
-   
-`$ jupyter notebook workflow-*.ipynb`
+ export HTSOHM_DIR=${HTSOHM_DIR}
+ export RASPA_DIR=${RASPA_DIR}
+ export SRC_DIR=${HTSOHM_DR}/bin
+ export FF_DIR=${RASPA_DIR}/share/raspa/forcefield
+ export MAT_DIR=${RASPA_DIR}/share/raspa/structures/cif
+```
+To run the program, execute:    
+  `python $HTSOHM_DIR/bin/HTSOHM.py <MpG> <NoA> <S0> <NoB>`
+Where `<MpG>`is the number of materials per generation, and    
+`<NoA>` the number of atom-types, `<S0>` the initial strength-    
+parameter, and `<NoB>` the number of bins.
+
+By default the program will terminate after 20 generations.   
    
 Please send questions/comments/concerns to `ark111@pitt.edu`.
 
 ## License
 
-HTSOHM-dev and related modules released under the GNU General Public License v3.0. 
+HTSOHM-dev and related modules released under the MIT License 2016. 
 
 ## Development environment
 
