@@ -1,0 +1,23 @@
+SimulationType			MonteCarlo
+NumberOfCycles			1000
+NumberOfInitializationCycles	500
+PrintEvery			100
+RestartFile			no
+
+Forcefield			15.4.2016_4.24.37_1.4_0.2_5-5
+ChargeMethod			Ewald
+CutOff				12.0
+
+Framework 0
+FrameworkName 15.4.2016_4.24.37_1.4_0.2_5-5
+UnitCells 1 1 1
+HeliumVoidFraction 0.140701
+ExternalTemperature 298.0
+ExternalPressure 3500000
+
+Component 0 MoleculeName		methane
+            MoleculeDefinition		TraPPE
+            TranslationProbability	1.0
+            ReinsertionProbability	1.0
+            SwapProbability		1.0
+            CreateNumberOfMolecules	0

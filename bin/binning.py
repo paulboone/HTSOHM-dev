@@ -1,128 +1,102 @@
-import numpy as np
-import os
 
 
-def bin3d(p_dir, bins):
+def CountBin(run_ID, ML_bin, SA_bin, VF_bin):
 
-    ml_file = p_dir + '/ch4_abs_cc_cc.txt'
-    sa_file = p_dir + '/SAdata_m2_cc.txt'
-    vf_file = p_dir + '/HVdata2col.txt'
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from runDB_declarative import RunData, Base
 
-    # bins data in one dimension (ml, sa, or vf)
-    def bin_data(data_file, e_min, e_max, bins):
+    engine = create_engine( "sqlite:///HTSOHM-dev.db" )
+    Base.metadata.bind = engine
 
-        name = np.genfromtxt(data_file, usecols=0, dtype=str)
-        valu = np.genfromtxt(data_file, usecols=1, dtype=float)
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
 
-        step = e_max / bins
-        edge = np.arange(e_min, e_max + step, step)
+    BinCount = session.query(RunData).filter(RunData.Run == run_ID,
+                                             RunData.Bin_ML == ML_bin,
+                                             RunData.Bin_SA == SA_bin,
+                                             RunData.Bin_VF == VF_bin).count()
 
-        IDs = [[] for i in range(bins)]
+    return BinCount
 
-        for i in range(bins):
 
-            lower = edge[i]
-            upper = edge[i + 1]
+def CountAll(run_ID):
+    
+    import numpy as np
 
-            for j in range(len(valu)):
-                if valu[j] >= lower and valu[j] < upper:
-                    IDs[i].append(name[j])
-
-        return IDs
-
-    ml_IDs = bin_data(ml_file, 0, 400., bins)
-    sa_IDs = bin_data(sa_file, 0, 4500., bins)
-    vf_IDs = bin_data(vf_file, 0, 1., bins)
-
-    bin_IDs = [[[[] for i in range(bins)] for j in range(
-        bins)] for k in range(bins)]  # make empty 3D list
-
-    freq = np.zeros([bins, bins, bins])
+    bins = int(run_ID[-1])
+    AllCounts = np.zeros([bins, bins, bins])
 
     for i in range(bins):
         for j in range(bins):
             for k in range(bins):
-                for l in ml_IDs[i]:
-                    for m in sa_IDs[j]:
-                        if l == m:
-                            for n in vf_IDs[k]:
-                                if m == n:
-                                    bin_IDs[i][j][k].append(n)
+                
+                b_count = CountBin(run_ID, i, j, k)
+                AllCounts[i,j,k] = b_count
 
-    # 3D array containing number of materials per bin
-    bin_counts = np.empty([bins, bins, bins])
-
-    for i in range(bins):
-        for j in range(bins):
-            for k in range(bins):
-                bin_counts[i, j, k] = len(bin_IDs[i][j][k])
-
-    return bin_counts, bin_IDs
+    return AllCounts
 
 
-def find_bin(name, ID_array):
+def SelectParents(run_ID, children_per_generation, generation):
 
-    dim = len(ID_array)
+    import numpy as np
 
-    for i in range(dim):
-        for j in range(dim):
-            for k in range(dim):
-                if name in ID_array[i][j][k]:
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from runDB_declarative import RunData, Base
 
-                    a = i
-                    b = j
-                    c = k
+    engine = create_engine( "sqlite:///HTSOHM-dev.db" )
+    Base.metadata.bind = engine
 
-    return [a, b, c]
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
 
-
-def pick_parents(p_dir, bin_counts, bin_IDs, n_children, n_dummy=5):
-
-    bins = len(bin_counts)
-
+    bins = int(run_ID[-1])
+    counts = CountAll(run_ID)
     weights = np.zeros([bins, bins, bins])
 
     for i in range(bins):
         for j in range(bins):
-            for k in range(bins):
-
-                if bin_counts[i][j][k] != 0.:
-
-                    weights[i][j][k] = bin_counts.sum() / bin_counts[i][j][k]
-
+            for k in range(bins):    
+                if counts[i,j,k] != 0.:
+                    weights[i,j,k] = counts.sum() / counts[i,j,k]
     weights = weights / weights.sum()
 
     w_list = []
     ID_list = []
-
     for i in range(bins):
         for j in range(bins):
-
-            w_list = np.concatenate([w_list, weights[i, j, :]])
-
+            w_list = np.concatenate( [w_list, weights[i,j,:]] )
             for k in range(bins):
+                bin_IDs = []
+                res = session.query(RunData).filter(RunData.Run == run_ID,
+                                                         RunData.Bin_ML == i,
+                                                         RunData.Bin_SA == j,
+                                                         RunData.Bin_VF == k).all()
+                for item in res:
+                    bin_IDs.append(item.Mat)
+                ID_list = ID_list + [bin_IDs]
 
-                ID_list = ID_list + [bin_IDs[i][j][k]]
+    first = generation * children_per_generation
+    last = (generation + 1) * children_per_generation
+    new_mat_IDs = np.arange(first, last)                   # IDs for next generation of materials
 
-    p_list = []
-    dummyList = open(os.path.abspath(p_dir) + '/dummyList.txt', 'w')
-    p_file = open(os.path.abspath(p_dir) + '/p_list.txt', 'w')
+    for i in new_mat_IDs:
 
-    for i in range(n_children):
+        p_bin = np.random.choice(ID_list, p=w_list)
+        p_ID = np.random.choice(p_bin)                     # Select parent for new material
 
-        p = np.random.choice(ID_list, p=w_list)
-        pos = find_bin(p[0], bin_IDs)
+        # Write parent IDs to database...
+        check_first = session.query(RunData).filter( RunData.Run == run_ID,
+                                                     RunData.Mat == str(i) ).count()
+        if not check_first:
+            new_mat = RunData( Run=run_ID, Mat=str(i) )
+            session.add(new_mat)
+            session.commit()
 
-        p_list.append([p[0], pos])
-        p_file.write((p[0] + '\t' + str(pos) + '\n'))
+        NextMat = session.query(RunData).filter( RunData.Run == run_ID,
+                                                 RunData.Mat == str(i) )
+        NextMat.update({'Parent': str(p_ID)})
+        session.commit()
+    
 
-    d_list = []
-    dummyList = open(os.path.abspath(p_dir) + '/dummyList.txt', 'w')
-
-    for i in p_list:
-        if i[0] not in d_list:
-            d_list.append(i[0])
-            for j in range(n_dummy):
-                dummyList.write((i[0] + '\n'))
-
-    return p_list

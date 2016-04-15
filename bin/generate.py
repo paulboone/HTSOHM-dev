@@ -62,17 +62,6 @@ def generate(
     ff_dir = os.environ['FF_DIR']      # output force-field files to $FF_DIR
     mat_dir = os.environ['MAT_DIR']    # output .cif-files to $MAT_DIR
 
-#    # open mat_stats.txt, to track material data
-#    mat_stats = open(os.path.abspath(top_path) + '/mat_stats.txt', 'w')
-#    mat_stat_heading = ('\nBOUNDARIES\nNumber of particles: ' + Ntag +
-#                        '\nnumber density:   ' + ntag + '\nx-coordinate: ' +
-#                        xtag + '\ny-coordinate: ' + ytag + '\nz-coordinate: ' +
-#                        ztag + '\nEpsilon: ' + eptag + '\nSigma: ' + sigtag
-#                        + '\nCharge: ' + qtag + '\n\n' +
-#                        '#name     number density     xdim     ydim     ' +
-#                        'zdim     total particles     net charge\n')
-#    mat_stats.write(mat_stat_heading)
-
     for i in range(N):                           # each iteration creates a new material
 
         mat_name = RUN_ID + '-' + str(i)
@@ -83,7 +72,7 @@ def generate(
         cif_file = open(mat_dir + "/" + mat_name + ".cif", "w")        # structure file
         mix_file = open(def_dir + '/force_field_mixing_rules.def', "w") # LJ-parameters
         for_file = open(def_dir + '/force_field.def', "w")              # to overwrite LJ
-        psu_file = open(def_dir + '/psuedo_atoms.def', "w")             # define atom-types
+        psu_file = open(def_dir + '/pseudo_atoms.def', "w")             # define atom-types
 
         xdim_ = round(random() * (xmax - xmin) + xmin, 4)
         ydim_ = round(random() * (ymax - ymin) + ymin, 4)
@@ -93,7 +82,7 @@ def generate(
         n_ = randrange(2, Nmax, 1)
         nden_ = round(n_ / (xdim_ * ydim_ * zdim_))
 
-        cif_file.write( "\n\nloop_\n" +
+        cif_file.write( "\nloop_\n" +
                         "_symmetry_equiv_pos_as_xyz\n" +
                         "  x,y,z\n" +
                         "_cell_length_a\t%s\n" % (xdim_) +
@@ -114,7 +103,7 @@ def generate(
                         "# general rule tailcorrections\n" +
                         "no\n" +
                         "# number of defined interactions\n" +
-                        "%s\n" % (ATOM_TYPES) +
+                        "%s\n" % (ATOM_TYPES + 8) +
                         "# type interaction, parameters.    " + 
                             "IMPORTANT: define shortest matches first, so" + 
                             " that more specific ones overwrites these\n" )
@@ -125,6 +114,12 @@ def generate(
                             "charge\tpolarization\tB-factor\tradii\t" +
                             "connectivity\tanisotropic\tanisotrop-type\t" +
                             "tinker-type\n" )
+#        psu_file.write( '#number of pseudo atoms\n' +
+#                            str(ATOM_TYPES + 8) +
+#                            '\n#type          print    as     chem     oxidation' +
+#                            '     mass       charge     polarization     ' +
+#                            'B-factor     radii    connectivity     anisotropic' +
+#                            '   anisotrop-type  tinker-type\n')
 
         ep = []                        # assign LJ-parameters and partial charges
         sig = []
@@ -142,10 +137,6 @@ def generate(
         sig_ = np.asarray(sig).reshape(-1, 1)
         q_ = np.asarray(q).reshape(-1, 1)
         ID_ = np.asarray(range(0, ATOM_TYPES)).reshape(-1, 1)
-#        ep = ep_.reshape(-1, 1)
-#        sig = sig_.reshape(-1, 1)
-#        q = q_.reshape(-1, 1)
-#        ID = ID_.reshape(-1, 1)
 
         atoms = np.hstack((ID_, ep_, sig_, q_))
 
@@ -155,7 +146,6 @@ def generate(
             a_type = choice(range(ATOM_TYPES))
             n_atoms = np.vstack([n_atoms, atoms[a_type, :]])
 
-    #a_count = np.empty([ATOM_TYPES, 1], dtype=int)
         a_count = []
         a_id = []
         for i in range(ATOM_TYPES):
@@ -175,7 +165,6 @@ def generate(
             cm_list = []
     #cm_f = -1 * sum(cm_list)
 
-    # print atoms
             ac_len = len(a_count)
 
     # if ac_len == 1:
@@ -196,16 +185,11 @@ def generate(
             net_q = 0
             for i in range(ac_len):
                 net_q = a_count[i] * atoms[a_id[i], 3] + net_q
-##############################################
+
         else:  # single atom type!
             net_q = sum(atoms[:, 3])
 
         mat_charge = str(round(net_q, 10))
-#        cif_file.write('#NET CHARGE: ' + mat_charge + '\n')
-#        mat_X_stats = (mat_name + '     ' + str(nden_) + '     ' + str(xdim_) +
-#                       '     ' + str(ydim_) + '     ' + str(zdim_) + '     ' +
-#                       str(n_) + '     ' + mat_charge + '\n')
-#        mat_stats.write(mat_X_stats)
 
         eps = n_atoms[:, 1]
         sigs = n_atoms[:, 2]
@@ -216,21 +200,19 @@ def generate(
             psu_file.write( "A_%s\tyes\tC\tC\t0\t12.\t" % (int(atoms[i,0])) +
                                 "%s\t0\t0\t1\t1\t0\t0\t" % (atoms[i,3]) +
                                 "absolute\t0\n" )
-#            atom_X_pseudo = ('A_' +
-#                             str(int(atoms[i, 0])) +
-#                             '   yes   C   C   0   ' +
-#                             '12.0   ' +
-#                             str(atoms[i, 3]) +
-#                             '   0.0   0.0   ' +
-#                             '1.0  1.00   0   0  absolute   0\n')
-#            pseudo_atoms.write(atom_X_pseudo)
+#            psu_file.write ( 'A_' +
+#                                 str(int(atoms[i, 0])) +
+#                                 '   yes   C   C   0   ' +
+#                                 '12.0   ' +
+#                                 str(atoms[i, 3]) +
+#                                 '   0.0   0.0   ' +
+#                                 '1.0  1.00   0   0  absolute   0\n')
 
             mix_file.write( "A_%s\tlennard-jones\t" % (int(atoms[i,0])) +
                                 "%s\t%s\n" % (atoms[i,1], atoms[i,2]) )
-#            atom_X_mixing = ('A_' + str(int(atoms[i, 0])) + ' ' +
+#            mix_file.write( 'A_' + str(int(atoms[i, 0])) + ' ' +
 #                             'lennard-jones ' + str(atoms[i, 1]) + ' '
 #                             + str(atoms[i, 2]) + '\n')
-#            mixing_rules.write(atom_X_mixing)
 
     # writing cif...
         for i in range(n_):
@@ -263,7 +245,6 @@ def generate(
                         "H_com\tlennard-jones\t36.7\t2.958\n" +
                         "# general mixing rule for Lennard-Jones\n" +
                         "Lorentz-Berthelot" )
-#        mixing_rules.write(adsorbate_mixing)
 
         psu_file.write( "N_n2\tyes\tN\tN\t0\t14.00674\t-0.4048\t0.0\t1.0\t" +
                             "0.7\t0\t0\trelative\t0\n" +
@@ -281,7 +262,34 @@ def generate(
                             "\t0\t0\trelative\t0\n" +
                         "H_com\tno\tH\tH\t0\t0.0\t-0.936\t0.0\t1.0\t0.7\t0" +
                             "\t0\trelative\t0\n" )
-#        pseudo_atoms.write(adsorbate_pseudo)
+
+#        mix_file.write( 'N_n2        lennard-jones   36.0     3.31\n' +
+#                        'N_com       none\n' +
+#                        'C_co2       lennard-jones   27.0     2.80\n' +
+#                        'O_co2       lennard-jones   79.0     3.05\n' +
+#                        'CH4_sp3     lennard-jones   158.5    3.72\n' +
+#                        'He          lennard-jones   10.9     2.64\n' +
+#                        'H_h2        none\n' +
+#                        'H_com       lennard-jones   36.7     2.958\n' +
+#                        '# general mixing rule for Lennard-Jones\n' +
+#                        'Lorentz-Berthelot')
+
+#        psu_file.write( 'N_n2     yes   N   N   0   14.00674   -0.4048' +
+#                            '   0.0   1.0   0.7   0   0   relative   0\n' +
+#                        'N_com    no    N   -   0   0.0         0.8096' +
+#                            '   0.0   1.0   0.7   0   0   relative   0\n' +
+#                        'C_co2    yes   C   C   0   12.0        0.70' +
+#                            '     0.0   1.0   0.720 0   0   relative   0\n' +
+#                        'O_co2    yes   O   O   0   15.9994    -0.35' +
+#                            '     0.0   1.0   0.68  0   0   relative   0\n' +
+#                        'CH4_sp3  yes   C   C   0   16.04246    0.0' +
+#                            '      0.0   1.0   1.00  0   0   relative   0\n' +
+#                        'He       yes   He  He  0   4.002602    0.0' +
+#                            '      0.0   1.0   1.0   0   0   relative   0\n' +
+#                        'H_h2     yes   H   H   0   1.00794     0.468' +
+#                            '    0.0   1.0   0.7   0   0   relative   0\n' +
+#                        'H_com    no    H   H   0   0.0        - 0.936' +
+#                            '   0.0   1.0   0.7   0   0   relative   0\n')
 
         for_file.write( "# rules to overwrite\n" +
                         "0\n" +
