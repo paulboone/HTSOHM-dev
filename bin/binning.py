@@ -100,3 +100,7 @@ def SelectParents(run_ID, children_per_generation, generation):
         session.commit()
     
 
+def CheckConvergance(run_ID):
+
+    counts = CountAll(run_ID)
+       

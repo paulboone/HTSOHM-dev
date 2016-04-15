@@ -1,6 +1,0 @@
-#!/bin/bash
-
-echo 'removing old data...'
-rm -rf CH4data* Nprobe* HVdata*
-
-echo 'done!'

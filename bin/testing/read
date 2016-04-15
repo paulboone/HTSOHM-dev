@@ -1,7 +1,0 @@
-#!/bin/bash
-IFS=$'\n' read -d '' -r -a lines < list.txt
-
-for ((i = 0; i < 3; i++))
-do
-	echo "${lines[i]}"
-done
