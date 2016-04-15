@@ -25,9 +25,9 @@ in `$HOME`. The shell script also writes the following to `~/.bashrc`:
  export MAT_DIR=${RASPA_DIR}/share/raspa/structures/cif
 ```
 To run the program, execute:    
-  `python $HTSOHM_DIR/bin/HTSOHM.py <MpG> <NoA> <S0> <NoB>`
+  `python $HTSOHM_DIR/bin/HTSOHM.py <MpG> <NoA> <S0> <NoB>`    
 Where `<MpG>`is the number of materials per generation, and    
-`<NoA>` the number of atom-types, `<S0>` the initial strength-    
+<NoA>` the number of atom-types, `<S0>` the initial strength-    
 parameter, and `<NoB>` the number of bins.
 
 By default the program will terminate after 20 generations.   
