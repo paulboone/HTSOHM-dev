@@ -57,6 +57,7 @@ def HTSOHM(children_per_generation,    # number of materials per generation
     import binning as bng
     # Select parents, add IDs to database...
     bng.SelectParents(run_ID, children_per_generation, generation)
+    sim.DummyTest(run_ID, generation)
     
     # Create `first` generation of child-materials
     import mutate as mut
@@ -75,6 +76,7 @@ def HTSOHM(children_per_generation,    # number of materials per generation
         NextMaterials = np.arange(first, last)
 
         bng.SelectParents(run_ID, children_per_generation, generation)
+        sim.DummyTest(run_ID, generation)
         mut.CalculateS(run_ID, generation)
         mut.mutate(run_ID, generation)
 
