@@ -143,10 +143,10 @@ def simulate(run_ID, mat_ID):
     VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, mat_ID)
     with open(VF_data) as origin:
         for line in origin:
-            if not "Average Widom Rosenbluth-weight:" in line:
+            if not "Average Widom:" in line:
                 continue
             try:
-                VF_val = line.split()[4]
+                VF_val = line.split()[3]
             except IndexError:
                 print()
 
@@ -323,10 +323,10 @@ def DummyTest(run_ID, generation):
             VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, i)
             with open(VF_data) as origin:
                 for line in origin:
-                    if not "Average Widom Rosenbluth-weight:" in line:
+                    if not "Average Widom:" in line:
                         continue
                     try:  
-                        VF_val = line.split()[4]
+                        VF_val = line.split()[3]
                     except IndexError:
                         print()
             VFs.append( float(VF_val) )
