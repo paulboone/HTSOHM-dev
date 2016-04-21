@@ -89,7 +89,6 @@ def CalculateS(run_ID, generation):
         for j in range(len(gp_bins)):
             if p_bin == gp_bins[j]:
                 ID = j + children_per_generation
-                print( ID )
                 ML_bin = GetValue(run_ID, ID, "Bin_ML")
                 SA_bin = GetValue(run_ID, ID, "Bin_SA")
                 VF_bin = GetValue(run_ID, ID, "Bin_VF")

@@ -7,10 +7,17 @@ from simulate import CreateSession, AddRows, UpdateTable
 def CountBin(run_ID, ML_bin, SA_bin, VF_bin):
     
     s = CreateSession()
-    BinCount = s.query(RunData).filter(RunData.Run == run_ID,
-                                       RunData.Bin_ML == ML_bin,
-                                       RunData.Bin_SA == SA_bin,
-                                       RunData.Bin_VF == VF_bin).count()
+    c0 = s.query(RunData).filter(RunData.Run == run_ID,
+                                 RunData.Bin_ML == ML_bin,
+                                 RunData.Bin_SA == SA_bin,
+                                 RunData.Bin_VF == VF_bin,
+                                 RunData.D_pass == None).count()
+    c1 = s.query(RunData).filter(RunData.Run == run_ID,
+                                 RunData.Bin_ML == ML_bin,
+                                 RunData.Bin_SA == SA_bin,
+                                 RunData.Bin_VF == VF_bin,
+                                 RunData.D_pass == 'y').count()
+    BinCount = c0 + c1
 
     return BinCount
 
@@ -55,7 +62,15 @@ def SelectParents(run_ID, children_per_generation, generation):
                 res = s.query(RunData).filter(RunData.Run == run_ID,
                                               RunData.Bin_ML == i,
                                               RunData.Bin_SA == j,
-                                              RunData.Bin_VF == k).all()
+                                              RunData.Bin_VF == k,
+                                              RunData.D_pass == None).all()
+                for item in res:
+                    bin_IDs.append(item.Mat)
+                res = s.query(RunData).filter(RunData.Run == run_ID,
+                                              RunData.Bin_ML == i,
+                                              RunData.Bin_SA == j,
+                                              RunData.Bin_VF == k,
+                                              RunData.D_pass == 'y').all()
                 for item in res:
                     bin_IDs.append(item.Mat)
                 ID_list = ID_list + [bin_IDs]

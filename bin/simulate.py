@@ -11,7 +11,6 @@ import numpy as np
 
 from runDB_declarative import Base, RunData
 
-
 def CreateSession():
 #
 #    from sqlalchemy import create_engine
@@ -431,6 +430,20 @@ def DummyTest(run_ID, generation):
         if i not in Failed:
             Failed.append(i)
 
+    for i in p_IDs:
+        if i not in Failed:
+            data = {'D_pass': 'y'}
+            UpdateTable(run_ID, i, data)
+        elif i in Failed:
+            data = {'D_pass': 'n'}
+            UpdateTable(run_ID, i, data)
+            AffectedMats = s.query(RunData).filter(RunData.Run == run_ID,
+                                                   RunData.Parent == i).all()
+            Maybes = [j.Mat for j in AffectedMats]
+            for j in Maybes:
+                data = {'D_pass': 'm'}
+                UpdateTable(run_ID, j, data)
+                                                    
     if len(Failed) == 0:
         print( "\nALL PARENTS IN GENERATION %s PASSED THE DUMMY TEST.\n" % (generation) )
     if len(Failed) != 0:

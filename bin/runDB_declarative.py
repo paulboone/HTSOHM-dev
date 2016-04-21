@@ -29,6 +29,7 @@ class RunData(Base):
     Bin_ML = Column(Integer)
     Bin_SA = Column(Integer)
     Bin_VF = Column(Integer)
+    D_pass = Column(String(1))
 
 # Create engine to storedata in local directory .db-file.
 engine = create_engine("sqlite:///HTSOHM-dev.db")
