@@ -5,7 +5,7 @@ from simulate import CreateSession, AddRows, UpdateTable
 
 
 def CountBin(run_ID, ML_bin, SA_bin, VF_bin):
-                                             RunData.Bin_VF == VF_bin).count()
+    
     s = CreateSession()
     BinCount = s.query(RunData).filter(RunData.Run == run_ID,
                                        RunData.Bin_ML == ML_bin,
@@ -32,7 +32,7 @@ def CountAll(run_ID):
 
 def SelectParents(run_ID, children_per_generation, generation):
 
-   s = CreateSession()
+    s = CreateSession()
 
     bins = int(run_ID[-1])
     counts = CountAll(run_ID)

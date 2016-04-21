@@ -1,10 +1,18 @@
+import os
+import shutil
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import numpy as np
+from random import random, choice
+
+from runDB_declarative import Base, RunData
+import binning as bng
+from simulate import GetValue
 
 
 # Create "strength" array...
 def FirstS(run_ID, strength_0):
-
-    import numpy as np
-    import os
 
     bins = int(run_ID[-1])
 
@@ -20,16 +28,6 @@ def FirstS(run_ID, strength_0):
 
 
 def CalculateS(run_ID, generation):
-    
-    import os
-    import numpy as np
-
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    
-    from runDB_declarative import RunData, Base
-
-    import binning as bng
 
     wd = os.environ['HTSOHM_DIR']
 
@@ -42,30 +40,16 @@ def CalculateS(run_ID, generation):
     c_IDs = np.arange(First, Last)
     gen0_IDs = np.arange(0, children_per_generation)
 
-    Strength_o = np.load(wd + '/' + run_ID + '.npy')         # Load strength-parameter array
-
-    engine = create_engine( "sqlite:///HTSOHM-dev.db" )    # Connect to database
-    Base.metadata.bin = engine
-
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
+    Strength_o = np.load(wd + '/' + run_ID + '.npy')       # Load strength-parameter array
 
     p_IDs = []
     p_bins = []
     for i in c_IDs:
-        DBchild = session.query(RunData).filter( RunData.Run == run_ID,
-                                                 RunData.Mat == str(i) )
-        for item in DBchild:
-            p_ID = item.Parent
-
+        p_ID = GetValue(run_ID, i, "Parent")
         p_IDs.append( p_ID )
-
-        DBparent = session.query(RunData).filter( RunData.Run == run_ID,
-                                                  RunData.Mat == str(p_ID) )
-        for item in DBparent:
-            p_MLb = item.Bin_ML
-            p_SAb = item.Bin_SA
-            p_VFb = item.Bin_VF
+        p_MLb = GetValue(run_ID, p_ID, "Bin_ML")
+        p_SAb = GetValue(run_ID, p_ID, "Bin_SA")
+        p_VFb = GetValue(run_ID, p_ID, "Bin_VF")
 
         p_bin = [ p_MLb, p_SAb, p_VFb ]
         p_bins.append( p_bin )
@@ -75,20 +59,11 @@ def CalculateS(run_ID, generation):
     gp_IDs = []
     gp_bins = []
     for i in pgen_IDs:
-        DBchild = session.query(RunData).filter( RunData.Run == run_ID,
-                                                 RunData.Mat == str(i) )
-        for item in DBchild:
-            gp_ID = item.Parent
-
+        gp_ID = GetValue(run_ID, i, "Parent")
         gp_IDs.append( gp_ID )
-
-        DBparent = session.query(RunData).filter( RunData.Run == run_ID,
-                                                  RunData.Mat == str(gp_ID) )
-        for item in DBparent:
-            gp_MLb = item.Bin_ML
-            gp_SAb = item.Bin_SA
-            gp_VFb = item.Bin_VF
-
+        gp_MLb = GetValue(run_ID, gp_ID, "Bin_ML")
+        gp_SAb = GetValue(run_ID, gp_ID, "Bin_SA")
+        gp_VFb = GetValue(run_ID, gp_ID, "Bin_VF")
         gp_bin = [ gp_MLb, gp_SAb, gp_VFb ]
         gp_bins.append( gp_bin )
     
@@ -115,12 +90,9 @@ def CalculateS(run_ID, generation):
             if p_bin == gp_bins[j]:
                 ID = j + children_per_generation
                 print( ID )
-                DBmat = session.query(RunData).filter( RunData.Run == run_ID,
-                                                       RunData.Mat == str(ID) )
-                for item in DBmat:
-                    ML_bin = item.Bin_ML
-                    SA_bin = item.Bin_SA
-                    VF_bin = item.Bin_VF
+                ML_bin = GetValue(run_ID, ID, "Bin_ML")
+                SA_bin = GetValue(run_ID, ID, "Bin_SA")
+                VF_bin = GetValue(run_ID, ID, "Bin_VF")
                 c_bin = [ ML_bin, SA_bin, VF_bin ]
 
                 if c_bin not in c_bins:
@@ -206,17 +178,6 @@ def deltax(x_o, x_r, strength):  # removed random()
 
 def mutate(run_ID, generation):
 
-    import os
-    import numpy as np
-
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    
-    from runDB_declarative import RunData, Base
-
-    import shutil
-    from random import random, choice
-
     print( "\nCreating generation :\t%s" % (generation) )
 
     wd = os.environ['HTSOHM_DIR']
@@ -257,28 +218,15 @@ def mutate(run_ID, generation):
     
     Strength = np.load(wd + '/' + run_ID + '.npy')         # Load strength-parameter array
 
-    engine = create_engine( "sqlite:///HTSOHM-dev.db" )    # Connect to database
-    Base.metadata.bin = engine
-
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
 
     for i in child_IDs:
 
         child_ID = str(i)
-        
         # Find parent ID
-        DBchild = session.query(RunData).filter(RunData.Run == run_ID,
-                                                RunData.Mat == child_ID)
-        for item in DBchild:
-            p_ID = item.Parent
-        
-        DBparent = session.query(RunData).filter(RunData.Run == run_ID,
-                                                 RunData.Mat == p_ID)
-        for item in DBparent:
-            p_MLb = item.Bin_ML
-            p_SAb = item.Bin_SA
-            p_VFb = item.Bin_VF
+        p_ID = GetValue(run_ID, child_ID, "Parent")
+        p_MLb = GetValue(run_ID, p_ID, "Bin_ML")
+        p_SAb = GetValue(run_ID, p_ID, "Bin_SA")
+        p_VFb = GetValue(run_ID, p_ID, "Bin_VF")
         strength = Strength[p_MLb, p_SAb, p_VFb]
         
         pd = "%s/%s-%s" % (fd, run_ID, p_ID)               # Parent's forcefield directory

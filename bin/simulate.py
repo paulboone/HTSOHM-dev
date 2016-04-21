@@ -343,7 +343,7 @@ def DummyTest(run_ID, generation):
     s = CreateSession()
 
     Tolerance = 0.05      # Acceptable deviation from original value(s)...
-    NumberOfTrials = 3   # Number of times each simulation is repeated.
+    NumberOfTrials = 1    # Number of times each simulation is repeated.
 
     wd = os.environ['HTSOHM_DIR']
     with open(wd + '/' + run_ID + '.txt') as origin:

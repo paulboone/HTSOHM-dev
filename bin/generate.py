@@ -1,9 +1,11 @@
+import os
+
 from random import choice, random, randrange, randint
 from functools import reduce
 from math import fsum
-import os
 import numpy as np
 from math import floor
+
 
 def GCD(a, b):
     while b:
