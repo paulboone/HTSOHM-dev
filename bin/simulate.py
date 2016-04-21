@@ -1,10 +1,76 @@
 #! /usr/bin/env python
 
-def VoidFraction(run_ID, mat_ID):
+import os
+import subprocess
+import shlex
+import shutil
 
-    import os
-    import subprocess
-    import shlex
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import numpy as np
+
+from runDB_declarative import Base, RunData
+
+
+def CreateSession():
+#
+#    from sqlalchemy import create_engine
+#    from sqlalchemy.orm import sessionmaker
+#    from runDB_declarative import Base
+
+    engine = create_engine( "sqlite:///HTSOHM-dev.db" )
+    Base.metadata.bind = engine
+
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
+
+    return session
+
+def AddRows(run_ID, mat_IDs):
+#
+#    from runDB_declarative import RunData
+
+    s = CreateSession()
+
+    for i in mat_IDs:
+        check_first = s.query(RunData).filter( RunData.Run == run_ID,
+                                               RunData.Mat == str(i) ).count()
+        if not check_first:
+            new_mat = RunData( Run=run_ID, Mat=str(i) )
+            s.add(new_mat)
+    s.commit()
+
+
+def UpdateTable(run_ID, mat_ID, data):
+#
+#   from runDB_declarative import RunData
+
+    s = CreateSession()
+    DBmat = s.query(RunData).filter( RunData.Run == run_ID,
+                                     RunData.Mat == str(mat_ID) )
+    DBmat.update(data)
+    s.commit()
+
+
+def GetValue(run_ID, mat_ID, value):
+#
+#    from runDB_declarative import RunData
+
+    s = CreateSession()
+    DBmat = s.query(RunData).filter( RunData.Run == run_ID,
+                                     RunData.Mat == str(mat_ID) )
+
+    for i in DBmat:
+        DBval = getattr(i, value)
+
+    return DBval
+
+
+def VoidFraction(run_ID, mat_ID):
+#
+#    import os
+#    import subprocess
+#    import shlex
 
     pwd = os.getcwd()
     
@@ -32,13 +98,14 @@ def VoidFraction(run_ID, mat_ID):
     rd = os.environ['RASPA_DIR']
     subprocess.call(shlex.split( rd + '/bin/simulate -i VoidFraction.input' ))
 
-def MethaneLoading(run_ID, mat_ID, VF_val):
-
-    import os
-    import subprocess
-    import shlex
+def MethaneLoading(run_ID, mat_ID):
+#
+#    import os
+#    import subprocess
+#    import shlex
 
     pwd = os.getcwd()
+    VF = GetValue(run_ID, mat_ID, "VF_wido")    
 
     # Simulate METHANE LOADING
     ML_input = open( pwd + '/MethaneLoading.input', "w")
@@ -55,9 +122,9 @@ def MethaneLoading(run_ID, mat_ID, VF_val):
                     "Framework 0\n" +
                     "FrameworkName %s-%s\n" % (run_ID, mat_ID) +
                     "UnitCells 1 1 1\n" +
-                    "HeliumVoidFraction %s\n" % (VF_val) +
-                    "ExternalTemperature 298.0\n" +       # External temperature, K
-                    "ExternalPressure 3500000\n" +        # External pressure, Pa
+                    "HeliumVoidFraction %s\n" % (VF) +
+                    "ExternalTemperature 298.0\n" +            # External temperature, K
+                    "ExternalPressure 3500000\n" +             # External pressure, Pa
                     "\n" +
                     "Component 0 MoleculeName\t\tmethane\n" +
                     "            MoleculeDefinition\t\tTraPPE\n" +
@@ -72,10 +139,10 @@ def MethaneLoading(run_ID, mat_ID, VF_val):
 
 
 def SurfaceArea(run_ID, mat_ID):
-
-    import os
-    import subprocess
-    import shlex
+#
+#    import os
+#    import subprocess
+#    import shlex
 
     pwd = os.getcwd()
 
@@ -105,65 +172,9 @@ def SurfaceArea(run_ID, mat_ID):
     subprocess.call(shlex.split( rd + '/bin/simulate -i SurfaceArea.input' ))
 
 
-def simulate(run_ID, mat_ID):
+def GetML(run_ID, mat_ID):
 
-    import os
-    import subprocess
-    import shlex
-    import shutil
-    
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    
-    from runDB_declarative import RunData, Base
-
-    import numpy as np
-
-    print("\nMATERIAL ID :   %s-%s\n" % (run_ID, mat_ID) )
-
-    engine = create_engine( "sqlite:///HTSOHM-dev.db" )
-    Base.metadata.bind = engine
-
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
-
-    check_first = session.query(RunData).filter( RunData.Run == run_ID,
-                                                 RunData.Mat == str(mat_ID) ).count()
-    if not check_first:
-        new_mat = RunData( Run=run_ID, Mat=str(mat_ID) )
-        session.add(new_mat)
-        session.commit()
-
-    DBmat = session.query(RunData).filter( RunData.Run == run_ID,
-                                           RunData.Mat == str(mat_ID) )
-
-    # Simulate VOID FRACTION:
-    VoidFraction(run_ID, mat_ID)
-
-    VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, mat_ID)
-    with open(VF_data) as origin:
-        for line in origin:
-            if not "Average Widom:" in line:
-                continue
-            try:
-                VF_val = line.split()[3]
-            except IndexError:
-                print()
-
-    # Add to database...
-    DBmat.update({'VF_wido': VF_val})
-    session.commit()
-
-    print( "\nVOID FRACTION :   %s\n" % (VF_val) )
-
-    os.remove("VoidFraction.input")
-    shutil.rmtree("Output")
-    shutil.rmtree("Movies")
-    shutil.rmtree("VTK")
-    shutil.rmtree("Restart")
-
-    # Simulate METHANE LOADING:
-    MethaneLoading(run_ID, mat_ID, VF_val)
+    MethaneLoading(run_ID, mat_ID)
 
     ML_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_ID, mat_ID)
     with open(ML_data) as origin:
@@ -181,13 +192,13 @@ def simulate(run_ID, mat_ID):
             elif "excess [cm^3 (STP)/c" in line:
                 ML_e_cc = line.split()[6]
 
-    DBmat.update({'Abs_cccc': ML_a_cc,
-                  'Abs_ccgr': ML_a_cg,
-                  'Abs_mokg': ML_a_mk,
-                  'Exc_cccc': ML_e_cc,
-                  'Exc_ccgr': ML_e_cg,
-                  'Exc_mokg': ML_e_mk})
-    session.commit()
+    data = {'Abs_cccc': ML_a_cc,
+            'Abs_ccgr': ML_a_cg,
+            'Abs_mokg': ML_a_mk,
+            'Exc_cccc': ML_e_cc,
+            'Exc_ccgr': ML_e_cg,
+            'Exc_mokg': ML_e_mk}
+    UpdateTable(run_ID, mat_ID, data)
 
     print( "\nMETHANE LOADING\tabsolute\texcess\n" +
            "mol/kg\t\t%s\t%s\n" % (ML_a_mk, ML_e_mk) +
@@ -201,6 +212,8 @@ def simulate(run_ID, mat_ID):
     shutil.rmtree("VTK")
     shutil.rmtree("Restart")
 
+
+def GetSA(run_ID, mat_ID):
     SurfaceArea(run_ID, mat_ID)
 
     SA_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, mat_ID)
@@ -217,8 +230,10 @@ def simulate(run_ID, mat_ID):
                 elif count == 2:
                     SA_mc = line.split()[2]
     
-    DBmat.update({'SA_A2': SA_a2, 'SA_m2cc': SA_mc, 'SA_m2gr': SA_mg})
-    session.commit()
+    data = {'SA_A2': SA_a2,
+            'SA_m2cc': SA_mc,
+            'SA_m2gr': SA_mg}
+    UpdateTable(run_ID, mat_ID, data)
 
     print( "\nSURFACE AREA\n" +
            "%s\tA^2\n" % (SA_a2) +
@@ -231,6 +246,46 @@ def simulate(run_ID, mat_ID):
     shutil.rmtree("VTK")
     shutil.rmtree("Restart")    
 
+
+def GetVF(run_ID, mat_ID):
+
+    VoidFraction(run_ID, mat_ID)
+
+    VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, mat_ID)
+    with open(VF_data) as origin:
+       for line in origin:
+#            if not "Average Widom:" in line:
+#                continue
+#            try:
+#                VF_val = line.split()[3]
+#            except IndexError:
+#                print()
+            if not "Average Widom Rosenbluth-weight:" in line:       #ONLY ON AKAIJA BUILD
+                continue
+            try:
+                VF_val = line.split()[4]
+            except IndexError:
+                print()
+
+    # Add to database...
+    data = {'VF_wido': VF_val}
+    UpdateTable(run_ID, mat_ID, data)
+
+    print( "\nVOID FRACTION :   %s\n" % (VF_val) )
+
+    os.remove("VoidFraction.input")
+    shutil.rmtree("Output")
+    shutil.rmtree("Movies")
+    shutil.rmtree("VTK")
+    shutil.rmtree("Restart")
+
+
+def GetBins(run_ID, mat_ID):
+   
+    ML = GetValue(run_ID, mat_ID, "Abs_cccc")
+    SA = GetValue(run_ID, mat_ID, "SA_m2cc")
+    VF = GetValue(run_ID, mat_ID, "VF_wido")
+ 
     # Arbitary structure-property space "boundaries"
     ML_min = 0.
     ML_max = 350.
@@ -249,10 +304,6 @@ def simulate(run_ID, mat_ID):
     SA_edges = np.arange( SA_min, SA_max + SA_step, SA_step )
     VF_edges = np.arange( VF_min, VF_max + VF_step, VF_step )
 
-    SA = float(SA_mc)
-    ML = float(ML_a_cc)
-    VF = float(VF_val)
-
     for i in range( bins ):
         if SA >= SA_edges[i] and SA < SA_edges[i + 1]:
             SA_bin = i
@@ -261,35 +312,40 @@ def simulate(run_ID, mat_ID):
         if VF >= VF_edges[i] and VF < VF_edges[i + 1]:
             VF_bin = i
 
-    DBmat.update({'Bin_ML': str(ML_bin), 'Bin_SA': str(SA_bin), 'Bin_VF': str(VF_bin)})
-    session.commit()
+    data = {'Bin_ML': str(ML_bin),
+            'Bin_SA': str(SA_bin),
+            'Bin_VF': str(VF_bin)}
+    UpdateTable(run_ID, mat_ID, data)
+
+
+def simulate(run_ID, mat_IDs):
+   for i in mat_IDs:
+       GetVF(run_ID, i)
+       GetML(run_ID, i)
+       GetSA(run_ID, i)
+       GetBins(run_ID, i)
 
 
 def DummyTest(run_ID, generation):
+#
+#    import os
+#    import subprocess
+#    import shlex
+#    import shutil
+#    
+#    from sqlalchemy import create_engine
+#    from sqlalchemy.orm import sessionmaker
+#    
+#    from runDB_declarative import RunData, Base
+#
+#    import numpy as np
 
-    import os
-    import subprocess
-    import shlex
-    import shutil
-    
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    
-    from runDB_declarative import RunData, Base
+    s = CreateSession()
 
-    import numpy as np
-
-    Tolerance = 0.1      # Acceptable deviation from original value(s)...
-    NumberOfTrials = 5   # Number of times each simulation is repeated.
-
-    engine = create_engine( "sqlite:///HTSOHM-dev.db" )
-    Base.metadata.bind = engine
-
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
+    Tolerance = 0.05      # Acceptable deviation from original value(s)...
+    NumberOfTrials = 3   # Number of times each simulation is repeated.
 
     wd = os.environ['HTSOHM_DIR']
-
     with open(wd + '/' + run_ID + '.txt') as origin:
         for line in origin:
             if "Children per generation:" in line:
@@ -300,22 +356,19 @@ def DummyTest(run_ID, generation):
 
     p_IDs = []
     for i in c_IDs:
-        DBchild = session.query(RunData).filter( RunData.Run == run_ID,
-                                                 RunData.Mat == str(i) )
-        for item in DBchild:
-            p_ID = item.Parent
-        p_IDs.append( p_ID )
+
+        pID = GetValue(run_ID, i, "Parent")
+        if pID not in p_IDs:
+            p_IDs.append(pID)
 
     BadMaterials = []
     for i in p_IDs:
 
         print( "\nRe-Simulating %s-%s...\n" % (run_ID, i) )
-        DBmat = session.query(RunData).filter( RunData.Run == run_ID,
-                                               RunData.Mat == str(i) )
-        for item in DBmat:
-            ML_o = item.Abs_cccc
-            SA_o = item.SA_m2cc
-            VF_o = item.VF_wido
+
+        ML_o = GetValue(run_ID, i, "Abs_cccc")
+        SA_o = GetValue(run_ID, i, "SA_m2cc")
+        VF_o = GetValue(run_ID, i, "VF_wido")
 
         VFs = []
         for j in range(NumberOfTrials):
@@ -323,17 +376,24 @@ def DummyTest(run_ID, generation):
             VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, i)
             with open(VF_data) as origin:
                 for line in origin:
-                    if not "Average Widom:" in line:
+#                    if not "Average Widom:" in line:
+#                        continue
+#                    try:  
+#                        VF_val = line.split()[3]
+#                    except IndexError:
+#                        print()
+                    if not "Average Widom Rosenbluth-weight:" in line:       #ONLY ON AKAIJA BUILD
                         continue
-                    try:  
-                        VF_val = line.split()[3]
+                    try:
+                        VF_val = line.split()[4]
                     except IndexError:
                         print()
+
             VFs.append( float(VF_val) )
 
         MLs = []
         for j in range(NumberOfTrials):
-            MethaneLoading(run_ID, i, VFs[j])
+            MethaneLoading(run_ID, i)
             ML_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_ID, i)
             with open(ML_data) as origin:
                 for line in origin:
