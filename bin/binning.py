@@ -1,28 +1,21 @@
+import numpy as np
+
+from runDB_declarative import Base, RunData
+from simulate import CreateSession, AddRows, UpdateTable
 
 
 def CountBin(run_ID, ML_bin, SA_bin, VF_bin):
-
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    from runDB_declarative import RunData, Base
-
-    engine = create_engine( "sqlite:///HTSOHM-dev.db" )
-    Base.metadata.bind = engine
-
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
-
-    BinCount = session.query(RunData).filter(RunData.Run == run_ID,
-                                             RunData.Bin_ML == ML_bin,
-                                             RunData.Bin_SA == SA_bin,
                                              RunData.Bin_VF == VF_bin).count()
+    s = CreateSession()
+    BinCount = s.query(RunData).filter(RunData.Run == run_ID,
+                                       RunData.Bin_ML == ML_bin,
+                                       RunData.Bin_SA == SA_bin,
+                                       RunData.Bin_VF == VF_bin).count()
 
     return BinCount
 
 
 def CountAll(run_ID):
-    
-    import numpy as np
 
     bins = int(run_ID[-1])
     AllCounts = np.zeros([bins, bins, bins])
@@ -39,17 +32,7 @@ def CountAll(run_ID):
 
 def SelectParents(run_ID, children_per_generation, generation):
 
-    import numpy as np
-
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    from runDB_declarative import RunData, Base
-
-    engine = create_engine( "sqlite:///HTSOHM-dev.db" )
-    Base.metadata.bind = engine
-
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
+   s = CreateSession()
 
     bins = int(run_ID[-1])
     counts = CountAll(run_ID)
@@ -69,10 +52,10 @@ def SelectParents(run_ID, children_per_generation, generation):
             w_list = np.concatenate( [w_list, weights[i,j,:]] )
             for k in range(bins):
                 bin_IDs = []
-                res = session.query(RunData).filter(RunData.Run == run_ID,
-                                                         RunData.Bin_ML == i,
-                                                         RunData.Bin_SA == j,
-                                                         RunData.Bin_VF == k).all()
+                res = s.query(RunData).filter(RunData.Run == run_ID,
+                                              RunData.Bin_ML == i,
+                                              RunData.Bin_SA == j,
+                                              RunData.Bin_VF == k).all()
                 for item in res:
                     bin_IDs.append(item.Mat)
                 ID_list = ID_list + [bin_IDs]
@@ -86,21 +69,12 @@ def SelectParents(run_ID, children_per_generation, generation):
         p_bin = np.random.choice(ID_list, p=w_list)
         p_ID = np.random.choice(p_bin)                     # Select parent for new material
 
-        # Write parent IDs to database...
-        check_first = session.query(RunData).filter( RunData.Run == run_ID,
-                                                     RunData.Mat == str(i) ).count()
-        if not check_first:
-            new_mat = RunData( Run=run_ID, Mat=str(i) )
-            session.add(new_mat)
-            session.commit()
+        AddRows(run_ID, [i])
+        data = {'Parent': str(p_ID)}
+        UpdateTable(run_ID, i, data)
+   
 
-        NextMat = session.query(RunData).filter( RunData.Run == run_ID,
-                                                 RunData.Mat == str(i) )
-        NextMat.update({'Parent': str(p_ID)})
-        session.commit()
-    
-
-def CheckConvergance(run_ID):
-
-    counts = CountAll(run_ID)
+#def CheckConvergance(run_ID):
+#
+#    counts = CountAll(run_ID)
        

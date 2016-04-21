@@ -60,7 +60,6 @@ def HTSOHM(children_per_generation,    # number of materials per generation
     mut.FirstS(run_ID, strength_0)     # Create strength-parameter array `run_ID`.npy
     mut.mutate(run_ID, generation)     # Create first generation of child-materials
 
-    sim.AddRows( run_ID, GenIDs(generation, children_per_generation) )
     sim.simulate( run_ID, GenIDs(generation, children_per_generation) )
 
 
@@ -73,7 +72,6 @@ def HTSOHM(children_per_generation,    # number of materials per generation
         sim.DummyTest(run_ID, generation)
         mut.CalculateS(run_ID, generation)
         mut.mutate(run_ID, generation)
-        sim.AddRows( run_ID, GenIDs(generation, children_per_generation) )
         sim.simulate( run_ID, GenIDs(generation, children_per_generation) )
 
 def GenIDs(generation, children_per_generation):
