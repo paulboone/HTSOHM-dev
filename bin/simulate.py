@@ -64,6 +64,19 @@ def GetValue(run_ID, mat_ID, value):
 
     return DBval
 
+def id_to_mat(run_ID, ID):
+#
+#    from runDB_declarative import RunData
+
+    s = CreateSession()
+    DBmat = s.query(RunData).filter( RunData.Run == run_ID,
+                                     RunData.id == str(ID) )
+
+    for i in DBmat:
+        mat = getattr(i, "Mat")
+
+    return mat
+
 
 def VoidFraction(run_ID, mat_ID):
 #
@@ -77,7 +90,7 @@ def VoidFraction(run_ID, mat_ID):
     VF_input = open( pwd + '/VoidFraction.input', "w")
     VF_input.write( "SimulationType\t\t\tMonteCarlo\n" +
                     "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
-                    "PrintEvery\t\t\t100\n" +
+         "PrintEvery\t\t\t100\n" +
                     "PrintPropertiesEvery\t\t100\n" +
                     "\n" +
                     "Forcefield\t\t\t%s-%s\n" % (run_ID, mat_ID) +
@@ -362,17 +375,18 @@ def DummyTest(run_ID, generation):
 
     BadMaterials = []
     for i in p_IDs:
+        matID = id_to_mat(run_ID, i)
 
-        print( "\nRe-Simulating %s-%s...\n" % (run_ID, i) )
+        print( "\nRe-Simulating %s-%s...\n" % (run_ID, matID) )
 
-        ML_o = GetValue(run_ID, i, "Abs_cccc")
-        SA_o = GetValue(run_ID, i, "SA_m2cc")
-        VF_o = GetValue(run_ID, i, "VF_wido")
+        ML_o = GetValue(run_ID, matID, "Abs_cccc")
+        SA_o = GetValue(run_ID, matID, "SA_m2cc")
+        VF_o = GetValue(run_ID, matID, "VF_wido")
 
         VFs = []
         for j in range(NumberOfTrials):
-            VoidFraction(run_ID, i)
-            VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, i)
+            VoidFraction(run_ID, matID)
+            VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, matID)
             with open(VF_data) as origin:
                 for line in origin:
 #                    if not "Average Widom:" in line:
@@ -392,8 +406,8 @@ def DummyTest(run_ID, generation):
 
         MLs = []
         for j in range(NumberOfTrials):
-            MethaneLoading(run_ID, i)
-            ML_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_ID, i)
+            MethaneLoading(run_ID, matID)
+            ML_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_ID, matID)
             with open(ML_data) as origin:
                 for line in origin:
                     if "absolute [cm^3 (STP)/c" in line:
@@ -402,8 +416,8 @@ def DummyTest(run_ID, generation):
 
         SAs = []
         for j in range(NumberOfTrials):
-            SurfaceArea(run_ID, i)
-            SA_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, i)
+            SurfaceArea(run_ID, matID)
+            SA_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, matID)
             with open(SA_data) as origin:
                 count = 0
                 for line in origin:
@@ -431,17 +445,17 @@ def DummyTest(run_ID, generation):
             Failed.append(i)
 
     for i in p_IDs:
+        matID = id_to_mat(run_ID, i)
         if i not in Failed:
             data = {'D_pass': 'y'}
-            UpdateTable(run_ID, i, data)
+            UpdateTable(run_ID, matID, data)
         elif i in Failed:
             data = {'D_pass': 'n'}
-            UpdateTable(run_ID, i, data)
+            UpdateTable(run_ID, matID, data)
             AffectedMats = s.query(RunData).filter(RunData.Run == run_ID,
                                                    RunData.Parent == i).all()
             Maybes = [j.Mat for j in AffectedMats]
             for j in Maybes:
-                data = {'D_pass': 'm'}
                 UpdateTable(run_ID, j, data)
                                                     
     if len(Failed) == 0:
@@ -449,7 +463,8 @@ def DummyTest(run_ID, generation):
     if len(Failed) != 0:
         print( "\nTHE FOLLOWING PARENTS IN GENERATION %s FAIL THE DUMMY TEST:" % (generation) )
         for i in Failed:
-            print( "\t%s-%s\n" % (run_ID, i) )
+            matID = id_to_mat(run_ID, i)
+            print( "\t%s-%s\n" % (run_ID, matID) )
 
 
 if __name__ == "__main__":

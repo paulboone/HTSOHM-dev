@@ -1,23 +1,30 @@
 import numpy as np
 
 from runDB_declarative import Base, RunData
-from simulate import CreateSession, AddRows, UpdateTable
+from simulate import CreateSession, GetValue, AddRows, UpdateTable
 
 
 def CountBin(run_ID, ML_bin, SA_bin, VF_bin):
     
     s = CreateSession()
-    c0 = s.query(RunData).filter(RunData.Run == run_ID,
+    c0 = s.query(RunData).filter(RunData.Run == run_ID,              # Not dummy-tested
                                  RunData.Bin_ML == ML_bin,
                                  RunData.Bin_SA == SA_bin,
                                  RunData.Bin_VF == VF_bin,
                                  RunData.D_pass == None).count()
-    c1 = s.query(RunData).filter(RunData.Run == run_ID,
+    c1 = s.query(RunData).filter(RunData.Run == run_ID,              # Passed dummy-test
                                  RunData.Bin_ML == ML_bin,
                                  RunData.Bin_SA == SA_bin,
                                  RunData.Bin_VF == VF_bin,
                                  RunData.D_pass == 'y').count()
-    BinCount = c0 + c1
+    c2 = s.query(RunData).filter(RunData.Run == run_ID,              # Parent failed dummy-test, child not tested
+                                 RunData.Bin_ML == ML_bin,
+                                 RunData.Bin_SA == SA_bin,
+                                 RunData.Bin_VF == VF_bin,
+                                 RunData.D_pass == 'm').count()
+
+
+    BinCount = c0 + c1 + c2
 
     return BinCount
 
@@ -73,6 +80,13 @@ def SelectParents(run_ID, children_per_generation, generation):
                                               RunData.D_pass == 'y').all()
                 for item in res:
                     bin_IDs.append(item.Mat)
+                res = s.query(RunData).filter(RunData.Run == run_ID,
+                                              RunData.Bin_ML == i,
+                                              RunData.Bin_SA == j,
+                                              RunData.Bin_VF == k,
+                                              RunData.D_pass == 'm').all()
+                for item in res:
+                    bin_IDs.append(item.Mat)
                 ID_list = ID_list + [bin_IDs]
 
     first = generation * children_per_generation
@@ -84,8 +98,10 @@ def SelectParents(run_ID, children_per_generation, generation):
         p_bin = np.random.choice(ID_list, p=w_list)
         p_ID = np.random.choice(p_bin)                     # Select parent for new material
 
+        _id =GetValue(run_ID, p_ID, "id")
+
         AddRows(run_ID, [i])
-        data = {'Parent': str(p_ID)}
+        data = {'Parent': _id}
         UpdateTable(run_ID, i, data)
    
 

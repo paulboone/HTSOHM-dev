@@ -8,7 +8,7 @@ from random import random, choice
 
 from runDB_declarative import Base, RunData
 import binning as bng
-from simulate import GetValue
+from simulate import GetValue, id_to_mat
 
 
 # Create "strength" array...
@@ -45,7 +45,7 @@ def CalculateS(run_ID, generation):
     p_IDs = []
     p_bins = []
     for i in c_IDs:
-        p_ID = GetValue(run_ID, i, "Parent")
+        p_ID = GetValue(run_ID, i, "Mat")
         p_IDs.append( p_ID )
         p_MLb = GetValue(run_ID, p_ID, "Bin_ML")
         p_SAb = GetValue(run_ID, p_ID, "Bin_SA")
@@ -59,7 +59,7 @@ def CalculateS(run_ID, generation):
     gp_IDs = []
     gp_bins = []
     for i in pgen_IDs:
-        gp_ID = GetValue(run_ID, i, "Parent")
+        gp_ID = GetValue(run_ID, i, "id")
         gp_IDs.append( gp_ID )
         gp_MLb = GetValue(run_ID, gp_ID, "Bin_ML")
         gp_SAb = GetValue(run_ID, gp_ID, "Bin_SA")
@@ -219,11 +219,10 @@ def mutate(run_ID, generation):
 
 
     for i in child_IDs:
-
         child_ID = str(i)
-        # Find parent ID
-        p_ID = GetValue(run_ID, child_ID, "Parent")
-        p_MLb = GetValue(run_ID, p_ID, "Bin_ML")
+        p = GetValue(run_ID, child_ID, "Parent")        # Find parent ID
+        p_ID = id_to_mat(run_ID, p)
+        p_MLb = GetValue(run_ID, p_ID, "Bin_ML")           # Find parent-bin coordinates
         p_SAb = GetValue(run_ID, p_ID, "Bin_SA")
         p_VFb = GetValue(run_ID, p_ID, "Bin_VF")
         strength = Strength[p_MLb, p_SAb, p_VFb]
