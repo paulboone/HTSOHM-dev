@@ -13,12 +13,11 @@ also requires `RASPA-2.0`, available :
 
 https://github.com/numat/RASPA2   
 
-To configure HTSOHM, you may run `configure.sh`, which exports    
-`$HTSOHM_DIR` to the directory in which the package was cloned.    
-The RASPA directory (`$RASPA_DIR`) assumes a default installation   
-in `$HOME`. The shell script also writes the following to `~/.bashrc`:    
+To configure HTSOHM, you may run `configure.sh`, which writes the following    
+to `~/.bashrc`:    
 ```
- export HTSOHM_DIR=${HTSOHM_DIR}
+ export RASPA_DIR=${HOME}/RASPA        # for a default RASPA build
+ export HTSOHM_DIR=${HOME}/HTSOHM-dev  # if cloned into ${HOME}
  export RASPA_DIR=${RASPA_DIR}
  export SRC_DIR=${HTSOHM_DR}/bin
  export FF_DIR=${RASPA_DIR}/share/raspa/forcefield
@@ -26,9 +25,10 @@ in `$HOME`. The shell script also writes the following to `~/.bashrc`:
 ```
 To run the program, execute:    
   `python $HTSOHM_DIR/bin/HTSOHM.py <MpG> <NoA> <S0> <NoB>`    
-Where `<MpG>`is the number of materials per generation, and    
-<NoA>` the number of atom-types, `<S0>` the initial strength-    
-parameter, and `<NoB>` the number of bins.
+`<MpG>` : number of materials per generation.   
+`<NoA>` : number of atom-types.   
+`<S0>`  : initial strength-parameter. 
+`<NoB>` : number of bins.
 
 By default the program will terminate after 20 generations.   
    
