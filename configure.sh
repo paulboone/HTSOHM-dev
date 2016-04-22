@@ -1,8 +1,7 @@
 #!/bin/bash
 
-export HTSOHM_DIR=${PWD}          # specifies HTSOHM directory
-export RASPA_DIR=${HOME}/RASPA    # specifies RASPA directory
-
+HTSOHM_DIR=${PWD}          # specifies HTSOHM directory
+RASPA_DIR=${HOME}/RASPA    # specifies RASPA directory
 
 #writing environment variables to .bashrc
 DEST=~/.bashrc
@@ -12,7 +11,10 @@ echo "export RASPA_DIR=${RASPA_DIR}" >> $DEST
 echo "export SRC_DIR=\${HTSOHM_DIR}/bin" >> $DEST
 echo "export FF_DIR=\${RASPA_DIR}/share/raspa/forcefield" >> $DEST
 echo "export MAT_DIR=\${RASPA_DIR}/share/raspa/structures/cif" >> $DEST
-echo "# " >> ~/.bashrc
+echo "# " >> $DEST
+
+#load updated .bashrc into this console
+source $DEST
 
 #create local database/table...
 python $HTSOHM_DIR/bin/runDB_declarative.py
