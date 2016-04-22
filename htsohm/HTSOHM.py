@@ -80,11 +80,3 @@ def GenIDs(generation, children_per_generation):
     GenIDs = np.arange(first, last)
 
     return GenIDs
-
-
-if __name__ == "__main__":
-    import sys
-    HTSOHM(int(sys.argv[1]),
-           int(sys.argv[2]),
-           float(sys.argv[3]),
-           int(sys.argv[4]))
