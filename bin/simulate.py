@@ -107,8 +107,7 @@ def VoidFraction(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0" )
     VF_input.close()
 
-    rd = os.environ['RASPA_DIR']
-    subprocess.call(shlex.split( rd + '/bin/simulate -i VoidFraction.input' ))
+    subprocess.call(shlex.split('simulate -i VoidFraction.input'))
 
 def MethaneLoading(run_ID, mat_ID):
 #
@@ -146,8 +145,7 @@ def MethaneLoading(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0" )
     ML_input.close()
 
-    rd = os.environ['RASPA_DIR']
-    subprocess.call(shlex.split( rd + '/bin/simulate -i MethaneLoading.input' ))
+    subprocess.call(shlex.split('simulate -i MethaneLoading.input'))
 
 
 def SurfaceArea(run_ID, mat_ID):
@@ -180,8 +178,7 @@ def SurfaceArea(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0" )
     SA_input.close()
 
-    rd = os.environ['RASPA_DIR']
-    subprocess.call(shlex.split( rd + '/bin/simulate -i SurfaceArea.input' ))
+    subprocess.call(shlex.split('simulate -i SurfaceArea.input'))
 
 
 def GetML(run_ID, mat_ID):
