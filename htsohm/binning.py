@@ -1,7 +1,7 @@
 import numpy as np
 
-from runDB_declarative import Base, RunData
-from simulate import CreateSession, GetValue, AddRows, UpdateTable
+from htsohm.runDB_declarative import Base, RunData
+from htsohm.simulate import CreateSession, GetValue, AddRows, UpdateTable
 
 
 def CountBin(run_ID, ML_bin, SA_bin, VF_bin):

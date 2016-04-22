@@ -6,10 +6,10 @@ import datetime
 
 import numpy as np
 
-import generate as gen
-import simulate as sim
-import binning as bng
-import mutate as mut
+from htsohm import generate as gen
+from htsohm import simulate as sim
+from htsohm import binning as bng
+from htsohm import mutate as mut
 
 
 def HTSOHM(children_per_generation,    # number of materials per generation

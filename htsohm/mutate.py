@@ -4,9 +4,8 @@ import shutil
 import numpy as np
 from random import random, choice
 
-import binning as bng
-from simulate import GetValue, id_to_mat
-
+from htsohm import binning as bng
+from htsohm.simulate import GetValue, id_to_mat
 
 # Create "strength" array...
 def FirstS(run_ID, strength_0):
@@ -363,4 +362,4 @@ def mutate(run_ID, generation):
         cif_file.close()
         mix_file.close()
 
-    print( "...done!\n" )        
+    print( "...done!\n" )
