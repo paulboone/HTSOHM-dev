@@ -2,7 +2,7 @@
 
 import sys
 import os
-import datetime 
+import datetime
 
 import numpy as np
 
@@ -29,12 +29,12 @@ def HTSOHM(children_per_generation,    # number of materials per generation
                 strength_0,
                 number_of_bins))
 
-    wd = os.environ['HTSOHM_DIR']      # specify working directory          
+    wd = os.environ['HTSOHM_DIR']      # specify working directory
 
     run_file = open( wd + '/' + run_ID + '.txt', "w")
     run_file.write( "Date:\t\t\t\t%s:%s:%s\n" % (start.day, start.month,
                                                  start.year) +
-                    "Time:\t\t\t\t%s:%s:%s\n" % (start.hour, start.minute, 
+                    "Time:\t\t\t\t%s:%s:%s\n" % (start.hour, start.minute,
                                                  start.second) +
                     "Children per generation:\t%s\n" % (
                                                  children_per_generation) +

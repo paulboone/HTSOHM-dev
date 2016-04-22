@@ -38,4 +38,3 @@ engine = create_engine("sqlite:///HTSOHM-dev.db")
 
 # Create table in the engine.
 Base.metadata.create_all(engine)
-

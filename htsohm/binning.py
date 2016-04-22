@@ -54,7 +54,7 @@ def SelectParents(run_ID, children_per_generation, generation):
 
     for i in range(bins):
         for j in range(bins):
-            for k in range(bins):    
+            for k in range(bins):
                 if counts[i,j,k] != 0.:
                     weights[i,j,k] = counts.sum() / counts[i,j,k]
     weights = weights / weights.sum()
