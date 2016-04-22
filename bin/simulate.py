@@ -104,7 +104,7 @@ def VoidFraction(run_ID, mat_ID):
                     "Component 0 MoleculeName\t\thelium\n" +
                     "            MoleculeDefinition\t\tTraPPE\n" +
                     "            WidomProbability\t\t1.0\n" +
-                    "            CreateNumberOfMolecules\t0" )
+                    "            CreateNumberOfMolecules\t0\n" )
     VF_input.close()
 
     subprocess.call(shlex.split('simulate -i VoidFraction.input'))
@@ -142,7 +142,7 @@ def MethaneLoading(run_ID, mat_ID):
                     "            TranslationProbability\t1.0\n" +
                     "            ReinsertionProbability\t1.0\n" +
                     "            SwapProbability\t\t1.0\n" +
-                    "            CreateNumberOfMolecules\t0" )
+                    "            CreateNumberOfMolecules\t0\n" )
     ML_input.close()
 
     subprocess.call(shlex.split('simulate -i MethaneLoading.input'))
@@ -175,7 +175,7 @@ def SurfaceArea(run_ID, mat_ID):
                     "            StartingBead\t\t0\n" +
                     "            MoleculeDefinition\t\tTraPPE\n" +
                     "            SurfaceAreaProbability\t1.0\n" +
-                    "            CreateNumberOfMolecules\t0" )
+                    "            CreateNumberOfMolecules\t0\n" )
     SA_input.close()
 
     subprocess.call(shlex.split('simulate -i SurfaceArea.input'))
