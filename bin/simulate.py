@@ -32,10 +32,11 @@ def AddRows(run_ID, mat_IDs):
     s = CreateSession()
 
     for i in mat_IDs:
-        check_first = s.query(RunData).filter( RunData.Run == run_ID,
-                                               RunData.Mat == str(i) ).count()
+        check_first = s.query(RunData).filter( RunData.run_id == run_ID,
+                                               RunData.material_id == str(i) 
+                                              ).count()
         if not check_first:
-            new_mat = RunData( Run=run_ID, Mat=str(i) )
+            new_mat = RunData( run_id=run_ID, material_id=str(i) )
             s.add(new_mat)
     s.commit()
 
@@ -45,8 +46,8 @@ def UpdateTable(run_ID, mat_ID, data):
 #   from runDB_declarative import RunData
 
     s = CreateSession()
-    DBmat = s.query(RunData).filter( RunData.Run == run_ID,
-                                     RunData.Mat == str(mat_ID) )
+    DBmat = s.query(RunData).filter( RunData.run_id == run_ID,
+                                     RunData.material_id == str(mat_ID) )
     DBmat.update(data)
     s.commit()
 
@@ -56,8 +57,8 @@ def GetValue(run_ID, mat_ID, value):
 #    from runDB_declarative import RunData
 
     s = CreateSession()
-    DBmat = s.query(RunData).filter( RunData.Run == run_ID,
-                                     RunData.Mat == str(mat_ID) )
+    DBmat = s.query(RunData).filter( RunData.run_id == run_ID,
+                                     RunData.material_id == str(mat_ID) )
 
     for i in DBmat:
         DBval = getattr(i, value)
@@ -69,11 +70,11 @@ def id_to_mat(run_ID, ID):
 #    from runDB_declarative import RunData
 
     s = CreateSession()
-    DBmat = s.query(RunData).filter( RunData.Run == run_ID,
+    DBmat = s.query(RunData).filter( RunData.run_id == run_ID,
                                      RunData.id == str(ID) )
 
     for i in DBmat:
-        mat = getattr(i, "Mat")
+        mat = getattr(i, "material_id")
 
     return mat
 
@@ -107,7 +108,7 @@ def VoidFraction(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     VF_input.close()
 
-    subprocess.call(shlex.split('simulate -i VoidFraction.input'))
+    subprocess.call(shlex.split('simulate VoidFraction.input'))
 
 def MethaneLoading(run_ID, mat_ID):
 #
@@ -116,7 +117,7 @@ def MethaneLoading(run_ID, mat_ID):
 #    import shlex
 
     pwd = os.getcwd()
-    VF = GetValue(run_ID, mat_ID, "VF_wido")    
+    VF = GetValue(run_ID, mat_ID, "helium_void_fraction")    
 
     # Simulate METHANE LOADING
     ML_input = open( pwd + '/MethaneLoading.input', "w")
@@ -145,7 +146,7 @@ def MethaneLoading(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     ML_input.close()
 
-    subprocess.call(shlex.split('simulate -i MethaneLoading.input'))
+    subprocess.call(shlex.split('simulate MethaneLoading.input'))
 
 
 def SurfaceArea(run_ID, mat_ID):
@@ -178,7 +179,7 @@ def SurfaceArea(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     SA_input.close()
 
-    subprocess.call(shlex.split('simulate -i SurfaceArea.input'))
+    subprocess.call(shlex.split('simulate SurfaceArea.input'))
 
 
 def GetML(run_ID, mat_ID):
@@ -201,12 +202,12 @@ def GetML(run_ID, mat_ID):
             elif "excess [cm^3 (STP)/c" in line:
                 ML_e_cc = line.split()[6]
 
-    data = {'Abs_cccc': ML_a_cc,
-            'Abs_ccgr': ML_a_cg,
-            'Abs_mokg': ML_a_mk,
-            'Exc_cccc': ML_e_cc,
-            'Exc_ccgr': ML_e_cg,
-            'Exc_mokg': ML_e_mk}
+    data = {"absolute_volumetric_loading": ML_a_cc,
+            "absolute_gravimetric_loading": ML_a_cg,
+            "absolute_molar_loading": ML_a_mk,
+            "excess_volumetric_loading": ML_e_cc,
+            "excess_gravimetric_loading": ML_e_cg,
+            "excess_molar_loading": ML_e_mk}
     UpdateTable(run_ID, mat_ID, data)
 
     print( "\nMETHANE LOADING\tabsolute\texcess\n" +
@@ -239,9 +240,9 @@ def GetSA(run_ID, mat_ID):
                 elif count == 2:
                     SA_mc = line.split()[2]
     
-    data = {'SA_A2': SA_a2,
-            'SA_m2cc': SA_mc,
-            'SA_m2gr': SA_mg}
+    data = {"unit_cell_surface_area": SA_a2,
+            "volumetric_surface_area": SA_mc,
+            "gravimetric_surface_area": SA_mg}
     UpdateTable(run_ID, mat_ID, data)
 
     print( "\nSURFACE AREA\n" +
@@ -262,25 +263,19 @@ def GetVF(run_ID, mat_ID):
 
     VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, mat_ID)
     with open(VF_data) as origin:
-       for line in origin:
-#            if not "Average Widom:" in line:
-#                continue
-#            try:
-#                VF_val = line.split()[3]
-#            except IndexError:
-#                print()
-            if not "Average Widom Rosenbluth-weight:" in line:       #ONLY ON AKAIJA BUILD
+        for line in origin:
+            if not "Average Widom Rosenbluth-weight:" in line:
                 continue
             try:
-                VF_val = line.split()[4]
+                VF_val = float(line.split()[4][:-1])
             except IndexError:
                 print()
 
-    # Add to database...
-    data = {'VF_wido': VF_val}
-    UpdateTable(run_ID, mat_ID, data)
-
     print( "\nVOID FRACTION :   %s\n" % (VF_val) )
+
+    # Add to database...
+    data = {"helium_void_fraction": VF_val}
+    UpdateTable(run_ID, mat_ID, data)
 
     os.remove("VoidFraction.input")
     shutil.rmtree("Output")
@@ -291,9 +286,9 @@ def GetVF(run_ID, mat_ID):
 
 def GetBins(run_ID, mat_ID):
    
-    ML = GetValue(run_ID, mat_ID, "Abs_cccc")
-    SA = GetValue(run_ID, mat_ID, "SA_m2cc")
-    VF = GetValue(run_ID, mat_ID, "VF_wido")
+    ML = GetValue(run_ID, mat_ID, "absolute_volumetric_loading")
+    SA = GetValue(run_ID, mat_ID, "volumetric_surface_area")
+    VF = GetValue(run_ID, mat_ID, "helium_void_fraction")
  
     # Arbitary structure-property space "boundaries"
     ML_min = 0.
@@ -321,9 +316,9 @@ def GetBins(run_ID, mat_ID):
         if VF >= VF_edges[i] and VF < VF_edges[i + 1]:
             VF_bin = i
 
-    data = {'Bin_ML': str(ML_bin),
-            'Bin_SA': str(SA_bin),
-            'Bin_VF': str(VF_bin)}
+    data = {"methane_loading_bin": str(ML_bin),
+            "surface_area_bin": str(SA_bin),
+            "void_fraction_bin": str(VF_bin)}
     UpdateTable(run_ID, mat_ID, data)
 
 
@@ -366,7 +361,7 @@ def DummyTest(run_ID, generation):
     p_IDs = []
     for i in c_IDs:
 
-        pID = GetValue(run_ID, i, "Parent")
+        pID = GetValue(run_ID, i, "parent_id")
         if pID not in p_IDs:
             p_IDs.append(pID)
 
@@ -376,9 +371,9 @@ def DummyTest(run_ID, generation):
 
         print( "\nRe-Simulating %s-%s...\n" % (run_ID, matID) )
 
-        ML_o = GetValue(run_ID, matID, "Abs_cccc")
-        SA_o = GetValue(run_ID, matID, "SA_m2cc")
-        VF_o = GetValue(run_ID, matID, "VF_wido")
+        ML_o = GetValue(run_ID, matID, "absolute_volumetric_loading")
+        SA_o = GetValue(run_ID, matID, "volumetric_surface_area")
+        VF_o = GetValue(run_ID, matID, "helium_void_fraction")
 
         VFs = []
         for j in range(NumberOfTrials):
@@ -444,16 +439,17 @@ def DummyTest(run_ID, generation):
     for i in p_IDs:
         matID = id_to_mat(run_ID, i)
         if i not in Failed:
-            data = {'D_pass': 'y'}
+            data = {"dummy_test_result": 'y'}
             UpdateTable(run_ID, matID, data)
         elif i in Failed:
-            data = {'D_pass': 'n'}
+            data = {"dummy_test_result": 'n'}
             UpdateTable(run_ID, matID, data)
-            AffectedMats = s.query(RunData).filter(RunData.Run == run_ID,
-                                                   RunData.Parent == i).all()
-            Maybes = [j.Mat for j in AffectedMats]
-            for j in Maybes:
-                UpdateTable(run_ID, j, data)
+#            AffectedMats = s.query(RunData).filter(RunData.run_id == run_ID,
+#                                                   RunData.parent_id == i
+#                                                   ).all()
+#            Maybes = [j.Mat for j in AffectedMats]
+#            for j in Maybes:
+#                UpdateTable(run_ID, j, data)
                                                     
     if len(Failed) == 0:
         print( "\nALL PARENTS IN GENERATION %s PASSED THE DUMMY TEST.\n" % (generation) )

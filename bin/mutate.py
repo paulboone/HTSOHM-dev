@@ -1,12 +1,9 @@
 import os
 import shutil
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 import numpy as np
 from random import random, choice
 
-from runDB_declarative import Base, RunData
 import binning as bng
 from simulate import GetValue, id_to_mat
 
@@ -45,11 +42,11 @@ def CalculateS(run_ID, generation):
     p_IDs = []
     p_bins = []
     for i in c_IDs:
-        p_ID = GetValue(run_ID, i, "Mat")
+        p_ID = GetValue(run_ID, i, "material_id")
         p_IDs.append( p_ID )
-        p_MLb = GetValue(run_ID, p_ID, "Bin_ML")
-        p_SAb = GetValue(run_ID, p_ID, "Bin_SA")
-        p_VFb = GetValue(run_ID, p_ID, "Bin_VF")
+        p_MLb = GetValue(run_ID, p_ID, "methane_loading_bin")
+        p_SAb = GetValue(run_ID, p_ID, "surface_area_bin")
+        p_VFb = GetValue(run_ID, p_ID, "void_fraction_bin")
 
         p_bin = [ p_MLb, p_SAb, p_VFb ]
         p_bins.append( p_bin )
@@ -61,9 +58,9 @@ def CalculateS(run_ID, generation):
     for i in pgen_IDs:
         gp_ID = GetValue(run_ID, i, "id")
         gp_IDs.append( gp_ID )
-        gp_MLb = GetValue(run_ID, gp_ID, "Bin_ML")
-        gp_SAb = GetValue(run_ID, gp_ID, "Bin_SA")
-        gp_VFb = GetValue(run_ID, gp_ID, "Bin_VF")
+        gp_MLb = GetValue(run_ID, gp_ID, "methane_loading_bin")
+        gp_SAb = GetValue(run_ID, gp_ID, "surface_area_bin")
+        gp_VFb = GetValue(run_ID, gp_ID, "void_fraction_bin")
         gp_bin = [ gp_MLb, gp_SAb, gp_VFb ]
         gp_bins.append( gp_bin )
     
@@ -89,9 +86,9 @@ def CalculateS(run_ID, generation):
         for j in range(len(gp_bins)):
             if p_bin == gp_bins[j]:
                 ID = j + children_per_generation
-                ML_bin = GetValue(run_ID, ID, "Bin_ML")
-                SA_bin = GetValue(run_ID, ID, "Bin_SA")
-                VF_bin = GetValue(run_ID, ID, "Bin_VF")
+                ML_bin = GetValue(run_ID, ID, "methane_loading_bin")
+                SA_bin = GetValue(run_ID, ID, "surface_area_bin")
+                VF_bin = GetValue(run_ID, ID, "void_fraction_bin")
                 c_bin = [ ML_bin, SA_bin, VF_bin ]
 
                 if c_bin not in c_bins:
@@ -220,11 +217,11 @@ def mutate(run_ID, generation):
 
     for i in child_IDs:
         child_ID = str(i)
-        p = GetValue(run_ID, child_ID, "Parent")        # Find parent ID
+        p = GetValue(run_ID, child_ID, "parent_id")                   # Find parent ID
         p_ID = id_to_mat(run_ID, p)
-        p_MLb = GetValue(run_ID, p_ID, "Bin_ML")           # Find parent-bin coordinates
-        p_SAb = GetValue(run_ID, p_ID, "Bin_SA")
-        p_VFb = GetValue(run_ID, p_ID, "Bin_VF")
+        p_MLb = GetValue(run_ID, p_ID, "methane_loading_bin")         # Find parent-bin coordinates
+        p_SAb = GetValue(run_ID, p_ID, "surface_area_bin")
+        p_VFb = GetValue(run_ID, p_ID, "void_fraction_bin")
         strength = Strength[p_MLb, p_SAb, p_VFb]
         
         pd = "%s/%s-%s" % (fd, run_ID, p_ID)               # Parent's forcefield directory
