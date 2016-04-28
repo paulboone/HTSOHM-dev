@@ -108,7 +108,8 @@ def VoidFraction(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     VF_input.close()
 
-    subprocess.call(shlex.split('simulate VoidFraction.input'))
+    subprocess.run(shlex.split('simulate VoidFraction.input'), check=True)
+
 
 def MethaneLoading(run_ID, mat_ID):
 #
@@ -147,8 +148,7 @@ def MethaneLoading(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     ML_input.close()
 
-    subprocess.call(shlex.split('simulate MethaneLoading.input'))
-
+    subprocess.run(shlex.split('simulate MethaneLoading.input'), check=True)
 
 def SurfaceArea(run_ID, mat_ID):
 #
@@ -180,8 +180,7 @@ def SurfaceArea(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     SA_input.close()
 
-    subprocess.call(shlex.split('simulate SurfaceArea.input'))
-
+    subprocess.run(shlex.split('simulate SurfaceArea.input'), check=True)
 
 def GetML(run_ID, mat_ID):
 
