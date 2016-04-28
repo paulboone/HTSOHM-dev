@@ -1,8 +1,11 @@
 import os
 import sys
+import yaml
+
 from sqlalchemy import Column, ForeignKey, Integer, String, Float
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
 
@@ -33,8 +36,16 @@ class RunData(Base):
                                                            # m = parent-material fails
                                                            # n = material fails
 
-# Create engine to storedata in local directory .db-file.
-engine = create_engine("sqlite:///HTSOHM-dev.db")
+with open('database.yaml', 'r') as yaml_file:
+    dbconfig = yaml.load(yaml_file)
 
-# Create table in the engine.
+connection_string = dbconfig['connection_string']
+engine = create_engine(connection_string)
+
+# Create tables in the engine, if they don't exist already.
 Base.metadata.create_all(engine)
+Base.metadata.bind = engine
+
+def CreateSession():
+    DBSession = sessionmaker(bind=engine)
+    return DBSession()

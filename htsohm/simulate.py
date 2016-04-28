@@ -5,25 +5,9 @@ import subprocess
 import shlex
 import shutil
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 import numpy as np
 
 from htsohm.runDB_declarative import Base, RunData, CreateSession
-
-def CreateSession():
-#
-#    from sqlalchemy import create_engine
-#    from sqlalchemy.orm import sessionmaker
-#    from runDB_declarative import Base
-
-    engine = create_engine( "sqlite:///HTSOHM-dev.db" )
-    Base.metadata.bind = engine
-
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
-
-    return session
 
 def AddRows(run_ID, mat_IDs):
 #
