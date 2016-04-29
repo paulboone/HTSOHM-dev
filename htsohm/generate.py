@@ -106,8 +106,8 @@ def generate(
                         "no\n" +
                         "# number of defined interactions\n" +
                         "%s\n" % (ATOM_TYPES + 8) +
-                        "# type interaction, parameters.    " + 
-                            "IMPORTANT: define shortest matches first, so" + 
+                        "# type interaction, parameters.    " +
+                            "IMPORTANT: define shortest matches first, so" +
                             " that more specific ones overwrites these\n" )
 
         psu_file.write( "#number of pseudo atoms\n" +

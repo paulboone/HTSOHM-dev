@@ -5,25 +5,9 @@ import subprocess
 import shlex
 import shutil
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 import numpy as np
 
-from runDB_declarative import Base, RunData
-
-def CreateSession():
-#
-#    from sqlalchemy import create_engine
-#    from sqlalchemy.orm import sessionmaker
-#    from runDB_declarative import Base
-
-    engine = create_engine( "sqlite:///HTSOHM-dev.db" )
-    Base.metadata.bind = engine
-
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
-
-    return session
+from htsohm.runDB_declarative import Base, RunData, CreateSession
 
 def AddRows(run_ID, mat_IDs):
 #
@@ -33,7 +17,7 @@ def AddRows(run_ID, mat_IDs):
 
     for i in mat_IDs:
         check_first = s.query(RunData).filter( RunData.run_id == run_ID,
-                                               RunData.material_id == str(i) 
+                                               RunData.material_id == str(i)
                                               ).count()
         if not check_first:
             new_mat = RunData( run_id=run_ID, material_id=str(i) )
@@ -108,7 +92,8 @@ def VoidFraction(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     VF_input.close()
 
-    subprocess.call(shlex.split('simulate VoidFraction.input'))
+    subprocess.run(shlex.split('simulate VoidFraction.input'), check=True)
+
 
 def MethaneLoading(run_ID, mat_ID):
 #
@@ -117,7 +102,8 @@ def MethaneLoading(run_ID, mat_ID):
 #    import shlex
 
     pwd = os.getcwd()
-    VF = GetValue(run_ID, mat_ID, "helium_void_fraction")    
+
+    VF = GetValue(run_ID, mat_ID, "helium_void_fraction")
 
     # Simulate METHANE LOADING
     ML_input = open( pwd + '/MethaneLoading.input', "w")
@@ -146,8 +132,7 @@ def MethaneLoading(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     ML_input.close()
 
-    subprocess.call(shlex.split('simulate MethaneLoading.input'))
-
+    subprocess.run(shlex.split('simulate MethaneLoading.input'), check=True)
 
 def SurfaceArea(run_ID, mat_ID):
 #
@@ -179,8 +164,7 @@ def SurfaceArea(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     SA_input.close()
 
-    subprocess.call(shlex.split('simulate SurfaceArea.input'))
-
+    subprocess.run(shlex.split('simulate SurfaceArea.input'), check=True)
 
 def GetML(run_ID, mat_ID):
 
@@ -254,7 +238,7 @@ def GetSA(run_ID, mat_ID):
     shutil.rmtree("Output")
     shutil.rmtree("Movies")
     shutil.rmtree("VTK")
-    shutil.rmtree("Restart")    
+    shutil.rmtree("Restart")
 
 
 def GetVF(run_ID, mat_ID):
@@ -304,7 +288,7 @@ def GetBins(run_ID, mat_ID):
     SA_step = SA_max / float(bins)
     VF_step = VF_max / float(bins)
 
-    ML_edges = np.arange( ML_min, ML_max + ML_step, ML_step )        
+    ML_edges = np.arange( ML_min, ML_max + ML_step, ML_step )
     SA_edges = np.arange( SA_min, SA_max + SA_step, SA_step )
     VF_edges = np.arange( VF_min, VF_max + VF_step, VF_step )
 
@@ -336,10 +320,10 @@ def DummyTest(run_ID, generation):
 #    import subprocess
 #    import shlex
 #    import shutil
-#    
+#
 #    from sqlalchemy import create_engine
 #    from sqlalchemy.orm import sessionmaker
-#    
+#
 #    from runDB_declarative import RunData, Base
 #
 #    import numpy as np
@@ -383,7 +367,7 @@ def DummyTest(run_ID, generation):
                 for line in origin:
 #                    if not "Average Widom:" in line:
 #                        continue
-#                    try:  
+#                    try:
 #                        VF_val = line.split()[3]
 #                    except IndexError:
 #                        print()
@@ -421,7 +405,7 @@ def DummyTest(run_ID, generation):
                             SA_mg = line.split()[2]
                             count = count + 1
                         elif count == 2:
-                            SA_mc = line.split()[2]           
+                            SA_mc = line.split()[2]
             SAs.append( float(SA_mc) )
 
         if abs(np.mean(MLs) - ML_o) >= Tolerance * ML_o:
