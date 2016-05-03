@@ -6,43 +6,37 @@ import shutil
 
 import numpy as np
 
-from htsohm.runDB_declarative import Base, RunData, create_session
+from htsohm.runDB_declarative import Base, RunData, session
 from htsohm import binning as bng
 
 def add_rows(run_id, mat_ids):
 #
 #    from runDB_declarative import RunData
-
-    s = create_session()
-
     for i in mat_ids:
-        check_first = s.query(RunData).filter( RunData.run_id == run_id,
+        check_first = session.query(RunData).filter(RunData.run_id == run_id,
                                                RunData.material_id == str(i)
                                               ).count()
         if not check_first:
-            new_mat = RunData( run_id=run_id, material_id=str(i) )
-            s.add(new_mat)
-    s.commit()
-
+            new_mat = RunData(run_id=run_ID, material_id=str(i))
+            session.add(new_mat)
+    
+    session.commit()
 
 def update_table(run_id, mat_id, data):
 #
 #   from runDB_declarative import RunData
 
-    s = create_session()
-    material = s.query(RunData).filter( RunData.run_id == run_id,
-                                        RunData.material_id == str(mat_id) )
+    material = session.query(RunData).filter(RunData.run_id == run_id,
+                                                RunData.material_id == str(mat_id))
     material.update(data)
-    s.commit()
-
+    session.commit()
 
 def get_value(run_id, mat_id, value):
 #
 #    from runDB_declarative import RunData
 
-    s = create_session()
-    material = s.query(RunData).filter( RunData.run_id == run_id,
-                                        RunData.material_id == str(mat_id) )
+    material = session.query(RunData).filter(RunData.run_id == run_id,
+                                                RunData.material_id == str(mat_id))
 
     for i in material:
         database_value = getattr(i, value)
@@ -54,9 +48,8 @@ def id_to_mat(run_id, ID):
 #
 #    from runDB_declarative import RunData
 
-    s = create_session()
-    material = s.query(RunData).filter( RunData.run_id == run_id,
-                                     RunData.id == str(ID) )
+    material = session.query(RunData).filter(RunData.run_id == run_id,
+                                                RunData.id == str(ID))
 
     for i in material:
         mat = getattr(i, "material_id")
@@ -329,8 +322,6 @@ def dummy_test(run_id, generation):
 #
 #    import numpy as np
 
-    s = create_session()
-
     tolerance = 0.05      # Acceptable deviation from original value(s)...
     number_of_trials = 1    # Number of times each simulation is repeated.
 
@@ -380,7 +371,7 @@ def dummy_test(run_id, generation):
         mls = []
         for j in range(number_of_trials):
             methane_loading(run_id, material_id)
-            ml_data = ( "Output/System_0/output_" + 
+            ml_data = ( "Output/System_0/output_" +
                         "%s-%s_1.1.1_298.000000_" % (run_id, material_id) +
                         "3.5e+06.data" )
             with open(ml_data) as origin:
@@ -392,7 +383,7 @@ def dummy_test(run_id, generation):
         sas = []
         for j in range(number_of_trials):
             surface_area(run_id, material_id)
-            sa_data = ( "Output/System_0/output_" + 
+            sa_data = ( "Output/System_0/output_" +
                         "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
                         )
             with open(sa_data) as origin:
@@ -437,7 +428,7 @@ def dummy_test(run_id, generation):
 #                update_table(run_id, j, data)
                                                     
     if len(failed) == 0:
-        print( "\nALL PARENTS IN GENERATION " + 
+        print( "\nALL PARENTS IN GENERATION " +
                "%s PASSED THE DUMMY TEST.\n" % (generation) )
     if len(failed) != 0:
         print( "\nTHE FOLLOWING PARENTS IN GENERATION " +

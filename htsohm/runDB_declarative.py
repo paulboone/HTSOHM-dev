@@ -46,6 +46,4 @@ engine = create_engine(connection_string)
 Base.metadata.create_all(engine)
 Base.metadata.bind = engine
 
-def create_session():
-    database_session = sessionmaker(bind=engine)
-    return database_session()
+session = sessionmaker(bind=engine)()
