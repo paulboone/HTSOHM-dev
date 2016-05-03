@@ -6,43 +6,8 @@ import shutil
 
 import numpy as np
 
-from htsohm.runDB_declarative import Base, RunData, session
+from htsohm.runDB_declarative import RunData, session
 from htsohm import binning as bng
-
-def add_rows(run_id, mat_ids):
-#
-#    from runDB_declarative import RunData
-    for i in mat_ids:
-        check_first = session.query(RunData).filter(RunData.run_id == run_id,
-                                               RunData.material_id == str(i)
-                                              ).count()
-        if not check_first:
-            new_mat = RunData(run_id=run_ID, material_id=str(i))
-            session.add(new_mat)
-    
-    session.commit()
-
-def update_table(run_id, mat_id, data):
-#
-#   from runDB_declarative import RunData
-
-    material = session.query(RunData).filter(RunData.run_id == run_id,
-                                                RunData.material_id == str(mat_id))
-    material.update(data)
-    session.commit()
-
-def get_value(run_id, mat_id, value):
-#
-#    from runDB_declarative import RunData
-
-    material = session.query(RunData).filter(RunData.run_id == run_id,
-                                                RunData.material_id == str(mat_id))
-
-    for i in material:
-        database_value = getattr(i, value)
-
-    return database_value
-
 
 def id_to_mat(run_id, ID):
 #
@@ -180,13 +145,14 @@ def get_ml(id):
             elif "excess [cm^3 (STP)/c" in line:
                 ml_e_cc = line.split()[6]
 
-    data = {"absolute_volumetric_loading": ml_a_cc,
-            "absolute_gravimetric_loading": ml_a_cg,
-            "absolute_molar_loading": ml_a_mk,
-            "excess_volumetric_loading": ml_e_cc,
-            "excess_gravimetric_loading": ml_e_cg,
-            "excess_molar_loading": ml_e_mk}
-    update_table(run_id, mat_id, data)
+    run_data.absolute_volumetric_loading = ml_a_cc
+    run_data.absolute_gravimetric_loading = ml_a_cg
+    run_data.absolute_molar_loading = ml_a_mk
+    run_data.excess_volumetric_loading = ml_e_cc
+    run_data.excess_gravimetric_loading = ml_e_cg
+    run_data.excess_molar_loading = ml_e_mk
+    
+    session.commit()
 
     print( "\nMETHANE LOADING\tabsolute\texcess\n" +
            "mol/kg\t\t%s\t%s\n" % (ml_a_mk, ml_e_mk) +
@@ -218,11 +184,11 @@ def get_sa(id):
                 elif count == 2:
                     sa_mc = line.split()[2]
     
-    data = {"unit_cell_surface_area": sa_a2,
-            "volumetric_surface_area": sa_mc,
-            "gravimetric_surface_area": sa_mg}
-    update_table(run_id, mat_id, data)
-
+    run_data.unit_cell_surface_area = sa_a2
+    run_data.volumetric_surface_area = sa_mc
+    run_data.gravimetric_surface_area = sa_mg
+    session.commit()
+    
     print( "\nSURFACE AREA\n" +
            "%s\tA^2\n" % (sa_a2) +
            "%s\tm^2/g\n" % (sa_mg) +
@@ -251,9 +217,8 @@ def get_vf(id):
 
     print( "\nVOID FRACTION :   %s\n" % (vf_val) )
 
-    # Add to database...
-    data = {"helium_void_fraction": vf_val}
-    update_table(run_id, mat_id, data)
+    run_data.helium_void_fraction = vf_val
+    session.commit()
 
     os.remove("void_fraction.input")
     shutil.rmtree("Output")
@@ -261,12 +226,11 @@ def get_vf(id):
     shutil.rmtree("VTK")
     shutil.rmtree("Restart")
 
-
-def get_bins(run_id, mat_id):
-   
-    ml = get_value(run_id, mat_id, "absolute_volumetric_loading")
-    sa = get_value(run_id, mat_id, "volumetric_surface_area")
-    vf = get_value(run_id, mat_id, "helium_void_fraction")
+def get_bins(id):
+    run_data = session.query(RunData).get(id)
+    ml = run_data.absolute_volumetric_loading
+    sa = run_data.volumetric_surface_area
+    vf = run_data.helium_void_fraction
  
     # Arbitary structure-property space "boundaries"
     ml_min = 0.
@@ -294,10 +258,10 @@ def get_bins(run_id, mat_id):
         if vf >= vf_edges[i] and vf < vf_edges[i + 1]:
             vf_bin = i
 
-    data = {"methane_loading_bin": str(ml_bin),
-            "surface_area_bin": str(sa_bin),
-            "void_fraction_bin": str(vf_bin)}
-    update_table(run_id, mat_id, data)
+    run_data.methane_loading_bin = ml_bin
+    run_data.surface_area_bin = sa_bin
+    run_data.void_fraction_bin = vf_bin
+    session.commit()
 
 def run_simulations(id):
    get_vf(id)
