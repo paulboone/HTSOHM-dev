@@ -57,7 +57,7 @@ def id_to_mat(run_id, ID):
     return mat
 
 
-def void_fraction(run_id, mat_id):
+def void_fraction(run_data):
 #
 #    import os
 #    import subprocess
@@ -72,11 +72,11 @@ def void_fraction(run_id, mat_id):
          "PrintEvery\t\t\t100\n" +
                     "PrintPropertiesEvery\t\t100\n" +
                     "\n" +
-                    "Forcefield\t\t\t%s-%s\n" % (run_id, mat_id) +
+                    "Forcefield\t\t\t%s-%s\n" % (run_data.run_id, run_data.material_id) +
                     "CutOff\t\t\t\t12.8\n" +                       # LJ interaction cut-off, Angstroms
                     "\n" +
                     "Framework 0\n" +
-                    "FrameworkName %s-%s\n" % (run_id, mat_id) +
+                    "FrameworkName %s-%s\n" % (run_data.run_id, run_data.material_id) +
                     "UnitCells 1 1 1\n" +
                     "ExternalTemperature 298.0\n" +       # External temperature, K
                     "\n" +
@@ -89,15 +89,14 @@ def void_fraction(run_id, mat_id):
     subprocess.run(shlex.split('simulate void_fraction.input'), check=True)
 
 
-def methane_loading(run_id, mat_id):
+
+def methane_loading(run_data):
 #
 #    import os
 #    import subprocess
 #    import shlex
 
     pwd = os.getcwd()
-
-    vf = get_value(run_id, mat_id, "helium_void_fraction")
 
     # Simulate METHANE LOADING
     ml_input = open( pwd + '/methane_loading.input', "w")
@@ -107,14 +106,14 @@ def methane_loading(run_id, mat_id):
                     "PrintEvery\t\t\t100\n" +
                     "RestartFile\t\t\tno\n" +
                     "\n" +
-                    "Forcefield\t\t\t%s-%s\n" % (run_id, mat_id) +
+                    "Forcefield\t\t\t%s-%s\n" % (run_data.run_id, run_data.material_id) +
                     "ChargeMethod\t\t\tEwald\n"
                     "CutOff\t\t\t\t12.0\n" +                   # electrostatic cut-off, Angstroms
                     "\n" +
                     "Framework 0\n" +
-                    "FrameworkName %s-%s\n" % (run_id, mat_id) +
+                    "FrameworkName %s-%s\n" % (run_data.run_id, run_data.material_id) +
                     "UnitCells 1 1 1\n" +
-                    "HeliumVoidFraction %s\n" % (vf) +
+                    "HeliumVoidFraction %s\n" % (run_data.helium_void_fraction) +
                     "ExternalTemperature 298.0\n" +            # External temperature, K
                     "ExternalPressure 3500000\n" +             # External pressure, Pa
                     "\n" +
@@ -128,7 +127,7 @@ def methane_loading(run_id, mat_id):
 
     subprocess.run(shlex.split('simulate methane_loading.input'), check=True)
 
-def surface_area(run_id, mat_id):
+def surface_area(run_data):
 #
 #    import os
 #    import subprocess
@@ -143,11 +142,11 @@ def surface_area(run_id, mat_id):
                     "PrintEvery\t\t\t1\n" +
                     "PrintPropertiesEvery\t\t1\n" +
                     "\n" +
-                    "Forcefield %s-%s\n" % (run_id, mat_id) +
+                    "Forcefield %s-%s\n" % (run_data.run_id, run_data.material_id) +
                     "CutOff 12.8\n" +                        # electrostatic cut-off, Angstroms
                     "\n" +
                     "Framework 0\n" +
-                    "FrameworkName %s-%s\n" % (run_id, mat_id) +
+                    "FrameworkName %s-%s\n" % (run_data.run_id, run_data.material_id) +
                     "UnitCells 1 1 1\n" +
                     "SurfaceAreaProbeDistance Minimum\n" +
                     "\n" +
@@ -160,11 +159,12 @@ def surface_area(run_id, mat_id):
 
     subprocess.run(shlex.split('simulate surface_area.input'), check=True)
 
-def get_ml(run_id, mat_id):
+def get_ml(id):
+    run_data = session.query(RunData).get(id)
+    methane_loading(run_data)
 
-    methane_loading(run_id, mat_id)
-
-    ml_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, mat_id)
+    ml_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_data.run_id, run_data.material_id)
+    
     with open(ml_data) as origin:
         for line in origin:
             if "absolute [mol/kg" in line:
@@ -200,11 +200,11 @@ def get_ml(run_id, mat_id):
     shutil.rmtree("VTK")
     shutil.rmtree("Restart")
 
+def get_sa(id):
+    run_data = session.query(RunData).get(id)
+    surface_area(run_data)
 
-def get_sa(run_id, mat_id):
-    surface_area(run_id, mat_id)
-
-    sa_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_id, mat_id)
+    sa_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_data.run_id, run_data.material_id)
     with open(sa_data) as origin:
         count = 0
         for line in origin:
@@ -234,12 +234,12 @@ def get_sa(run_id, mat_id):
     shutil.rmtree("VTK")
     shutil.rmtree("Restart")
 
+def get_vf(id):
+    run_data = session.query(RunData).get(id)
+    void_fraction(run_data)
 
-def get_vf(run_id, mat_id):
-
-    void_fraction(run_id, mat_id)
-
-    vf_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_id, mat_id)
+    vf_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_data.run_id, run_data.material_id)
+                
     with open(vf_data) as origin:
         for line in origin:
             if not "Average Widom Rosenbluth-weight:" in line:
@@ -299,14 +299,11 @@ def get_bins(run_id, mat_id):
             "void_fraction_bin": str(vf_bin)}
     update_table(run_id, mat_id, data)
 
-
-def simulate(run_id, mat_ids):
-   for i in mat_ids:
-       get_vf(run_id, i)
-       get_ml(run_id, i)
-       get_sa(run_id, i)
-       get_bins(run_id, i)
-
+def run_simulations(id):
+   get_vf(id)
+   get_ml(id)
+   get_sa(id)
+   get_bins(id)
 
 def dummy_test(run_id, generation):
 #
