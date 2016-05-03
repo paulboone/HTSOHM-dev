@@ -9,18 +9,8 @@ import numpy as np
 from htsohm.runDB_declarative import RunData, session
 from htsohm import binning as bng
 
-def id_to_mat(run_id, ID):
-#
-#    from runDB_declarative import RunData
-
-    material = session.query(RunData).filter(RunData.run_id == run_id,
-                                                RunData.id == str(ID))
-
-    for i in material:
-        mat = getattr(i, "material_id")
-
-    return mat
-
+def id_to_mat(id):
+    return session.query(RunData).get(id).material_id
 
 def void_fraction(run_data):
 #

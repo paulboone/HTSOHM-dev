@@ -213,11 +213,10 @@ def mutate(run_id, generation):
     
     strength_array = np.load(wd + '/' + run_id + '.npy')         # Load strength-parameter array
 
-
     for i in child_ids:
         child_id = str(i)
         p = get_value(run_id, child_id, "parent_id")                   # Find parent ID
-        parent_id = id_to_mat(run_id, p)
+        parent_id = id_to_mat(p)
         parent_ml_bin = get_value(run_id, parent_id, "methane_loading_bin")         # Find parent-bin coordinates
         parent_sa_bin = get_value(run_id, parent_id, "surface_area_bin")
         parent_vf_bin = get_value(run_id, parent_id, "void_fraction_bin")
