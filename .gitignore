@@ -7,3 +7,4 @@ HTSOHM-dev.db
 *_*_*_*.txt
 *_*_*_*.npy
 database.yaml
+*.input

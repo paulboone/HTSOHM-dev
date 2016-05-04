@@ -8,7 +8,6 @@ DEST=~/.bashrc
 echo $'\n# HTSOHM directories' >> $DEST
 echo "export HTSOHM_DIR=${HTSOHM_DIR}" >> $DEST
 echo "export RASPA_DIR=${RASPA_DIR}" >> $DEST
-echo "export SRC_DIR=\${HTSOHM_DIR}/bin" >> $DEST
 echo "export FF_DIR=\${RASPA_DIR}/forcefield" >> $DEST
 echo "export MAT_DIR=\${RASPA_DIR}/structures/cif" >> $DEST
 echo "# " >> $DEST
@@ -17,4 +16,4 @@ echo "# " >> $DEST
 source $DEST
 
 #create local database/table...
-python $HTSOHM_DIR/bin/runDB_declarative.py
+python $HTSOHM_DIR/htsohm/runDB_declarative.py
