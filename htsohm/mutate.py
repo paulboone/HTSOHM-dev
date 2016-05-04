@@ -7,8 +7,7 @@ from random import random, choice
 from htsohm import binning as bng
 from htsohm.simulate import get_value, id_to_mat
 
-# Create "strength" array...
-def first_s(run_id, strength_0):
+def first_s(run_id, strength_0):       # Creates `strength` array
 
     bins = bng.check_number_of_bins(run_id)
 

@@ -2,7 +2,6 @@ import os
 import numpy as np
 
 from htsohm.runDB_declarative import Base, RunData, create_session
-#from htsohm.simulate import add_rows, update_table, get_value
 from htsohm import simulate as sim
 
 
@@ -116,11 +115,7 @@ def select_parents(run_id, children_per_generation, generation):
 
         next_material = [ i, sim.get_value(run_id, parent_id, "id") ]
         next_materials_list.append( next_material )
-#        _id =sim.get_value(run_id, p_ID, "id")
 
-#        sim.add_rows(run_id, [i])
-#        data = {'parent_id': _id}
-#        sim.update_table(run_id, i, data)
     return next_materials_list   
 
 
@@ -133,7 +128,3 @@ def add_parent_ids(run_id, next_materials_list):
         sim.update_table(run_id, material_id, data)
 
 
-#def CheckConvergance(run_id):
-#
-#    counts = count_all(run_id)
-        

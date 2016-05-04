@@ -246,7 +246,6 @@ def generate(
                         "0\n" +
                         "# mixing rules to overwrite\n" +
                         "0" )
-#        force_field.write(force_field_rules)
 
         cif_file.close()
         mix_file.close()

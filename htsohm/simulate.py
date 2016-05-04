@@ -368,13 +368,7 @@ def dummy_test(run_id, generation):
                         )
             with open(vf_data) as origin:
                 for line in origin:
-#                    if not "Average Widom:" in line:
-#                        continue
-#                    try:
-#                        vf_val = line.split()[3]
-#                    except IndexError:
-#                        print()
-                    if not "Average Widom Rosenbluth-weight:" in line:       #ONLY ON AKAIJA BUILD
+                    if not "Average Widom Rosenbluth-weight:" in line:
                         continue
                     try:
                         vf_val = line.split()[4]

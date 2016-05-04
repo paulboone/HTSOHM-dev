@@ -1,15 +1,7 @@
 # /usr/bin/env python
+
 import sys
-# import os
-# parentdir = os.path.dirname(__file__)
-# print(__file__)
-# print(parentdir)
-# exit()
-#
-# sys.path.insert(0,os.path.dirname(__file__))
-#
-# sys.path.insert(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
-# sys.path.insert(0,'')
+
 
 from htsohm.htsohm import htsohm
 
