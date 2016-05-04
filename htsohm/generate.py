@@ -1,3 +1,5 @@
+# /usr/bin/evn python
+
 import os
 
 from random import choice, random, randrange, randint
