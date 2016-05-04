@@ -15,6 +15,7 @@ class RunData(Base):
     id = Column(Integer, primary_key=True)                 # dimm.
     run_id = Column(String(50))                            # dimm.
     material_id = Column(Integer)                          # dimm.
+    generation = Column(Integer)                           # generation#
     absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
     absolute_gravimetric_loading = Column(Float)           # cm^3 / g
     absolute_molar_loading = Column(Float)                 # mol / kg
