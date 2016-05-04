@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 
 import os
 import subprocess
@@ -8,6 +7,7 @@ import shutil
 import numpy as np
 
 from htsohm.runDB_declarative import Base, RunData, create_session
+from htsohm import binning as bng
 
 def add_rows(run_id, mat_ids):
 #
@@ -42,12 +42,13 @@ def get_value(run_id, mat_id, value):
 
     s = create_session()
     material = s.query(RunData).filter( RunData.run_id == run_id,
-                                     RunData.material_id == str(mat_id) )
+                                        RunData.material_id == str(mat_id) )
 
     for i in material:
         database_value = getattr(i, value)
 
     return database_value
+
 
 def id_to_mat(run_id, ID):
 #
@@ -282,7 +283,7 @@ def get_bins(run_id, mat_id):
     vf_min = 0.
     vf_max = 1.
 
-    bins = int( run_id[-1] )
+    bins = bng.check_number_of_bins(run_id)
 
     ml_step = ml_max / float(bins)
     sa_step = sa_max / float(bins)

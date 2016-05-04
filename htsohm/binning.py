@@ -1,7 +1,9 @@
+import os
 import numpy as np
 
-from htsohm.runDB_declarative import Base, RunData
-from htsohm.simulate import create_session, get_value, add_rows, update_table
+from htsohm.runDB_declarative import Base, RunData, create_session
+#from htsohm.simulate import add_rows, update_table, get_value
+from htsohm import simulate as sim
 
 
 def count_bin(run_id, ml_bin, sa_bin, vf_bin):
@@ -29,9 +31,20 @@ def count_bin(run_id, ml_bin, sa_bin, vf_bin):
     return bin_count
 
 
+def check_number_of_bins(run_id):
+
+    wd = os.environ['HTSOHM_DIR']
+    with open( wd + '/' + run_id + '.txt' ) as origin:
+        for line in origin:
+            if "Number of bins:" in line:
+                bins = int( line.split()[3] )
+
+    return bins
+
+
 def count_all(run_id):
 
-    bins = int(run_id[-1])
+    bins = check_number_of_bins(run_id)
     all_counts = np.zeros([bins, bins, bins])
 
     for i in range(bins):
@@ -48,7 +61,7 @@ def select_parents(run_id, children_per_generation, generation):
 
     s = create_session()
 
-    bins = int(run_id[-1])
+    bins = check_number_of_bins(run_id)
     counts = count_all(run_id)
     weights = np.zeros([bins, bins, bins])
 
@@ -100,11 +113,11 @@ def select_parents(run_id, children_per_generation, generation):
         p_bin = np.random.choice(id_list, p=w_list)
         p_ID = np.random.choice(p_bin)                     # Select parent for new material
 
-        _id =get_value(run_id, p_ID, "id")
+        _id =sim.get_value(run_id, p_ID, "id")
 
-        add_rows(run_id, [i])
+        sim.add_rows(run_id, [i])
         data = {'parent_id': _id}
-        update_table(run_id, i, data)
+        sim.update_table(run_id, i, data)
    
 
 #def CheckConvergance(run_id):

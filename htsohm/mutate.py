@@ -10,7 +10,7 @@ from htsohm.simulate import get_value, id_to_mat
 # Create "strength" array...
 def first_s(run_id, strength_0):
 
-    bins = int(run_id[-1])
+    bins = bng.check_number_of_bins(run_id)
 
     s_array = np.zeros([bins, bins, bins])
 
