@@ -197,7 +197,7 @@ def dummy_test(run_id, generation):
 #            Maybes = [j.Mat for j in AffectedMats]
 #            for j in Maybes:
 #                update_table(run_id, j, data)
-                                                    
+
     if len(failed) == 0:
         print( "\nALL PARENTS IN GENERATION " +
                "%s PASSED THE DUMMY TEST.\n" % (generation) )
@@ -207,9 +207,3 @@ def dummy_test(run_id, generation):
         for i in failed:
             material_id = id_to_mat(run_id, i)
             print( "\t%s-%s\n" % (run_id, material_id) )
-
-
-if __name__ == "__main__":
-    import sys
-    simulate(str(sys.argv[1]),
-             int(sys.argv[2]))
