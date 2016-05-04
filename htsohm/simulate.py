@@ -20,7 +20,7 @@ def get_bins(id):
     ml = run_data.absolute_volumetric_loading
     sa = run_data.volumetric_surface_area
     vf = run_data.helium_void_fraction
- 
+
     # Arbitary structure-property space "boundaries"
     ml_min = 0.
     ml_max = 350.
@@ -79,131 +79,210 @@ def run_all_simulations(id):
     
     # GetBins(id)
 
-def dummy_test(run_id, generation):
-#
-#    import os
-#    import subprocess
-#    import shlex
-#    import shutil
-#
-#    from sqlalchemy import create_engine
-#    from sqlalchemy.orm import sessionmaker
-#
-#    from runDB_declarative import RunData, Base
-#
-#    import numpy as np
+def dummy_test(run_id, next_materials_list, status, generation):
 
-    tolerance = 0.05      # Acceptable deviation from original value(s)...
-    number_of_trials = 1    # Number of times each simulation is repeated.
-
-    wd = os.environ['HTSOHM_DIR']
-    with open(wd + '/' + run_id + '.txt') as origin:
-        for line in origin:
-            if "Children per generation:" in line:
-                children_per_generation = int(line.split()[3])
-    first = generation * children_per_generation
-    last = (generation + 1) * children_per_generation
-    child_ids = np.arange(first, last)
-
-    parents_ids = []
-    for i in child_ids:
-
-        parent_id = get_value(run_id, i, "parent_id")
-        if parent_id not in parents_ids:
-            parents_ids.append(parent_id)
-
-    bad_materials = []
-    for i in parents_ids:
-        material_id = id_to_mat(run_id, i)
-
-        print( "\nRe-Simulating %s-%s...\n" % (run_id, material_id) )
-
-        ml_o = get_value(run_id, material_id, "absolute_volumetric_loading")
-        sa_o = get_value(run_id, material_id, "volumetric_surface_area")
-        vf_o = get_value(run_id, material_id, "helium_void_fraction")
-
-        vfs = []
-        for j in range(number_of_trials):
-            void_fraction(run_id, material_id)
-            vf_data = ( "Output/System_0/output_" +
-                        "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
-                        )
-            with open(vf_data) as origin:
-                for line in origin:
-                    if not "Average Widom Rosenbluth-weight:" in line:
-                        continue
-                    try:
-                        vf_val = line.split()[4]
-                    except IndexError:
-                        print()
-
-            vfs.append( float(vf_val) )
-
-        mls = []
-        for j in range(number_of_trials):
-            methane_loading(run_id, material_id)
-            ml_data = ( "Output/System_0/output_" +
-                        "%s-%s_1.1.1_298.000000_" % (run_id, material_id) +
-                        "3.5e+06.data" )
-            with open(ml_data) as origin:
-                for line in origin:
-                    if "absolute [cm^3 (STP)/c" in line:
-                        ml_a_cc = line.split()[6]
-            mls.append( float(ml_a_cc) )
-
-        sas = []
-        for j in range(number_of_trials):
-            surface_area(run_id, material_id)
-            sa_data = ( "Output/System_0/output_" +
-                        "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
-                        )
-            with open(sa_data) as origin:
-                count = 0
-                for line in origin:
-                    if "Surface area" in line:
-                        if count == 0:
-                            sa_a2 = line.split()[2]
-                            count = count + 1
-                        elif count == 1:
-                            sa_mg = line.split()[2]
-                            count = count + 1
-                        elif count == 2:
-                            sa_mc = line.split()[2]
-            sas.append( float(sa_mc) )
-
-        if abs(np.mean(mls) - ml_o) >= tolerance * ml_o:
-            bad_materials.append(i)
-        if abs(np.mean(sas) - sa_o) >= tolerance * sa_o:
-            bad_materials.append(i)
-        if abs(np.mean(vfs) - vf_o) >= tolerance * vf_o:
-            bad_materials.append(i)
+    s = create_session()
+    tolerance = 0.05
+    number_of_trials = 1
 
     failed = []
-    for i in bad_materials:
-        if i not in failed:
-            failed.append(i)
+    for i in next_materials_list:
+        parent_id = i[1]
+        material_id = id_to_mat(run_id, parent_id)
+        if get_value(run_id, material_id, "dummy_test_result") != "pass":
+            print( "\nRe-Simulating %s-%s...\n" % (run_id, material_id) )
+            ml_o = get_value(run_id, material_id,
+                             "absolute_volumetric_loading")
+            sa_o = get_value(run_id, material_id, 
+                             "volumetric_surface_area")
+            vf_o = get_value(run_id, material_id, 
+                             "helium_void_fraction")
 
-    for i in parents_ids:
-        material_id = id_to_mat(run_id, i)
-        if i not in failed:
-            data = {"dummy_test_result": 'y'}
-            update_table(run_id, material_id, data)
-        elif i in failed:
-            data = {"dummy_test_result": 'n'}
-            update_table(run_id, material_id, data)
+            vfs = []                   # re-simulate void fraction calculations
+            for j in range(number_of_trials):
+                void_fraction(run_id, material_id)
+                vf_data = ( "Output/System_0/output_" +
+                            "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
+                            )
+                with open(vf_data) as origin:
+                    for line in origin:
+                        if "Average Widom Rosenbluth-weight:" in line:
+                            vf_val = line.split()[4]
+                vfs.append( float(vf_val) )
+
+            mls = []                   # re-simulate methane loading calculations
+            for j in range(number_of_trials):
+                methane_loading(run_id, material_id)
+                ml_data = ( "Output/System_0/output_" + 
+                            "%s-%s_1.1.1_298.000000_" % (run_id, material_id) +
+                            "3.5e+06.data" )
+                with open(ml_data) as origin:
+                    for line in origin:
+                        if "absolute [cm^3 (STP)/c" in line:
+                            ml_a_cc = line.split()[6]
+                mls.append( float(ml_a_cc) )
+
+            sas = []                   # re-simulate surface area calculations
+            for j in range(number_of_trials):
+                surface_area(run_id, material_id)
+                sa_data = ( "Output/System_0/output_" + 
+                            "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
+                            )
+                with open(sa_data) as origin:
+                    count = 0
+                    for line in origin:
+                        if "Surface area" in line:
+                            if count == 0:
+                                sa_a2 = line.split()[2]
+                                count = count + 1
+                            elif count == 1:
+                                sa_mg = line.split()[2]
+                                count = count + 1
+                            elif count == 2:
+                                sa_mc = line.split()[2]
+                sas.append( float(sa_mc) )
+
+            if ( abs(np.mean(mls) - ml_o) >= tolerance * ml_o or
+                 abs(np.mean(sas) - sa_o) >= tolerance * sa_o or
+                 abs(np.mean(vfs) - vf_o) >= tolerance * vf_o ):
+                result = {"dummy_test_result": "fail"}
+                update_table(run_id, material_id, result)			# update_table HAS BEEN REMOVED
+                print( "A MATERIAL HAS FAILED!\n" +
+                       "Run:\t%s\n" % (run_id) +
+                       "Material:\t%s\n" % (material_id) )
+                failed.append( "%s-%s" % (run_id, material_id) )
+                break
+            else:
+                result = {"dummy_test_result": "pass"}
+                update_table(run_id, material_id, result)
+
+    if len(failed) == 0:
+        status = "Dummy test:   COMPLETE"
+    print (status)
+
+    return status
+
+#        if abs(np.mean(mls) - ml_o) >= tolerance * ml_o:
+#                bad_materials.append(i)
+#            if abs(np.mean(sas) - sa_o) >= tolerance * sa_o:
+#                bad_materials.append(i)
+#            if abs(np.mean(vfs) - vf_o) >= tolerance * vf_o:
+#                bad_materials.append(i)
+#
+#
+#        for i in range(number_of_trials):
+#
+#
+#    s = create_session()
+#
+#    tolerance = 0.05      # Acceptable deviation from original value(s)...
+#    number_of_trials = 1    # Number of times each simulation is repeated.
+#
+#    child_ids = []
+#    parents_ids = []
+#    for i in next_materials_list:
+#        child_ids.append(i[0])
+#        if i[1] not in parents_ids:
+#            parents_ids.append(i[1])
+#    bad_materials = []
+#    for i in parents_ids:
+#
+#        material_id = id_to_mat(run_id, i)
+#        if get_value(run_id, material_id, "dummy_test_result") != "y":
+#
+#            print( "\nRe-Simulating %s-%s...\n" % (run_id, material_id) )
+#
+#            ml_o = get_value(run_id, material_id,
+#                             "absolute_volumetric_loading")
+#            sa_o = get_value(run_id, material_id, 
+#                             "volumetric_surface_area")
+#            vf_o = get_value(run_id, material_id, 
+#                             "helium_void_fraction")
+#
+#            vfs = []                   # re-simulate void fraction calculations
+#            for j in range(number_of_trials):
+#                void_fraction(run_id, material_id)
+#                vf_data = ( "Output/System_0/output_" +
+#                            "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
+#                            )
+#                with open(vf_data) as origin:
+#                    for line in origin:
+#                        if "Average Widom Rosenbluth-weight:" in line:
+#                            vf_val = line.split()[4]
+#                vfs.append( float(vf_val) )
+#
+#            mls = []                   # re-simulate methane loading calculations
+#            for j in range(number_of_trials):
+#                methane_loading(run_id, material_id)
+#                ml_data = ( "Output/System_0/output_" + 
+#                            "%s-%s_1.1.1_298.000000_" % (run_id, material_id) +
+#                            "3.5e+06.data" )
+#                with open(ml_data) as origin:
+#                    for line in origin:
+#                        if "absolute [cm^3 (STP)/c" in line:
+#                            ml_a_cc = line.split()[6]
+#                mls.append( float(ml_a_cc) )
+#
+#            sas = []                   # re-simulate surface area calculations
+#            for j in range(number_of_trials):
+#                surface_area(run_id, material_id)
+#                sa_data = ( "Output/System_0/output_" + 
+#                            "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
+#                            )
+#                with open(sa_data) as origin:
+#                    count = 0
+#                    for line in origin:
+#                        if "Surface area" in line:
+#                            if count == 0:
+#                                sa_a2 = line.split()[2]
+#                                count = count + 1
+#                            elif count == 1:
+#                                sa_mg = line.split()[2]
+#                                count = count + 1
+#                            elif count == 2:
+#                                sa_mc = line.split()[2]
+#                sas.append( float(sa_mc) )
+#
+#            if ( abs(np.mean(mls) - ml_o) >= tolerance * ml_o or
+#                 abs(np.mean(sas) - sa_o) >= tolerance * sa_o or
+#                 abs(np.mean(vfs) - vf_o) >= tolerance * vf_o ):
+#                result = {"dummy_test_result": "fail"}
+#                update_table(run_id, material_id, result)
+#                print( "A MATERIAL HAS FAILED!\n" +
+#                       "Run:\t%s\n" % (run_id) +
+#                       "Material:\t%s\n" % (material_id) )
+#                break
+#            elif:
+#                result = {"dummy_test_result": "pass"}
+#                update_table(run_id, material_id, result)
+#
+#
+#    failed = []
+#    for i in bad_materials:
+#        if i not in failed:
+#            failed.append(i)
+#
+#    for i in parents_ids:
+#        material_id = id_to_mat(run_id, i)
+#        if i not in failed:
+#            data = {"dummy_test_result": 'y'}
+#            update_table(run_id, material_id, data)
+#        elif i in failed:
+#            data = {"dummy_test_result": 'n'}
+#            update_table(run_id, material_id, data)
 #            AffectedMats = s.query(RunData).filter(RunData.run_id == run_id,
 #                                                   RunData.parent_id == i
 #                                                   ).all()
 #            Maybes = [j.Mat for j in AffectedMats]
 #            for j in Maybes:
 #                update_table(run_id, j, data)
-
-    if len(failed) == 0:
-        print( "\nALL PARENTS IN GENERATION " +
-               "%s PASSED THE DUMMY TEST.\n" % (generation) )
-    if len(failed) != 0:
-        print( "\nTHE FOLLOWING PARENTS IN GENERATION " +
-               "%s FAIL THE DUMMY TEST:" % (generation) )
-        for i in failed:
-            material_id = id_to_mat(run_id, i)
-            print( "\t%s-%s\n" % (run_id, material_id) )
+                                                    
+#    if len(failed) == 0:
+#        print( "\nALL PARENTS IN GENERATION " + 
+#               "%s PASSED THE DUMMY TEST.\n" % (generation) )
+#    if len(failed) != 0:
+#        print( "\nTHE FOLLOWING PARENTS IN GENERATION " +
+#               "%s FAIL THE DUMMY TEST:" % (generation) )
+#        for i in failed:
+#            material_id = id_to_mat(run_id, i)
+#            print( "\t%s-%s\n" % (run_id, material_id) )

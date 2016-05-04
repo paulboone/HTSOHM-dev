@@ -33,9 +33,8 @@ class RunData(Base):
     methane_loading_bin = Column(Integer)                  # dimm.
     surface_area_bin = Column(Integer)                     # dimm.
     void_fraction_bin = Column(Integer)                    # dimm.
-    dummy_test_result = Column(String(1))                  # y = material passes
-                                                           # m = parent-material fails
-                                                           # n = material fails
+    dummy_test_result = Column(String(4))                  # "pass" = material passes
+                                                           # "fail" = material fails
 
 with open('database.yaml', 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)
