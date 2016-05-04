@@ -47,5 +47,5 @@ Base.metadata.create_all(engine)
 Base.metadata.bind = engine
 
 def create_session():
-    DBSession = sessionmaker(bind=engine)
-    return DBSession()
+    database_session = sessionmaker(bind=engine)
+    return database_session()

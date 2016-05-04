@@ -8,9 +8,9 @@ from htsohm import binning as bng
 from htsohm.simulate import get_value, id_to_mat
 
 # Create "strength" array...
-def first_s(run_ID, strength_0):
+def first_s(run_id, strength_0):
 
-    bins = int(run_ID[-1])
+    bins = int(run_id[-1])
 
     s_array = np.zeros([bins, bins, bins])
 
@@ -20,122 +20,123 @@ def first_s(run_ID, strength_0):
                 s_array[i, j, k] = strength_0
 
     wd = os.environ['HTSOHM_DIR']
-    np.save(wd + '/' + run_ID, s_array)
+    np.save(wd + '/' + run_id, s_array)
 
 
-def calculate_s(run_ID, generation):
+def calculate_s(run_id, generation):
 
     wd = os.environ['HTSOHM_DIR']
 
-    with open(wd + '/' + run_ID + '.txt') as origin:
+    with open(wd + '/' + run_id + '.txt') as origin:
         for line in origin:
             if "Children per generation:" in line:
                 children_per_generation = int(line.split()[3])
-    First = generation * children_per_generation
-    Last = (generation + 1) * children_per_generation
-    c_IDs = np.arange(First, Last)
-    gen0_IDs = np.arange(0, children_per_generation)
+    first = generation * children_per_generation
+    last = (generation + 1) * children_per_generation
+    child_ids = np.arange(first, last)
+    seed_ids = np.arange(0, children_per_generation)
 
-    Strength_o = np.load(wd + '/' + run_ID + '.npy')       # Load strength-parameter array
+    strength_0 = np.load(wd + '/' + run_id + '.npy')       # Load strength-parameter array
 
-    p_IDs = []
-    p_bins = []
-    for i in c_IDs:
-        p_ID = get_value(run_ID, i, "material_id")
-        p_IDs.append( p_ID )
-        p_MLb = get_value(run_ID, p_ID, "methane_loading_bin")
-        p_SAb = get_value(run_ID, p_ID, "surface_area_bin")
-        p_VFb = get_value(run_ID, p_ID, "void_fraction_bin")
+    parent_ids = []
+    parent_bins = []
+    for i in child_ids:
+        parent_id = get_value(run_id, i, "material_id")
+        parent_ids.append( parent_id )
+        parent_ml_bin = get_value(run_id, parent_id, "methane_loading_bin")
+        parent_sa_bin = get_value(run_id, parent_id, "surface_area_bin")
+        parent_vf_bin = get_value(run_id, parent_id, "void_fraction_bin")
 
-        p_bin = [ p_MLb, p_SAb, p_VFb ]
-        p_bins.append( p_bin )
+        parent_bin = [ parent_ml_bin, parent_sa_bin, parent_vf_bin ]
+        parent_bins.append( parent_bin )
 
-    pgen_IDs = np.arange( First - children_per_generation,
-                          Last - children_per_generation )
-    gp_IDs = []
-    gp_bins = []
-    for i in pgen_IDs:
-        gp_ID = get_value(run_ID, i, "id")
-        gp_IDs.append( gp_ID )
-        gp_MLb = get_value(run_ID, gp_ID, "methane_loading_bin")
-        gp_SAb = get_value(run_ID, gp_ID, "surface_area_bin")
-        gp_VFb = get_value(run_ID, gp_ID, "void_fraction_bin")
-        gp_bin = [ gp_MLb, gp_SAb, gp_VFb ]
-        gp_bins.append( gp_bin )
+    parent_generation_ids = np.arange( first - children_per_generation,
+                                       last - children_per_generation )
+    grandparent_ids = []
+    grandparent_bins = []
+    for i in parent_generation_ids:
+        grandparent_id = get_value(run_id, i, "id")
+        grandparent_ids.append( grandparent_id )
+
+        grandparent_ml_bin = get_value(run_id, grandparent_id, "methane_loading_bin")
+        grandparent_sa_bin = get_value(run_id, grandparent_id, "surface_area_bin")
+        grandparent_vf_bin = get_value(run_id, grandparent_id, "void_fraction_bin")
+        grandparent_bin = [ grandparent_ml_bin, grandparent_sa_bin, grandparent_vf_bin ]
+        grandparent_bins.append( grandparent_bin )
     
     bin_list = []
-    for i in p_bins:
-        if i in gp_bins:
+    for i in parent_bins:
+        if i in grandparent_bins:
             bin_list.append(i)
 
-    dS_bins = []
+    change_bin_strength = []
     for i in bin_list:
-        if i not in dS_bins:
-            dS_bins.append(i)
+        if i not in change_bin_strength:
+            change_bin_strength.append(i)
 
-    counts = bng.CountAll(run_ID)
+    counts = bng.count_all(run_id)
 
     bin_counts = []
-    for i in dS_bins:
-        p_bin = i
-        p_count = counts[ i[0],i[1],i[2] ]
+    for i in change_bin_strength:
+        parent_bin = i
+        parent_count = counts[ i[0],i[1],i[2] ]
         
-        c_bins = []
-        c_counts = []
-        for j in range(len(gp_bins)):
-            if p_bin == gp_bins[j]:
-                ID = j + children_per_generation
-                ML_bin = get_value(run_ID, ID, "methane_loading_bin")
-                SA_bin = get_value(run_ID, ID, "surface_area_bin")
-                VF_bin = get_value(run_ID, ID, "void_fraction_bin")
-                c_bin = [ ML_bin, SA_bin, VF_bin ]
+        child_bins = []
+        child_counts = []
+        for j in range(len(grandparent_bins)):
+            if parent_bin == grandparent_bins[j]:
+                id_ = j + children_per_generation
+                methane_loading_bin = get_value(run_id, id_, "methane_loading_bin")
+                surface_area_bin = get_value(run_id, id_, "surface_area_bin")
+                void_fraction_bin = get_value(run_id, id_, "void_fraction_bin")
+                child_bin = [ methane_loading_bin, surface_area_bin, void_fraction_bin ]
 
-                if c_bin not in c_bins:
-                    c_bins.append(c_bin)
+                if child_bin not in child_bins:
+                    child_bins.append(child_bin)
 
-                    count = int( counts[ c_bin[0], c_bin[1], c_bin[2] ] )
-                    c_counts.append(count)
+                    count = int( counts[ child_bin[0], child_bin[1], child_bin[2] ] )
+                    child_counts.append(count)
 
-        p_data = [p_bin, p_count]
-        c_data = [c_bins, c_counts]
-        row = [p_data, c_data]
+        parent_data = [parent_bin, parent_count]
+        child_data = [child_bins, child_counts]
+        row = [parent_data, child_data]
         bin_counts.append(row)
 
     for i in bin_counts:
 
-        p_bin = i[0][0]
-        p_count = i[0][1]
+        parent_bin = i[0][0]
+        parent_count = i[0][1]
 
-        c_bins = i[1][0]
-        c_counts = i[1][1]
+        child_bins = i[1][0]
+        child_counts = i[1][1]
 
-        a = p_bin[0]
-        b = p_bin[1]
-        c = p_bin[2]
+        a = parent_bin[0]
+        b = parent_bin[1]
+        c = parent_bin[2]
 
-        S_0 = Strength_o[a, b, c]
+        s_0 = strength_0[a, b, c]
 
-        if p_bin not in c_bins:
-            Strength_o[a, b, c] = 0.5 * S_0
+        if parent_bin not in child_bins:
+            strength_0[a, b, c] = 0.5 * s_0
 
-        if p_bin in c_bins:
+        if parent_bin in child_bins:
 
-            if p_count < 1.1 * min(c_counts):
-                Strength_o[a, b, c] = 0.5 * S_0
+            if parent_count < 1.1 * min(child_counts):
+                strength_0[a, b, c] = 0.5 * s_0
 
-            pos = c_bins.index(p_bin)
+            pos = child_bins.index(parent_bin)
             val = 0
-            for j in range(len(c_bins)):
+            for j in range(len(child_bins)):
                 if j != pos:
-                    if c_counts[j] > val:
-                        val = c_counts[j]
+                    if child_counts[j] > val:
+                        val = child_counts[j]
 
-            if p_count >= 3 * val:
-                Strength_o[a, b, c] = 1.5 * S_0
+            if parent_count >= 3 * val:
+                strength_0[a, b, c] = 1.5 * s_0
 
-    S_file = "%s/%s.npy" % (wd, run_ID)
-    os.remove(S_file)
-    np.save(S_file, Strength_o)
+    strength_array_file = "%s/%s.npy" % (wd, run_id)
+    os.remove(strength_array_file)
+    np.save(strength_array_file, strength_0)
 
 
 # function for finding "closest" distance over periodic boundaries
@@ -171,7 +172,7 @@ def delta_x(x_o, x_r, strength):  # removed random()
     return xfrac
 
 
-def mutate(run_ID, generation):
+def mutate(run_id, generation):
 
     print( "\nCreating generation :\t%s" % (generation) )
 
@@ -179,8 +180,8 @@ def mutate(run_ID, generation):
     md = os.environ['MAT_DIR']
     fd = os.environ['FF_DIR']
 
-    # Load parameter boundaries from `run_ID`.txt
-    with open(wd + '/' + run_ID + '.txt') as origin:
+    # Load parameter boundaries from `run_id`.txt
+    with open(wd + '/' + run_id + '.txt') as origin:
         for line in origin:
             if "Children per generation:" in line:
                 children_per_generation = int(line.split()[3])
@@ -209,22 +210,22 @@ def mutate(run_ID, generation):
 
     first = generation * children_per_generation
     last = (generation + 1) * children_per_generation
-    child_IDs = np.arange(first, last)
+    child_ids = np.arange(first, last)
     
-    Strength = np.load(wd + '/' + run_ID + '.npy')         # Load strength-parameter array
+    strength_array = np.load(wd + '/' + run_id + '.npy')         # Load strength-parameter array
 
 
-    for i in child_IDs:
-        child_ID = str(i)
-        p = get_value(run_ID, child_ID, "parent_id")                   # Find parent ID
-        p_ID = id_to_mat(run_ID, p)
-        p_MLb = get_value(run_ID, p_ID, "methane_loading_bin")         # Find parent-bin coordinates
-        p_SAb = get_value(run_ID, p_ID, "surface_area_bin")
-        p_VFb = get_value(run_ID, p_ID, "void_fraction_bin")
-        strength = Strength[p_MLb, p_SAb, p_VFb]
+    for i in child_ids:
+        child_id = str(i)
+        p = get_value(run_id, child_id, "parent_id")                   # Find parent ID
+        parent_id = id_to_mat(run_id, p)
+        parent_ml_bin = get_value(run_id, parent_id, "methane_loading_bin")         # Find parent-bin coordinates
+        parent_sa_bin = get_value(run_id, parent_id, "surface_area_bin")
+        parent_vf_bin = get_value(run_id, parent_id, "void_fraction_bin")
+        strength = strength_array[parent_ml_bin, parent_sa_bin, parent_vf_bin]
         
-        pd = "%s/%s-%s" % (fd, run_ID, p_ID)               # Parent's forcefield directory
-        cd = "%s/%s-%s" % (fd, run_ID, child_ID)           # Child's forcefield directory
+        pd = "%s/%s-%s" % (fd, run_id, parent_id)               # Parent's forcefield directory
+        cd = "%s/%s-%s" % (fd, run_id, child_id)           # Child's forcefield directory
         os.mkdir(cd)
 
         # Copy force_field.def
@@ -236,25 +237,25 @@ def mutate(run_ID, generation):
                                             unpack=True,
                                             skip_header=7,
                                             skip_footer=9)
-        cif_atype = np.genfromtxt("%s/%s-%s.cif" % (md, run_ID, p_ID),
+        cif_atype = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
                                   usecols=0, dtype=str, skip_header=16)
-        n1, n2, x_o, y_o, z_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_ID, p_ID),
+        n1, n2, x_o, y_o, z_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
                                               unpack=True, skip_header=16)
         a_foot = len(x_o) + 11
         b_foot = len(x_o) + 10
         c_foot = len(x_o) + 9
-        n1, a_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_ID, p_ID),
+        n1, a_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
                                 unpack=True, skip_header=4,
                                 skip_footer=a_foot)
-        n1, b_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_ID, p_ID),
+        n1, b_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
                                 unpack=True, skip_header=5,
                                 skip_footer=b_foot)
-        n1, c_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_ID, p_ID),
+        n1, c_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
                                 unpack=True, skip_header=6,
                                 skip_footer=c_foot)
 
         # Open child definition files
-        cif_file = open("%s/%s-%s.cif" % (md, run_ID, child_ID), "w")
+        cif_file = open("%s/%s-%s.cif" % (md, run_id, child_id), "w")
         mix_file = open("%s/force_field_mixing_rules.def" % (cd), "w")
 
         # Perturb crystal lattice parameters, then write to file

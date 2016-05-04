@@ -22,51 +22,43 @@ def lcmm(*args):
 
 
 def generate(
-        N,
-        ATOM_TYPES,
-        RUN_ID,
-        ndenmax=0.084086,
-        ndenmin=0.000013907,
-        xmax=52.392,
-        xmin=13.098,
-        ymax=52.392,
-        ymin=13.098,
-        zmax=52.392,
-        zmin=13.098,
-        epmax=513.264,
-        epmin=1.258,
-        sigmax=6.549,
-        sigmin=1.052,
-        qmax=0.0,
+        number_of_materials,
+        atom_types,
+        run_id,
+        max_number_density=0.084086,
+        min_number_density=0.000013907,
+        max_x=52.392,
+        min_x=13.098,
+        max_y=52.392,
+        min_y=13.098,
+        max_z=52.392,
+        min_z=13.098,
+        max_epsilon=513.264,
+        min_epsilon=1.258,
+        max_sigma=6.549,
+        min_sigma=1.052,
+        max_charge=0.0,
         elem_charge=0.0001):
-
-    Ntag = str(N)
-    ntag = str(ndenmax)
-    xtag = str(xmax)
-    ytag = str(ymax)
-    ztag = str(zmax)
-    eptag = str(epmax)
-    sigtag = str(sigmax)
-    qtag = str(qmax)
 
     wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
 
-    run_file = open(wd + '/' + RUN_ID + '.txt',"a")
+    run_file = open(wd + '/' + run_id + '.txt',"a")
     run_file.write( "\nBOUNDARIES\n" +
-                    "Number density:\t%s\t-\t%s\n" % (ndenmin, ndenmax) +
-                    "Lattice constant, a:\t%s\t-\t%s\n" % (xmin, xmax) +
-                    "Lattice constant, b:\t%s\t-\t%s\n" % (ymin, ymax) +
-                    "Lattice constant, c:\t%s\t-\t%s\n" % (zmin, zmax) +
-                    "Epsilon:\t\t%s\t-\t%s\n" % (epmin, epmax) +
-                    "Sigma:\t\t\t%s\t-\t%s\n" % (sigmin, sigmax) +
+                    "Number density:\t%s\t-\t%s\n" % (min_number_density, 
+                                                      max_number_density) +
+                    "Lattice constant, a:\t%s\t-\t%s\n" % (min_x, max_x) +
+                    "Lattice constant, b:\t%s\t-\t%s\n" % (min_y, max_y) +
+                    "Lattice constant, c:\t%s\t-\t%s\n" % (min_z, max_z) +
+                    "Epsilon:\t\t%s\t-\t%s\n" % (min_epsilon, max_epsilon) +
+                    "Sigma:\t\t\t%s\t-\t%s\n" % (min_sigma, max_sigma) +
                     "Elemental charge:\t%s\n" % (elem_charge))
 
     ff_dir = os.environ['FF_DIR']      # output force-field files to $FF_DIR
     mat_dir = os.environ['MAT_DIR']    # output .cif-files to $MAT_DIR
 
-    for i in range(N):                           # each iteration creates a new material
+    for i in range(number_of_materials):                           # each iteration creates a new material
 
-        mat_name = RUN_ID + '-' + str(i)
+        mat_name = run_id + '-' + str(i)
 
         def_dir = ff_dir + '/' + mat_name        # directory for material's force field
         os.mkdir( def_dir )
@@ -76,12 +68,12 @@ def generate(
         for_file = open(def_dir + '/force_field.def', "w")              # to overwrite LJ
         psu_file = open(def_dir + '/pseudo_atoms.def', "w")             # define atom-types
 
-        xdim_ = round(random() * (xmax - xmin) + xmin, 4)
-        ydim_ = round(random() * (ymax - ymin) + ymin, 4)
-        zdim_ = round(random() * (zmax - zmin) + zmin, 4)
+        xdim_ = round(random() * (max_x - min_x) + min_x, 4)
+        ydim_ = round(random() * (max_y - min_y) + min_y, 4)
+        zdim_ = round(random() * (max_z - min_z) + min_z, 4)
 
-        Nmax = int(ndenmax * xdim_ * ydim_ * zdim_)
-        n_ = randrange(2, Nmax, 1)
+        n_max = int(max_number_density * xdim_ * ydim_ * zdim_)
+        n_ = randrange(2, n_max, 1)
         nden_ = round(n_ / (xdim_ * ydim_ * zdim_))
 
         cif_file.write( "\nloop_\n" +
@@ -105,13 +97,13 @@ def generate(
                         "# general rule tailcorrections\n" +
                         "no\n" +
                         "# number of defined interactions\n" +
-                        "%s\n" % (ATOM_TYPES + 8) +
+                        "%s\n" % (atom_types + 8) +
                         "# type interaction, parameters.    " +
                             "IMPORTANT: define shortest matches first, so" +
                             " that more specific ones overwrites these\n" )
 
         psu_file.write( "#number of pseudo atoms\n" +
-                        "%s\n" % (ATOM_TYPES + 8) +
+                        "%s\n" % (atom_types + 8) +
                         "#type\tprint\tas\tchem\toxidation\tmass\t" +
                             "charge\tpolarization\tB-factor\tradii\t" +
                             "connectivity\tanisotropic\tanisotrop-type\t" +
@@ -121,10 +113,10 @@ def generate(
         sig = []
         q = []
 
-        for i in range(ATOM_TYPES):
-            epsilon = round(random() * (epmax - epmin) + epmin, 4)
+        for i in range(atom_types):
+            epsilon = round(random() * (max_epsilon - min_epsilon) + min_epsilon, 4)
             ep.append(epsilon)
-            sigma = round(random() * (sigmax - sigmin) + sigmin, 4)
+            sigma = round(random() * (max_sigma - min_sigma) + min_sigma, 4)
             sig.append(sigma)
             charge = 0
             q.append(charge)
@@ -132,19 +124,19 @@ def generate(
         ep_ = np.asarray(ep).reshape(-1, 1)
         sig_ = np.asarray(sig).reshape(-1, 1)
         q_ = np.asarray(q).reshape(-1, 1)
-        ID_ = np.asarray(range(0, ATOM_TYPES)).reshape(-1, 1)
+        ID_ = np.asarray(range(0, atom_types)).reshape(-1, 1)
 
         atoms = np.hstack((ID_, ep_, sig_, q_))
 
         n_atoms = np.empty([0, 4])
 
         for i in range(n_):
-            a_type = choice(range(ATOM_TYPES))
+            a_type = choice(range(atom_types))
             n_atoms = np.vstack([n_atoms, atoms[a_type, :]])
 
         a_count = []
         a_id = []
-        for i in range(ATOM_TYPES):
+        for i in range(atom_types):
             if i in n_atoms[:, 0]:
                 count = list(n_atoms[:, 0]).count(i)
                 if count != 0:
@@ -156,7 +148,7 @@ def generate(
             temp_lcm = lcmm(*a_count)
 
             # maxiumum charge multiplier
-            cm_max = floor(qmax / (temp_lcm * elem_charge / min(a_count)))
+            cm_max = floor(max_charge / (temp_lcm * elem_charge / min(a_count)))
 
             cm_list = []
     #cm_f = -1 * sum(cm_list)
@@ -192,7 +184,7 @@ def generate(
 #        qs = n_atoms[:,3]
 
     # writing mixing_rules, pseudo_atoms...
-        for i in range(ATOM_TYPES):
+        for i in range(atom_types):
             psu_file.write( "A_%s\tyes\tC\tC\t0\t12.\t" % (int(atoms[i,0])) +
                                 "%s\t0\t0\t1\t1\t0\t0\t" % (atoms[i,3]) +
                                 "absolute\t0\n" )

@@ -9,61 +9,61 @@ import numpy as np
 
 from htsohm.runDB_declarative import Base, RunData, create_session
 
-def add_rows(run_ID, mat_IDs):
+def add_rows(run_id, mat_ids):
 #
 #    from runDB_declarative import RunData
 
     s = create_session()
 
-    for i in mat_IDs:
-        check_first = s.query(RunData).filter( RunData.run_id == run_ID,
+    for i in mat_ids:
+        check_first = s.query(RunData).filter( RunData.run_id == run_id,
                                                RunData.material_id == str(i)
                                               ).count()
         if not check_first:
-            new_mat = RunData( run_id=run_ID, material_id=str(i) )
+            new_mat = RunData( run_id=run_id, material_id=str(i) )
             s.add(new_mat)
     s.commit()
 
 
-def update_table(run_ID, mat_ID, data):
+def update_table(run_id, mat_id, data):
 #
 #   from runDB_declarative import RunData
 
     s = create_session()
-    DBmat = s.query(RunData).filter( RunData.run_id == run_ID,
-                                     RunData.material_id == str(mat_ID) )
-    DBmat.update(data)
+    material = s.query(RunData).filter( RunData.run_id == run_id,
+                                        RunData.material_id == str(mat_id) )
+    material.update(data)
     s.commit()
 
 
-def get_value(run_ID, mat_ID, value):
+def get_value(run_id, mat_id, value):
 #
 #    from runDB_declarative import RunData
 
     s = create_session()
-    DBmat = s.query(RunData).filter( RunData.run_id == run_ID,
-                                     RunData.material_id == str(mat_ID) )
+    material = s.query(RunData).filter( RunData.run_id == run_id,
+                                     RunData.material_id == str(mat_id) )
 
-    for i in DBmat:
-        DBval = getattr(i, value)
+    for i in material:
+        database_value = getattr(i, value)
 
-    return DBval
+    return database_value
 
-def id_to_mat(run_ID, ID):
+def id_to_mat(run_id, ID):
 #
 #    from runDB_declarative import RunData
 
     s = create_session()
-    DBmat = s.query(RunData).filter( RunData.run_id == run_ID,
+    material = s.query(RunData).filter( RunData.run_id == run_id,
                                      RunData.id == str(ID) )
 
-    for i in DBmat:
+    for i in material:
         mat = getattr(i, "material_id")
 
     return mat
 
 
-def void_fraction(run_ID, mat_ID):
+def void_fraction(run_id, mat_id):
 #
 #    import os
 #    import subprocess
@@ -72,17 +72,17 @@ def void_fraction(run_ID, mat_ID):
     pwd = os.getcwd()
     
     # Simulate VOID FRACTION:
-    VF_input = open( pwd + '/void_fraction.input', "w")
-    VF_input.write( "SimulationType\t\t\tMonteCarlo\n" +
+    vf_input = open( pwd + '/void_fraction.input', "w")
+    vf_input.write( "SimulationType\t\t\tMonteCarlo\n" +
                     "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
          "PrintEvery\t\t\t100\n" +
                     "PrintPropertiesEvery\t\t100\n" +
                     "\n" +
-                    "Forcefield\t\t\t%s-%s\n" % (run_ID, mat_ID) +
+                    "Forcefield\t\t\t%s-%s\n" % (run_id, mat_id) +
                     "CutOff\t\t\t\t12.8\n" +                       # LJ interaction cut-off, Angstroms
                     "\n" +
                     "Framework 0\n" +
-                    "FrameworkName %s-%s\n" % (run_ID, mat_ID) +
+                    "FrameworkName %s-%s\n" % (run_id, mat_id) +
                     "UnitCells 1 1 1\n" +
                     "ExternalTemperature 298.0\n" +       # External temperature, K
                     "\n" +
@@ -90,12 +90,12 @@ def void_fraction(run_ID, mat_ID):
                     "            MoleculeDefinition\t\tTraPPE\n" +
                     "            WidomProbability\t\t1.0\n" +
                     "            CreateNumberOfMolecules\t0\n" )
-    VF_input.close()
+    vf_input.close()
 
     subprocess.run(shlex.split('simulate void_fraction.input'), check=True)
 
 
-def methane_loading(run_ID, mat_ID):
+def methane_loading(run_id, mat_id):
 #
 #    import os
 #    import subprocess
@@ -103,24 +103,24 @@ def methane_loading(run_ID, mat_ID):
 
     pwd = os.getcwd()
 
-    VF = get_value(run_ID, mat_ID, "helium_void_fraction")
+    vf = get_value(run_id, mat_id, "helium_void_fraction")
 
     # Simulate METHANE LOADING
-    ML_input = open( pwd + '/methane_loading.input', "w")
-    ML_input.write( "SimulationType\t\t\tMonteCarlo\n" +
+    ml_input = open( pwd + '/methane_loading.input', "w")
+    ml_input.write( "SimulationType\t\t\tMonteCarlo\n" +
                     "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
                     "NumberOfInitializationCycles\t500\n" +    # number of initialization cycles
                     "PrintEvery\t\t\t100\n" +
                     "RestartFile\t\t\tno\n" +
                     "\n" +
-                    "Forcefield\t\t\t%s-%s\n" % (run_ID, mat_ID) +
+                    "Forcefield\t\t\t%s-%s\n" % (run_id, mat_id) +
                     "ChargeMethod\t\t\tEwald\n"
                     "CutOff\t\t\t\t12.0\n" +                   # electrostatic cut-off, Angstroms
                     "\n" +
                     "Framework 0\n" +
-                    "FrameworkName %s-%s\n" % (run_ID, mat_ID) +
+                    "FrameworkName %s-%s\n" % (run_id, mat_id) +
                     "UnitCells 1 1 1\n" +
-                    "HeliumVoidFraction %s\n" % (VF) +
+                    "HeliumVoidFraction %s\n" % (vf) +
                     "ExternalTemperature 298.0\n" +            # External temperature, K
                     "ExternalPressure 3500000\n" +             # External pressure, Pa
                     "\n" +
@@ -130,11 +130,11 @@ def methane_loading(run_ID, mat_ID):
                     "            ReinsertionProbability\t1.0\n" +
                     "            SwapProbability\t\t1.0\n" +
                     "            CreateNumberOfMolecules\t0\n" )
-    ML_input.close()
+    ml_input.close()
 
     subprocess.run(shlex.split('simulate methane_loading.input'), check=True)
 
-def surface_area(run_ID, mat_ID):
+def surface_area(run_id, mat_id):
 #
 #    import os
 #    import subprocess
@@ -143,17 +143,17 @@ def surface_area(run_ID, mat_ID):
     pwd = os.getcwd()
 
     # Simulate SURFACE AREA:
-    SA_input = open( pwd + '/surface_area.input', "w")
-    SA_input.write( "SimulationType\t\t\tMonteCarlo\n" +
+    sa_input = open( pwd + '/surface_area.input', "w")
+    sa_input.write( "SimulationType\t\t\tMonteCarlo\n" +
                     "NumberOfCycles\t\t\t10\n" +             # number of MonteCarlo cycles
                     "PrintEvery\t\t\t1\n" +
                     "PrintPropertiesEvery\t\t1\n" +
                     "\n" +
-                    "Forcefield %s-%s\n" % (run_ID, mat_ID) +
+                    "Forcefield %s-%s\n" % (run_id, mat_id) +
                     "CutOff 12.8\n" +                        # electrostatic cut-off, Angstroms
                     "\n" +
                     "Framework 0\n" +
-                    "FrameworkName %s-%s\n" % (run_ID, mat_ID) +
+                    "FrameworkName %s-%s\n" % (run_id, mat_id) +
                     "UnitCells 1 1 1\n" +
                     "SurfaceAreaProbeDistance Minimum\n" +
                     "\n" +
@@ -162,42 +162,42 @@ def surface_area(run_ID, mat_ID):
                     "            MoleculeDefinition\t\tTraPPE\n" +
                     "            SurfaceAreaProbability\t1.0\n" +
                     "            CreateNumberOfMolecules\t0\n" )
-    SA_input.close()
+    sa_input.close()
 
     subprocess.run(shlex.split('simulate surface_area.input'), check=True)
 
-def get_ml(run_ID, mat_ID):
+def get_ml(run_id, mat_id):
 
-    methane_loading(run_ID, mat_ID)
+    methane_loading(run_id, mat_id)
 
-    ML_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_ID, mat_ID)
-    with open(ML_data) as origin:
+    ml_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, mat_id)
+    with open(ml_data) as origin:
         for line in origin:
             if "absolute [mol/kg" in line:
-                ML_a_mk = line.split()[5]
+                ml_a_mk = line.split()[5]
             elif "absolute [cm^3 (STP)/g" in line:
-                ML_a_cg = line.split()[6]
+                ml_a_cg = line.split()[6]
             elif "absolute [cm^3 (STP)/c" in line:
-                ML_a_cc = line.split()[6]
+                ml_a_cc = line.split()[6]
             elif "excess [mol/kg" in line:
-                ML_e_mk = line.split()[5]
+                ml_e_mk = line.split()[5]
             elif "excess [cm^3 (STP)/g" in line:
-                ML_e_cg = line.split()[6]
+                ml_e_cg = line.split()[6]
             elif "excess [cm^3 (STP)/c" in line:
-                ML_e_cc = line.split()[6]
+                ml_e_cc = line.split()[6]
 
-    data = {"absolute_volumetric_loading": ML_a_cc,
-            "absolute_gravimetric_loading": ML_a_cg,
-            "absolute_molar_loading": ML_a_mk,
-            "excess_volumetric_loading": ML_e_cc,
-            "excess_gravimetric_loading": ML_e_cg,
-            "excess_molar_loading": ML_e_mk}
-    update_table(run_ID, mat_ID, data)
+    data = {"absolute_volumetric_loading": ml_a_cc,
+            "absolute_gravimetric_loading": ml_a_cg,
+            "absolute_molar_loading": ml_a_mk,
+            "excess_volumetric_loading": ml_e_cc,
+            "excess_gravimetric_loading": ml_e_cg,
+            "excess_molar_loading": ml_e_mk}
+    update_table(run_id, mat_id, data)
 
     print( "\nMETHANE LOADING\tabsolute\texcess\n" +
-           "mol/kg\t\t%s\t%s\n" % (ML_a_mk, ML_e_mk) +
-           "cc/g\t\t%s\t%s\n" % (ML_a_cg, ML_e_cg) +
-           "cc/cc\t\t%s\t%s\n" % (ML_a_cc, ML_e_cc) )
+           "mol/kg\t\t%s\t%s\n" % (ml_a_mk, ml_e_mk) +
+           "cc/g\t\t%s\t%s\n" % (ml_a_cg, ml_e_cg) +
+           "cc/cc\t\t%s\t%s\n" % (ml_a_cc, ml_e_cc) )
 
     #STILL NEED TO GREP HEATDESORP
     os.remove("methane_loading.input")
@@ -207,32 +207,32 @@ def get_ml(run_ID, mat_ID):
     shutil.rmtree("Restart")
 
 
-def get_sa(run_ID, mat_ID):
-    surface_area(run_ID, mat_ID)
+def get_sa(run_id, mat_id):
+    surface_area(run_id, mat_id)
 
-    SA_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, mat_ID)
-    with open(SA_data) as origin:
+    sa_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_id, mat_id)
+    with open(sa_data) as origin:
         count = 0
         for line in origin:
             if "Surface area" in line:
                 if count == 0:
-                    SA_a2 = line.split()[2]
+                    sa_a2 = line.split()[2]
                     count = count + 1
                 elif count == 1:
-                    SA_mg = line.split()[2]
+                    sa_mg = line.split()[2]
                     count = count + 1
                 elif count == 2:
-                    SA_mc = line.split()[2]
+                    sa_mc = line.split()[2]
     
-    data = {"unit_cell_surface_area": SA_a2,
-            "volumetric_surface_area": SA_mc,
-            "gravimetric_surface_area": SA_mg}
-    update_table(run_ID, mat_ID, data)
+    data = {"unit_cell_surface_area": sa_a2,
+            "volumetric_surface_area": sa_mc,
+            "gravimetric_surface_area": sa_mg}
+    update_table(run_id, mat_id, data)
 
     print( "\nSURFACE AREA\n" +
-           "%s\tA^2\n" % (SA_a2) +
-           "%s\tm^2/g\n" % (SA_mg) +
-           "%s\tm^2/cm^3" % (SA_mc) )
+           "%s\tA^2\n" % (sa_a2) +
+           "%s\tm^2/g\n" % (sa_mg) +
+           "%s\tm^2/cm^3" % (sa_mc) )
 
     os.remove("surface_area.input")
     shutil.rmtree("Output")
@@ -241,25 +241,25 @@ def get_sa(run_ID, mat_ID):
     shutil.rmtree("Restart")
 
 
-def get_vf(run_ID, mat_ID):
+def get_vf(run_id, mat_id):
 
-    void_fraction(run_ID, mat_ID)
+    void_fraction(run_id, mat_id)
 
-    VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, mat_ID)
-    with open(VF_data) as origin:
+    vf_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_id, mat_id)
+    with open(vf_data) as origin:
         for line in origin:
             if not "Average Widom Rosenbluth-weight:" in line:
                 continue
             try:
-                VF_val = float(line.split()[4][:-1])
+                vf_val = float(line.split()[4][:-1])
             except IndexError:
                 print()
 
-    print( "\nVOID FRACTION :   %s\n" % (VF_val) )
+    print( "\nVOID FRACTION :   %s\n" % (vf_val) )
 
     # Add to database...
-    data = {"helium_void_fraction": VF_val}
-    update_table(run_ID, mat_ID, data)
+    data = {"helium_void_fraction": vf_val}
+    update_table(run_id, mat_id, data)
 
     os.remove("void_fraction.input")
     shutil.rmtree("Output")
@@ -268,53 +268,53 @@ def get_vf(run_ID, mat_ID):
     shutil.rmtree("Restart")
 
 
-def get_bins(run_ID, mat_ID):
+def get_bins(run_id, mat_id):
    
-    ML = get_value(run_ID, mat_ID, "absolute_volumetric_loading")
-    SA = get_value(run_ID, mat_ID, "volumetric_surface_area")
-    VF = get_value(run_ID, mat_ID, "helium_void_fraction")
+    ml = get_value(run_id, mat_id, "absolute_volumetric_loading")
+    sa = get_value(run_id, mat_id, "volumetric_surface_area")
+    vf = get_value(run_id, mat_id, "helium_void_fraction")
  
     # Arbitary structure-property space "boundaries"
-    ML_min = 0.
-    ML_max = 350.
-    SA_min = 0.
-    SA_max = 4500.
-    VF_min = 0.
-    VF_max = 1.
+    ml_min = 0.
+    ml_max = 350.
+    sa_min = 0.
+    sa_max = 4500.
+    vf_min = 0.
+    vf_max = 1.
 
-    bins = int( run_ID[-1] )
+    bins = int( run_id[-1] )
 
-    ML_step = ML_max / float(bins)
-    SA_step = SA_max / float(bins)
-    VF_step = VF_max / float(bins)
+    ml_step = ml_max / float(bins)
+    sa_step = sa_max / float(bins)
+    vf_step = vf_max / float(bins)
 
-    ML_edges = np.arange( ML_min, ML_max + ML_step, ML_step )
-    SA_edges = np.arange( SA_min, SA_max + SA_step, SA_step )
-    VF_edges = np.arange( VF_min, VF_max + VF_step, VF_step )
+    ml_edges = np.arange( ml_min, ml_max + ml_step, ml_step )
+    sa_edges = np.arange( sa_min, sa_max + sa_step, sa_step )
+    vf_edges = np.arange( vf_min, vf_max + vf_step, vf_step )
 
     for i in range( bins ):
-        if SA >= SA_edges[i] and SA < SA_edges[i + 1]:
-            SA_bin = i
-        if ML >= ML_edges[i] and ML < ML_edges[i + 1]:
-            ML_bin = i
-        if VF >= VF_edges[i] and VF < VF_edges[i + 1]:
-            VF_bin = i
+        if sa >= sa_edges[i] and sa < sa_edges[i + 1]:
+            sa_bin = i
+        if ml >= ml_edges[i] and ml < ml_edges[i + 1]:
+            ml_bin = i
+        if vf >= vf_edges[i] and vf < vf_edges[i + 1]:
+            vf_bin = i
 
-    data = {"methane_loading_bin": str(ML_bin),
-            "surface_area_bin": str(SA_bin),
-            "void_fraction_bin": str(VF_bin)}
-    update_table(run_ID, mat_ID, data)
-
-
-def simulate(run_ID, mat_IDs):
-   for i in mat_IDs:
-       get_vf(run_ID, i)
-       get_ml(run_ID, i)
-       get_sa(run_ID, i)
-       get_bins(run_ID, i)
+    data = {"methane_loading_bin": str(ml_bin),
+            "surface_area_bin": str(sa_bin),
+            "void_fraction_bin": str(vf_bin)}
+    update_table(run_id, mat_id, data)
 
 
-def dummy_test(run_ID, generation):
+def simulate(run_id, mat_ids):
+   for i in mat_ids:
+       get_vf(run_id, i)
+       get_ml(run_id, i)
+       get_sa(run_id, i)
+       get_bins(run_id, i)
+
+
+def dummy_test(run_id, generation):
 #
 #    import os
 #    import subprocess
@@ -330,118 +330,126 @@ def dummy_test(run_ID, generation):
 
     s = create_session()
 
-    Tolerance = 0.05      # Acceptable deviation from original value(s)...
-    NumberOfTrials = 1    # Number of times each simulation is repeated.
+    tolerance = 0.05      # Acceptable deviation from original value(s)...
+    number_of_trials = 1    # Number of times each simulation is repeated.
 
     wd = os.environ['HTSOHM_DIR']
-    with open(wd + '/' + run_ID + '.txt') as origin:
+    with open(wd + '/' + run_id + '.txt') as origin:
         for line in origin:
             if "Children per generation:" in line:
                 children_per_generation = int(line.split()[3])
-    First = generation * children_per_generation
-    Last = (generation + 1) * children_per_generation
-    c_IDs = np.arange(First, Last)
+    first = generation * children_per_generation
+    last = (generation + 1) * children_per_generation
+    child_ids = np.arange(first, last)
 
-    p_IDs = []
-    for i in c_IDs:
+    parents_ids = []
+    for i in child_ids:
 
-        pID = get_value(run_ID, i, "parent_id")
-        if pID not in p_IDs:
-            p_IDs.append(pID)
+        parent_id = get_value(run_id, i, "parent_id")
+        if parent_id not in parents_ids:
+            parents_ids.append(parent_id)
 
-    BadMaterials = []
-    for i in p_IDs:
-        matID = id_to_mat(run_ID, i)
+    bad_materials = []
+    for i in parents_ids:
+        material_id = id_to_mat(run_id, i)
 
-        print( "\nRe-Simulating %s-%s...\n" % (run_ID, matID) )
+        print( "\nRe-Simulating %s-%s...\n" % (run_id, material_id) )
 
-        ML_o = get_value(run_ID, matID, "absolute_volumetric_loading")
-        SA_o = get_value(run_ID, matID, "volumetric_surface_area")
-        VF_o = get_value(run_ID, matID, "helium_void_fraction")
+        ml_o = get_value(run_id, material_id, "absolute_volumetric_loading")
+        sa_o = get_value(run_id, material_id, "volumetric_surface_area")
+        vf_o = get_value(run_id, material_id, "helium_void_fraction")
 
-        VFs = []
-        for j in range(NumberOfTrials):
-            void_fraction(run_ID, matID)
-            VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, matID)
-            with open(VF_data) as origin:
+        vfs = []
+        for j in range(number_of_trials):
+            void_fraction(run_id, material_id)
+            vf_data = ( "Output/System_0/output_" +
+                        "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
+                        )
+            with open(vf_data) as origin:
                 for line in origin:
 #                    if not "Average Widom:" in line:
 #                        continue
 #                    try:
-#                        VF_val = line.split()[3]
+#                        vf_val = line.split()[3]
 #                    except IndexError:
 #                        print()
                     if not "Average Widom Rosenbluth-weight:" in line:       #ONLY ON AKAIJA BUILD
                         continue
                     try:
-                        VF_val = line.split()[4]
+                        vf_val = line.split()[4]
                     except IndexError:
                         print()
 
-            VFs.append( float(VF_val) )
+            vfs.append( float(vf_val) )
 
-        MLs = []
-        for j in range(NumberOfTrials):
-            methane_loading(run_ID, matID)
-            ML_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_ID, matID)
-            with open(ML_data) as origin:
+        mls = []
+        for j in range(number_of_trials):
+            methane_loading(run_id, material_id)
+            ml_data = ( "Output/System_0/output_" + 
+                        "%s-%s_1.1.1_298.000000_" % (run_id, material_id) +
+                        "3.5e+06.data" )
+            with open(ml_data) as origin:
                 for line in origin:
                     if "absolute [cm^3 (STP)/c" in line:
-                        ML_a_cc = line.split()[6]
-            MLs.append( float(ML_a_cc) )
+                        ml_a_cc = line.split()[6]
+            mls.append( float(ml_a_cc) )
 
-        SAs = []
-        for j in range(NumberOfTrials):
-            surface_area(run_ID, matID)
-            SA_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, matID)
-            with open(SA_data) as origin:
+        sas = []
+        for j in range(number_of_trials):
+            surface_area(run_id, material_id)
+            sa_data = ( "Output/System_0/output_" + 
+                        "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
+                        )
+            with open(sa_data) as origin:
                 count = 0
                 for line in origin:
                     if "Surface area" in line:
                         if count == 0:
-                            SA_a2 = line.split()[2]
+                            sa_a2 = line.split()[2]
                             count = count + 1
                         elif count == 1:
-                            SA_mg = line.split()[2]
+                            sa_mg = line.split()[2]
                             count = count + 1
                         elif count == 2:
-                            SA_mc = line.split()[2]
-            SAs.append( float(SA_mc) )
+                            sa_mc = line.split()[2]
+            sas.append( float(sa_mc) )
 
-        if abs(np.mean(MLs) - ML_o) >= Tolerance * ML_o:
-            BadMaterials.append(i)
-        if abs(np.mean(SAs) - SA_o) >= Tolerance * SA_o:
-            BadMaterials.append(i)
-        if abs(np.mean(VFs) - VF_o) >= Tolerance * VF_o:
-            BadMaterials.append(i)
+        if abs(np.mean(mls) - ml_o) >= tolerance * ml_o:
+            bad_materials.append(i)
+        if abs(np.mean(sas) - sa_o) >= tolerance * sa_o:
+            bad_materials.append(i)
+        if abs(np.mean(vfs) - vf_o) >= tolerance * vf_o:
+            bad_materials.append(i)
 
-    Failed = []
-    for i in BadMaterials:
-        if i not in Failed:
-            Failed.append(i)
+    failed = []
+    for i in bad_materials:
+        if i not in failed:
+            failed.append(i)
 
-    for i in p_IDs:
-        matID = id_to_mat(run_ID, i)
-        if i not in Failed:
+    for i in parents_ids:
+        material_id = id_to_mat(run_id, i)
+        if i not in failed:
             data = {"dummy_test_result": 'y'}
-            update_table(run_ID, matID, data)
-        elif i in Failed:
+            update_table(run_id, material_id, data)
+        elif i in failed:
             data = {"dummy_test_result": 'n'}
-            update_table(run_ID, matID, data)
-#            AffectedMats = s.query(RunData).filter(RunData.run_id == run_ID,
+            update_table(run_id, material_id, data)
+#            AffectedMats = s.query(RunData).filter(RunData.run_id == run_id,
 #                                                   RunData.parent_id == i
 #                                                   ).all()
 #            Maybes = [j.Mat for j in AffectedMats]
 #            for j in Maybes:
-#                update_table(run_ID, j, data)
+#                update_table(run_id, j, data)
                                                     
-    if len(Failed) == 0:
-        print( "\nALL PARENTS IN GENERATION %s PASSED THE DUMMY TEST.\n" % (generation) )
-    if len(Failed) != 0:
-        print( "\nTHE FOLLOWING PARENTS IN GENERATION %s FAIL THE DUMMY TEST:" % (generation) )
-        for i in Failed:
-            matID = id_to_mat(run_ID, i)
-            print( "\t%s-%s\n" % (run_ID, matID) )
+    if len(failed) == 0:
+        print( "\nALL PARENTS IN GENERATION " + 
+               "%s PASSED THE DUMMY TEST.\n" % (generation) )
+    if len(failed) != 0:
+        print( "\nTHE FOLLOWING PARENTS IN GENERATION " +
+               "%s FAIL THE DUMMY TEST:" % (generation) )
+        for i in failed:
+            material_id = id_to_mat(run_id, i)
+            print( "\t%s-%s\n" % (run_id, material_id) )
 
 
 if __name__ == "__main__":
