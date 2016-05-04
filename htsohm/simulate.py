@@ -12,113 +12,81 @@ from htsohm import binning as bng
 def id_to_mat(id):
     return session.query(RunData).get(id).material_id
 
-def void_fraction(run_data):
-#
-#    import os
-#    import subprocess
-#    import shlex
+def write_void_fraction_config(filename, run_id, material_id):
+    with open(filename, "w") as config:
+        config.write("SimulationType\t\t\tMonteCarlo\n" +
+                        "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
+                        "PrintEvery\t\t\t100\n" +
+                        "PrintPropertiesEvery\t\t100\n" +
+                        "\n" +
+                        "Forcefield\t\t\t%s-%s\n" % (run_id, material_id) +
+                        "CutOff\t\t\t\t12.8\n" +                       # LJ interaction cut-off, Angstroms
+                        "\n" +
+                        "Framework 0\n" +
+                        "FrameworkName %s-%s\n" % (run_id, material_id) +
+                        "UnitCells 1 1 1\n" +
+                        "ExternalTemperature 298.0\n" +       # External temperature, K
+                        "\n" +
+                        "Component 0 MoleculeName\t\thelium\n" +
+                        "            MoleculeDefinition\t\tTraPPE\n" +
+                        "            WidomProbability\t\t1.0\n" +
+                        "            CreateNumberOfMolecules\t0\n" )
 
-    pwd = os.getcwd()
-    
-    # Simulate VOID FRACTION:
-    vf_input = open( pwd + '/void_fraction.input', "w")
-    vf_input.write( "SimulationType\t\t\tMonteCarlo\n" +
-                    "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
-         "PrintEvery\t\t\t100\n" +
-                    "PrintPropertiesEvery\t\t100\n" +
-                    "\n" +
-                    "Forcefield\t\t\t%s-%s\n" % (run_data.run_id, run_data.material_id) +
-                    "CutOff\t\t\t\t12.8\n" +                       # LJ interaction cut-off, Angstroms
-                    "\n" +
-                    "Framework 0\n" +
-                    "FrameworkName %s-%s\n" % (run_data.run_id, run_data.material_id) +
-                    "UnitCells 1 1 1\n" +
-                    "ExternalTemperature 298.0\n" +       # External temperature, K
-                    "\n" +
-                    "Component 0 MoleculeName\t\thelium\n" +
-                    "            MoleculeDefinition\t\tTraPPE\n" +
-                    "            WidomProbability\t\t1.0\n" +
-                    "            CreateNumberOfMolecules\t0\n" )
-    vf_input.close()
+def write_methane_loading_configuration(filename, run_id, material_id, helium_void_fraction ):
+    with open(filename, "w") as config:
+        config.write("SimulationType\t\t\tMonteCarlo\n" +
+                        "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
+                        "NumberOfInitializationCycles\t500\n" +    # number of initialization cycles
+                        "PrintEvery\t\t\t100\n" +
+                        "RestartFile\t\t\tno\n" +
+                        "\n" +
+                        "Forcefield\t\t\t%s-%s\n" % (run_id, material_id) +
+                        "ChargeMethod\t\t\tEwald\n"
+                        "CutOff\t\t\t\t12.0\n" +                   # electrostatic cut-off, Angstroms
+                        "\n" +
+                        "Framework 0\n" +
+                        "FrameworkName %s-%s\n" % (run_id, material_id) +
+                        "UnitCells 1 1 1\n" +
+                        "HeliumVoidFraction %s\n" % (helium_void_fraction) +
+                        "ExternalTemperature 298.0\n" +            # External temperature, K
+                        "ExternalPressure 3500000\n" +             # External pressure, Pa
+                        "\n" +
+                        "Component 0 MoleculeName\t\tmethane\n" +
+                        "            MoleculeDefinition\t\tTraPPE\n" +
+                        "            TranslationProbability\t1.0\n" +
+                        "            ReinsertionProbability\t1.0\n" +
+                        "            SwapProbability\t\t1.0\n" +
+                        "            CreateNumberOfMolecules\t0\n" )
 
-    subprocess.run(shlex.split('simulate void_fraction.input'), check=True)
+def write_surface_area_configuration(filename, run_id, material_id):
+    with open(filename, "w") as config:
+        config.write( "SimulationType\t\t\tMonteCarlo\n" +
+                        "NumberOfCycles\t\t\t10\n" +             # number of MonteCarlo cycles
+                        "PrintEvery\t\t\t1\n" +
+                        "PrintPropertiesEvery\t\t1\n" +
+                        "\n" +
+                        "Forcefield %s-%s\n" % (run_id, material_id) +
+                        "CutOff 12.8\n" +                        # electrostatic cut-off, Angstroms
+                        "\n" +
+                        "Framework 0\n" +
+                        "FrameworkName %s-%s\n" % (run_id, material_id) +
+                        "UnitCells 1 1 1\n" +
+                        "SurfaceAreaProbeDistance Minimum\n" +
+                        "\n" +
+                        "Component 0 MoleculeName\t\tN2\n" +
+                        "            StartingBead\t\t0\n" +
+                        "            MoleculeDefinition\t\tTraPPE\n" +
+                        "            SurfaceAreaProbability\t1.0\n" +
+                        "            CreateNumberOfMolecules\t0\n" )
 
-
-
-def methane_loading(run_data):
-#
-#    import os
-#    import subprocess
-#    import shlex
-
-    pwd = os.getcwd()
-
-    # Simulate METHANE LOADING
-    ml_input = open( pwd + '/methane_loading.input', "w")
-    ml_input.write( "SimulationType\t\t\tMonteCarlo\n" +
-                    "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
-                    "NumberOfInitializationCycles\t500\n" +    # number of initialization cycles
-                    "PrintEvery\t\t\t100\n" +
-                    "RestartFile\t\t\tno\n" +
-                    "\n" +
-                    "Forcefield\t\t\t%s-%s\n" % (run_data.run_id, run_data.material_id) +
-                    "ChargeMethod\t\t\tEwald\n"
-                    "CutOff\t\t\t\t12.0\n" +                   # electrostatic cut-off, Angstroms
-                    "\n" +
-                    "Framework 0\n" +
-                    "FrameworkName %s-%s\n" % (run_data.run_id, run_data.material_id) +
-                    "UnitCells 1 1 1\n" +
-                    "HeliumVoidFraction %s\n" % (run_data.helium_void_fraction) +
-                    "ExternalTemperature 298.0\n" +            # External temperature, K
-                    "ExternalPressure 3500000\n" +             # External pressure, Pa
-                    "\n" +
-                    "Component 0 MoleculeName\t\tmethane\n" +
-                    "            MoleculeDefinition\t\tTraPPE\n" +
-                    "            TranslationProbability\t1.0\n" +
-                    "            ReinsertionProbability\t1.0\n" +
-                    "            SwapProbability\t\t1.0\n" +
-                    "            CreateNumberOfMolecules\t0\n" )
-    ml_input.close()
-
-    subprocess.run(shlex.split('simulate methane_loading.input'), check=True)
-
-def surface_area(run_data):
-#
-#    import os
-#    import subprocess
-#    import shlex
-
-    pwd = os.getcwd()
-
-    # Simulate SURFACE AREA:
-    sa_input = open( pwd + '/surface_area.input', "w")
-    sa_input.write( "SimulationType\t\t\tMonteCarlo\n" +
-                    "NumberOfCycles\t\t\t10\n" +             # number of MonteCarlo cycles
-                    "PrintEvery\t\t\t1\n" +
-                    "PrintPropertiesEvery\t\t1\n" +
-                    "\n" +
-                    "Forcefield %s-%s\n" % (run_data.run_id, run_data.material_id) +
-                    "CutOff 12.8\n" +                        # electrostatic cut-off, Angstroms
-                    "\n" +
-                    "Framework 0\n" +
-                    "FrameworkName %s-%s\n" % (run_data.run_id, run_data.material_id) +
-                    "UnitCells 1 1 1\n" +
-                    "SurfaceAreaProbeDistance Minimum\n" +
-                    "\n" +
-                    "Component 0 MoleculeName\t\tN2\n" +
-                    "            StartingBead\t\t0\n" +
-                    "            MoleculeDefinition\t\tTraPPE\n" +
-                    "            SurfaceAreaProbability\t1.0\n" +
-                    "            CreateNumberOfMolecules\t0\n" )
-    sa_input.close()
-
-    subprocess.run(shlex.split('simulate surface_area.input'), check=True)
-
-def get_ml(id):
+def run_methane_loading_simulation(id):
+    os.makedirs('output', exist_ok=True)
+    filename = 'output/MethaneLoading.input'
     run_data = session.query(RunData).get(id)
-    methane_loading(run_data)
-
-    ml_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_data.run_id, run_data.material_id)
+    write_methane_loading_configuration(filename, run_data.run_id, run_data.material_id, run_data.helium_void_fraction)
+    subprocess.run(['simulate', './MethaneLoading.input'], check=True, cwd='output')
+    
+    ML_data = "output/Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_data.run_id, run_data.material_id)
     
     with open(ml_data) as origin:
         for line in origin:
@@ -150,17 +118,17 @@ def get_ml(id):
            "cc/cc\t\t%s\t%s\n" % (ml_a_cc, ml_e_cc) )
 
     #STILL NEED TO GREP HEATDESORP
-    os.remove("methane_loading.input")
-    shutil.rmtree("Output")
-    shutil.rmtree("Movies")
-    shutil.rmtree("VTK")
-    shutil.rmtree("Restart")
+    shutil.rmtree("output")
 
-def get_sa(id):
+
+def run_surface_area_simulation(id):
+    os.makedirs('output', exist_ok=True)
+    filename = 'output/SurfaceArea.input'
     run_data = session.query(RunData).get(id)
-    surface_area(run_data)
+    write_surface_area_configuration(filename, run_data.run_id, run_data.material_id)
+    subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd='output')
 
-    sa_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_data.run_id, run_data.material_id)
+    sa_data = "output/Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_data.run_id, run_data.material_id)
     with open(sa_data) as origin:
         count = 0
         for line in origin:
@@ -184,18 +152,19 @@ def get_sa(id):
            "%s\tm^2/g\n" % (sa_mg) +
            "%s\tm^2/cm^3" % (sa_mc) )
 
-    os.remove("surface_area.input")
-    shutil.rmtree("Output")
-    shutil.rmtree("Movies")
-    shutil.rmtree("VTK")
-    shutil.rmtree("Restart")
+    shutil.rmtree("output")
 
-def get_vf(id):
+
+def run_void_fraction_simulation(id):
+    os.makedirs('output', exist_ok=True)
     run_data = session.query(RunData).get(id)
-    void_fraction(run_data)
+    filename = "output/VoidFraction.input"
+    
+    write_void_fraction_config(filename, run_data.run_id, run_data.material_id)
+    subprocess.run(['simulate', './VoidFraction.input'], check=True, cwd='output')
 
-    vf_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_data.run_id, run_data.material_id)
-                
+    vf_data = "output/Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_data.run_id, run_data.material_id)
+    
     with open(vf_data) as origin:
         for line in origin:
             if not "Average Widom Rosenbluth-weight:" in line:
@@ -210,12 +179,8 @@ def get_vf(id):
     run_data.helium_void_fraction = vf_val
     session.commit()
 
-    os.remove("void_fraction.input")
-    shutil.rmtree("Output")
-    shutil.rmtree("Movies")
-    shutil.rmtree("VTK")
-    shutil.rmtree("Restart")
-
+    shutil.rmtree("output")
+    
 def get_bins(id):
     run_data = session.query(RunData).get(id)
     ml = run_data.absolute_volumetric_loading
@@ -254,10 +219,10 @@ def get_bins(id):
     session.commit()
 
 def run_simulations(id):
-   get_vf(id)
-   get_ml(id)
-   get_sa(id)
-   get_bins(id)
+    run_void_fraction_simulation(id)
+    run_methane_loading_simulation(id)
+    run_surface_area_simulation(id)
+    get_bins(id)
 
 def dummy_test(run_id, generation):
 #
