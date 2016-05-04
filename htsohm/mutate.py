@@ -5,10 +5,10 @@ import numpy as np
 from random import random, choice
 
 from htsohm import binning as bng
-from htsohm.simulate import GetValue, id_to_mat
+from htsohm.simulate import get_value, id_to_mat
 
 # Create "strength" array...
-def FirstS(run_ID, strength_0):
+def first_s(run_ID, strength_0):
 
     bins = int(run_ID[-1])
 
@@ -23,7 +23,7 @@ def FirstS(run_ID, strength_0):
     np.save(wd + '/' + run_ID, s_array)
 
 
-def CalculateS(run_ID, generation):
+def calculate_s(run_ID, generation):
 
     wd = os.environ['HTSOHM_DIR']
 
@@ -41,11 +41,11 @@ def CalculateS(run_ID, generation):
     p_IDs = []
     p_bins = []
     for i in c_IDs:
-        p_ID = GetValue(run_ID, i, "material_id")
+        p_ID = get_value(run_ID, i, "material_id")
         p_IDs.append( p_ID )
-        p_MLb = GetValue(run_ID, p_ID, "methane_loading_bin")
-        p_SAb = GetValue(run_ID, p_ID, "surface_area_bin")
-        p_VFb = GetValue(run_ID, p_ID, "void_fraction_bin")
+        p_MLb = get_value(run_ID, p_ID, "methane_loading_bin")
+        p_SAb = get_value(run_ID, p_ID, "surface_area_bin")
+        p_VFb = get_value(run_ID, p_ID, "void_fraction_bin")
 
         p_bin = [ p_MLb, p_SAb, p_VFb ]
         p_bins.append( p_bin )
@@ -55,11 +55,11 @@ def CalculateS(run_ID, generation):
     gp_IDs = []
     gp_bins = []
     for i in pgen_IDs:
-        gp_ID = GetValue(run_ID, i, "id")
+        gp_ID = get_value(run_ID, i, "id")
         gp_IDs.append( gp_ID )
-        gp_MLb = GetValue(run_ID, gp_ID, "methane_loading_bin")
-        gp_SAb = GetValue(run_ID, gp_ID, "surface_area_bin")
-        gp_VFb = GetValue(run_ID, gp_ID, "void_fraction_bin")
+        gp_MLb = get_value(run_ID, gp_ID, "methane_loading_bin")
+        gp_SAb = get_value(run_ID, gp_ID, "surface_area_bin")
+        gp_VFb = get_value(run_ID, gp_ID, "void_fraction_bin")
         gp_bin = [ gp_MLb, gp_SAb, gp_VFb ]
         gp_bins.append( gp_bin )
     
@@ -85,9 +85,9 @@ def CalculateS(run_ID, generation):
         for j in range(len(gp_bins)):
             if p_bin == gp_bins[j]:
                 ID = j + children_per_generation
-                ML_bin = GetValue(run_ID, ID, "methane_loading_bin")
-                SA_bin = GetValue(run_ID, ID, "surface_area_bin")
-                VF_bin = GetValue(run_ID, ID, "void_fraction_bin")
+                ML_bin = get_value(run_ID, ID, "methane_loading_bin")
+                SA_bin = get_value(run_ID, ID, "surface_area_bin")
+                VF_bin = get_value(run_ID, ID, "void_fraction_bin")
                 c_bin = [ ML_bin, SA_bin, VF_bin ]
 
                 if c_bin not in c_bins:
@@ -139,7 +139,7 @@ def CalculateS(run_ID, generation):
 
 
 # function for finding "closest" distance over periodic boundaries
-def closestDist(x_o, x_r):
+def closest_distance(x_o, x_r):
     a = 1 - x_r + x_o
     b = abs(x_r - x_o)
     c = 1 - x_o + x_r
@@ -149,8 +149,8 @@ def closestDist(x_o, x_r):
 
 
 # given intial and "random" x-fraction, returns new x fraction
-def deltax(x_o, x_r, strength):  # removed random()
-    dx = closestDist(x_o, x_r)
+def delta_x(x_o, x_r, strength):  # removed random()
+    dx = closest_distance(x_o, x_r)
 
     if (x_o > x_r
             and (x_o - x_r) > 0.5):
@@ -216,11 +216,11 @@ def mutate(run_ID, generation):
 
     for i in child_IDs:
         child_ID = str(i)
-        p = GetValue(run_ID, child_ID, "parent_id")                   # Find parent ID
+        p = get_value(run_ID, child_ID, "parent_id")                   # Find parent ID
         p_ID = id_to_mat(run_ID, p)
-        p_MLb = GetValue(run_ID, p_ID, "methane_loading_bin")         # Find parent-bin coordinates
-        p_SAb = GetValue(run_ID, p_ID, "surface_area_bin")
-        p_VFb = GetValue(run_ID, p_ID, "void_fraction_bin")
+        p_MLb = get_value(run_ID, p_ID, "methane_loading_bin")         # Find parent-bin coordinates
+        p_SAb = get_value(run_ID, p_ID, "surface_area_bin")
+        p_VFb = get_value(run_ID, p_ID, "void_fraction_bin")
         strength = Strength[p_MLb, p_SAb, p_VFb]
         
         pd = "%s/%s-%s" % (fd, run_ID, p_ID)               # Parent's forcefield directory
@@ -304,9 +304,9 @@ def mutate(run_ID, generation):
             y_r = random()
             z_r = random()
 
-            xfrac = deltax(x_o[l], x_r, strength)
-            yfrac = deltax(y_o[l], y_r, strength)
-            zfrac = deltax(z_o[l], z_r, strength)
+            xfrac = delta_x(x_o[l], x_r, strength)
+            yfrac = delta_x(y_o[l], y_r, strength)
+            zfrac = delta_x(z_o[l], z_r, strength)
 
             charge = 0.  # if no charge in .cif---ERRRORRR
             

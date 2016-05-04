@@ -1,12 +1,12 @@
 import numpy as np
 
 from htsohm.runDB_declarative import Base, RunData
-from htsohm.simulate import CreateSession, GetValue, AddRows, UpdateTable
+from htsohm.simulate import create_session, get_value, add_rows, update_table
 
 
-def CountBin(run_ID, ML_bin, SA_bin, VF_bin):
+def count_bin(run_ID, ML_bin, SA_bin, VF_bin):
     
-    s = CreateSession()
+    s = create_session()
     c0 = s.query(RunData).filter(RunData.run_id == run_ID,              # Not dummy-tested
                                  RunData.methane_loading_bin == ML_bin,
                                  RunData.surface_area_bin == SA_bin,
@@ -29,7 +29,7 @@ def CountBin(run_ID, ML_bin, SA_bin, VF_bin):
     return BinCount
 
 
-def CountAll(run_ID):
+def count_all(run_ID):
 
     bins = int(run_ID[-1])
     AllCounts = np.zeros([bins, bins, bins])
@@ -38,18 +38,18 @@ def CountAll(run_ID):
         for j in range(bins):
             for k in range(bins):
                 
-                b_count = CountBin(run_ID, i, j, k)
+                b_count = count_bin(run_ID, i, j, k)
                 AllCounts[i,j,k] = b_count
 
     return AllCounts
 
 
-def SelectParents(run_ID, children_per_generation, generation):
+def select_parents(run_ID, children_per_generation, generation):
 
-    s = CreateSession()
+    s = create_session()
 
     bins = int(run_ID[-1])
-    counts = CountAll(run_ID)
+    counts = count_all(run_ID)
     weights = np.zeros([bins, bins, bins])
 
     for i in range(bins):
@@ -100,14 +100,14 @@ def SelectParents(run_ID, children_per_generation, generation):
         p_bin = np.random.choice(ID_list, p=w_list)
         p_ID = np.random.choice(p_bin)                     # Select parent for new material
 
-        _id =GetValue(run_ID, p_ID, "id")
+        _id =get_value(run_ID, p_ID, "id")
 
-        AddRows(run_ID, [i])
+        add_rows(run_ID, [i])
         data = {'parent_id': _id}
-        UpdateTable(run_ID, i, data)
+        update_table(run_ID, i, data)
    
 
 #def CheckConvergance(run_ID):
 #
-#    counts = CountAll(run_ID)
+#    counts = count_all(run_ID)
        

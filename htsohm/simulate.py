@@ -7,13 +7,13 @@ import shutil
 
 import numpy as np
 
-from htsohm.runDB_declarative import Base, RunData, CreateSession
+from htsohm.runDB_declarative import Base, RunData, create_session
 
-def AddRows(run_ID, mat_IDs):
+def add_rows(run_ID, mat_IDs):
 #
 #    from runDB_declarative import RunData
 
-    s = CreateSession()
+    s = create_session()
 
     for i in mat_IDs:
         check_first = s.query(RunData).filter( RunData.run_id == run_ID,
@@ -25,22 +25,22 @@ def AddRows(run_ID, mat_IDs):
     s.commit()
 
 
-def UpdateTable(run_ID, mat_ID, data):
+def update_table(run_ID, mat_ID, data):
 #
 #   from runDB_declarative import RunData
 
-    s = CreateSession()
+    s = create_session()
     DBmat = s.query(RunData).filter( RunData.run_id == run_ID,
                                      RunData.material_id == str(mat_ID) )
     DBmat.update(data)
     s.commit()
 
 
-def GetValue(run_ID, mat_ID, value):
+def get_value(run_ID, mat_ID, value):
 #
 #    from runDB_declarative import RunData
 
-    s = CreateSession()
+    s = create_session()
     DBmat = s.query(RunData).filter( RunData.run_id == run_ID,
                                      RunData.material_id == str(mat_ID) )
 
@@ -53,7 +53,7 @@ def id_to_mat(run_ID, ID):
 #
 #    from runDB_declarative import RunData
 
-    s = CreateSession()
+    s = create_session()
     DBmat = s.query(RunData).filter( RunData.run_id == run_ID,
                                      RunData.id == str(ID) )
 
@@ -63,7 +63,7 @@ def id_to_mat(run_ID, ID):
     return mat
 
 
-def VoidFraction(run_ID, mat_ID):
+def void_fraction(run_ID, mat_ID):
 #
 #    import os
 #    import subprocess
@@ -72,7 +72,7 @@ def VoidFraction(run_ID, mat_ID):
     pwd = os.getcwd()
     
     # Simulate VOID FRACTION:
-    VF_input = open( pwd + '/VoidFraction.input', "w")
+    VF_input = open( pwd + '/void_fraction.input', "w")
     VF_input.write( "SimulationType\t\t\tMonteCarlo\n" +
                     "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
          "PrintEvery\t\t\t100\n" +
@@ -92,10 +92,10 @@ def VoidFraction(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     VF_input.close()
 
-    subprocess.run(shlex.split('simulate VoidFraction.input'), check=True)
+    subprocess.run(shlex.split('simulate void_fraction.input'), check=True)
 
 
-def MethaneLoading(run_ID, mat_ID):
+def methane_loading(run_ID, mat_ID):
 #
 #    import os
 #    import subprocess
@@ -103,10 +103,10 @@ def MethaneLoading(run_ID, mat_ID):
 
     pwd = os.getcwd()
 
-    VF = GetValue(run_ID, mat_ID, "helium_void_fraction")
+    VF = get_value(run_ID, mat_ID, "helium_void_fraction")
 
     # Simulate METHANE LOADING
-    ML_input = open( pwd + '/MethaneLoading.input', "w")
+    ML_input = open( pwd + '/methane_loading.input', "w")
     ML_input.write( "SimulationType\t\t\tMonteCarlo\n" +
                     "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
                     "NumberOfInitializationCycles\t500\n" +    # number of initialization cycles
@@ -132,9 +132,9 @@ def MethaneLoading(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     ML_input.close()
 
-    subprocess.run(shlex.split('simulate MethaneLoading.input'), check=True)
+    subprocess.run(shlex.split('simulate methane_loading.input'), check=True)
 
-def SurfaceArea(run_ID, mat_ID):
+def surface_area(run_ID, mat_ID):
 #
 #    import os
 #    import subprocess
@@ -143,7 +143,7 @@ def SurfaceArea(run_ID, mat_ID):
     pwd = os.getcwd()
 
     # Simulate SURFACE AREA:
-    SA_input = open( pwd + '/SurfaceArea.input', "w")
+    SA_input = open( pwd + '/surface_area.input', "w")
     SA_input.write( "SimulationType\t\t\tMonteCarlo\n" +
                     "NumberOfCycles\t\t\t10\n" +             # number of MonteCarlo cycles
                     "PrintEvery\t\t\t1\n" +
@@ -164,11 +164,11 @@ def SurfaceArea(run_ID, mat_ID):
                     "            CreateNumberOfMolecules\t0\n" )
     SA_input.close()
 
-    subprocess.run(shlex.split('simulate SurfaceArea.input'), check=True)
+    subprocess.run(shlex.split('simulate surface_area.input'), check=True)
 
-def GetML(run_ID, mat_ID):
+def get_ml(run_ID, mat_ID):
 
-    MethaneLoading(run_ID, mat_ID)
+    methane_loading(run_ID, mat_ID)
 
     ML_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_ID, mat_ID)
     with open(ML_data) as origin:
@@ -192,7 +192,7 @@ def GetML(run_ID, mat_ID):
             "excess_volumetric_loading": ML_e_cc,
             "excess_gravimetric_loading": ML_e_cg,
             "excess_molar_loading": ML_e_mk}
-    UpdateTable(run_ID, mat_ID, data)
+    update_table(run_ID, mat_ID, data)
 
     print( "\nMETHANE LOADING\tabsolute\texcess\n" +
            "mol/kg\t\t%s\t%s\n" % (ML_a_mk, ML_e_mk) +
@@ -200,15 +200,15 @@ def GetML(run_ID, mat_ID):
            "cc/cc\t\t%s\t%s\n" % (ML_a_cc, ML_e_cc) )
 
     #STILL NEED TO GREP HEATDESORP
-    os.remove("MethaneLoading.input")
+    os.remove("methane_loading.input")
     shutil.rmtree("Output")
     shutil.rmtree("Movies")
     shutil.rmtree("VTK")
     shutil.rmtree("Restart")
 
 
-def GetSA(run_ID, mat_ID):
-    SurfaceArea(run_ID, mat_ID)
+def get_sa(run_ID, mat_ID):
+    surface_area(run_ID, mat_ID)
 
     SA_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, mat_ID)
     with open(SA_data) as origin:
@@ -227,23 +227,23 @@ def GetSA(run_ID, mat_ID):
     data = {"unit_cell_surface_area": SA_a2,
             "volumetric_surface_area": SA_mc,
             "gravimetric_surface_area": SA_mg}
-    UpdateTable(run_ID, mat_ID, data)
+    update_table(run_ID, mat_ID, data)
 
     print( "\nSURFACE AREA\n" +
            "%s\tA^2\n" % (SA_a2) +
            "%s\tm^2/g\n" % (SA_mg) +
            "%s\tm^2/cm^3" % (SA_mc) )
 
-    os.remove("SurfaceArea.input")
+    os.remove("surface_area.input")
     shutil.rmtree("Output")
     shutil.rmtree("Movies")
     shutil.rmtree("VTK")
     shutil.rmtree("Restart")
 
 
-def GetVF(run_ID, mat_ID):
+def get_vf(run_ID, mat_ID):
 
-    VoidFraction(run_ID, mat_ID)
+    void_fraction(run_ID, mat_ID)
 
     VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, mat_ID)
     with open(VF_data) as origin:
@@ -259,20 +259,20 @@ def GetVF(run_ID, mat_ID):
 
     # Add to database...
     data = {"helium_void_fraction": VF_val}
-    UpdateTable(run_ID, mat_ID, data)
+    update_table(run_ID, mat_ID, data)
 
-    os.remove("VoidFraction.input")
+    os.remove("void_fraction.input")
     shutil.rmtree("Output")
     shutil.rmtree("Movies")
     shutil.rmtree("VTK")
     shutil.rmtree("Restart")
 
 
-def GetBins(run_ID, mat_ID):
+def get_bins(run_ID, mat_ID):
    
-    ML = GetValue(run_ID, mat_ID, "absolute_volumetric_loading")
-    SA = GetValue(run_ID, mat_ID, "volumetric_surface_area")
-    VF = GetValue(run_ID, mat_ID, "helium_void_fraction")
+    ML = get_value(run_ID, mat_ID, "absolute_volumetric_loading")
+    SA = get_value(run_ID, mat_ID, "volumetric_surface_area")
+    VF = get_value(run_ID, mat_ID, "helium_void_fraction")
  
     # Arbitary structure-property space "boundaries"
     ML_min = 0.
@@ -303,18 +303,18 @@ def GetBins(run_ID, mat_ID):
     data = {"methane_loading_bin": str(ML_bin),
             "surface_area_bin": str(SA_bin),
             "void_fraction_bin": str(VF_bin)}
-    UpdateTable(run_ID, mat_ID, data)
+    update_table(run_ID, mat_ID, data)
 
 
 def simulate(run_ID, mat_IDs):
    for i in mat_IDs:
-       GetVF(run_ID, i)
-       GetML(run_ID, i)
-       GetSA(run_ID, i)
-       GetBins(run_ID, i)
+       get_vf(run_ID, i)
+       get_ml(run_ID, i)
+       get_sa(run_ID, i)
+       get_bins(run_ID, i)
 
 
-def DummyTest(run_ID, generation):
+def dummy_test(run_ID, generation):
 #
 #    import os
 #    import subprocess
@@ -328,7 +328,7 @@ def DummyTest(run_ID, generation):
 #
 #    import numpy as np
 
-    s = CreateSession()
+    s = create_session()
 
     Tolerance = 0.05      # Acceptable deviation from original value(s)...
     NumberOfTrials = 1    # Number of times each simulation is repeated.
@@ -345,7 +345,7 @@ def DummyTest(run_ID, generation):
     p_IDs = []
     for i in c_IDs:
 
-        pID = GetValue(run_ID, i, "parent_id")
+        pID = get_value(run_ID, i, "parent_id")
         if pID not in p_IDs:
             p_IDs.append(pID)
 
@@ -355,13 +355,13 @@ def DummyTest(run_ID, generation):
 
         print( "\nRe-Simulating %s-%s...\n" % (run_ID, matID) )
 
-        ML_o = GetValue(run_ID, matID, "absolute_volumetric_loading")
-        SA_o = GetValue(run_ID, matID, "volumetric_surface_area")
-        VF_o = GetValue(run_ID, matID, "helium_void_fraction")
+        ML_o = get_value(run_ID, matID, "absolute_volumetric_loading")
+        SA_o = get_value(run_ID, matID, "volumetric_surface_area")
+        VF_o = get_value(run_ID, matID, "helium_void_fraction")
 
         VFs = []
         for j in range(NumberOfTrials):
-            VoidFraction(run_ID, matID)
+            void_fraction(run_ID, matID)
             VF_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, matID)
             with open(VF_data) as origin:
                 for line in origin:
@@ -382,7 +382,7 @@ def DummyTest(run_ID, generation):
 
         MLs = []
         for j in range(NumberOfTrials):
-            MethaneLoading(run_ID, matID)
+            methane_loading(run_ID, matID)
             ML_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_ID, matID)
             with open(ML_data) as origin:
                 for line in origin:
@@ -392,7 +392,7 @@ def DummyTest(run_ID, generation):
 
         SAs = []
         for j in range(NumberOfTrials):
-            SurfaceArea(run_ID, matID)
+            surface_area(run_ID, matID)
             SA_data = "Output/System_0/output_%s-%s_1.1.1_298.000000_0.data" % (run_ID, matID)
             with open(SA_data) as origin:
                 count = 0
@@ -424,16 +424,16 @@ def DummyTest(run_ID, generation):
         matID = id_to_mat(run_ID, i)
         if i not in Failed:
             data = {"dummy_test_result": 'y'}
-            UpdateTable(run_ID, matID, data)
+            update_table(run_ID, matID, data)
         elif i in Failed:
             data = {"dummy_test_result": 'n'}
-            UpdateTable(run_ID, matID, data)
+            update_table(run_ID, matID, data)
 #            AffectedMats = s.query(RunData).filter(RunData.run_id == run_ID,
 #                                                   RunData.parent_id == i
 #                                                   ).all()
 #            Maybes = [j.Mat for j in AffectedMats]
 #            for j in Maybes:
-#                UpdateTable(run_ID, j, data)
+#                update_table(run_ID, j, data)
                                                     
     if len(Failed) == 0:
         print( "\nALL PARENTS IN GENERATION %s PASSED THE DUMMY TEST.\n" % (generation) )

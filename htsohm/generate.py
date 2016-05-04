@@ -7,18 +7,18 @@ import numpy as np
 from math import floor
 
 
-def GCD(a, b):
+def gcd(a, b):
     while b:
         a, b = b, a % b
     return a
 
 
-def LCM(a, b):
-    return a * b // GCD(a, b)
+def lcm(a, b):
+    return a * b // gcd(a, b)
 
 
-def LCMM(*args):
-    return reduce(LCM, args)
+def lcmm(*args):
+    return reduce(lcm, args)
 
 
 def generate(
@@ -153,10 +153,10 @@ def generate(
 
         if len(a_count) != 1:  # more than one atom type!
 
-            temp_LCM = LCMM(*a_count)
+            temp_lcm = lcmm(*a_count)
 
             # maxiumum charge multiplier
-            cm_max = floor(qmax / (temp_LCM * elem_charge / min(a_count)))
+            cm_max = floor(qmax / (temp_lcm * elem_charge / min(a_count)))
 
             cm_list = []
     #cm_f = -1 * sum(cm_list)
@@ -173,10 +173,10 @@ def generate(
                 cm_i = randint(-1 * cm_max, cm_max)
                 cm_list.append(cm_i)
 
-                atoms[a_id[i], 3] = cm_i * temp_LCM * elem_charge / a_count[i]
+                atoms[a_id[i], 3] = cm_i * temp_lcm * elem_charge / a_count[i]
 
             cm_f = -1 * sum(cm_list)
-            atoms[a_id[-1], 3] = cm_f * temp_LCM * elem_charge / a_count[-1]
+            atoms[a_id[-1], 3] = cm_f * temp_lcm * elem_charge / a_count[-1]
 
             net_q = 0
             for i in range(ac_len):
