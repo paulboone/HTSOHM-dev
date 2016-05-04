@@ -108,19 +108,32 @@ def select_parents(run_id, children_per_generation, generation):
     last = (generation + 1) * children_per_generation
     new_mat_ids = np.arange(first, last)                   # IDs for next generation of materials
 
+    next_materials_list = []
     for i in new_mat_ids:
 
-        p_bin = np.random.choice(id_list, p=w_list)
-        p_ID = np.random.choice(p_bin)                     # Select parent for new material
+        parent_bin = np.random.choice(id_list, p=w_list)
+        parent_id = np.random.choice(parent_bin)           # Select parent for new material
 
-        _id =sim.get_value(run_id, p_ID, "id")
+        next_material = [ i, sim.get_value(run_id, parent_id, "id") ]
+        next_materials_list.append( next_material )
+#        _id =sim.get_value(run_id, p_ID, "id")
 
-        sim.add_rows(run_id, [i])
-        data = {'parent_id': _id}
-        sim.update_table(run_id, i, data)
-   
+#        sim.add_rows(run_id, [i])
+#        data = {'parent_id': _id}
+#        sim.update_table(run_id, i, data)
+    return next_materials_list   
+
+
+def add_parent_ids(run_id, next_materials_list):
+
+    for i in next_materials_list:
+        material_id = i[0]
+        parent_id = i[1]
+        data = {'parent_id': parent_id}
+        sim.update_table(run_id, material_id, data)
+
 
 #def CheckConvergance(run_id):
 #
 #    counts = count_all(run_id)
-       
+        
