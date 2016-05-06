@@ -6,7 +6,7 @@ import datetime
 
 import numpy as np
 
-from htsohm import generate as gen
+from  htsohm import generate as gen
 from htsohm import simulate as sim
 from htsohm import binning as bng
 from htsohm import mutate as mut
