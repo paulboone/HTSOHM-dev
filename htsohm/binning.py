@@ -90,7 +90,7 @@ def select_parents(run_id, children_per_generation, generation):
                                               RunData.dummy_test_result == 'y'
                                               ).all()
                 for item in res:
-                    bin_ids.append(item.material_id)
+                    bin_ids.append(item.id)
 #                res = session.query(RunData).filter(RunData.Run == run_id,
 #                                              RunData.Bin_ML == i,
 #                                              RunData.Bin_SA == j,
@@ -102,15 +102,20 @@ def select_parents(run_id, children_per_generation, generation):
 
     first = generation * children_per_generation
     last = (generation + 1) * children_per_generation
-    new_mat_ids = np.arange(first, last)                   # IDs for next generation of materials
+    new_material_ids = np.arange(first, last)                   # IDs for next generation of materials
+    new_material_primary_keys = []
+    for i in new_material_ids:
+        res = session.query(RunData).filter(RunData.run_id == run_id,
+                                            RunData.material_id == i)
+        for item in res:
+            new_material_primary_keys.append(item.id)
 
     next_materials_list = []
-    for i in new_mat_ids:
+    for i in new_material_primary_keys:
 
         parent_bin = np.random.choice(id_list, p=w_list)
         parent_id = np.random.choice(parent_bin)           # Select parent for new material
-
-        next_material = [ i, sim.get_value(run_id, parent_id, "id") ]
+        next_material = [ i, parent_id ]
         next_materials_list.append( next_material )
 
     return next_materials_list
@@ -119,7 +124,6 @@ def select_parents(run_id, children_per_generation, generation):
 def add_parent_ids(run_id, next_materials_list):
 
     for i in next_materials_list:
-        material_id = i[0]
-        parent_id = i[1]
-        data = {'parent_id': parent_id}
-        sim.update_table(run_id, material_id, data)
+        row = session.query(RunData).get(i[0])
+        row.parent_id = i[1]
+        session.commit()
