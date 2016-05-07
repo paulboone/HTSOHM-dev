@@ -29,7 +29,7 @@ def get_bins(id):
     vf_min = 0.
     vf_max = 1.
 
-    bins = bng.check_number_of_bins(run_id)
+    bins = bng.check_number_of_bins(run_data.run_id)
 
     ml_step = ml_max / float(bins)
     sa_step = sa_max / float(bins)
@@ -46,6 +46,8 @@ def get_bins(id):
             ml_bin = i
         if vf >= vf_edges[i] and vf < vf_edges[i + 1]:
             vf_bin = i
+
+    print("\nBINS\t%s\t%s\t%s\n" % (ml_bin, sa_bin, vf_bin))
 
     run_data.methane_loading_bin = ml_bin
     run_data.surface_area_bin = sa_bin
@@ -77,7 +79,7 @@ def run_all_simulations(id):
     run_data.gravimetric_surface_area   = results['SA_mg']
     session.commit()
     
-    # GetBins(id)
+    get_bins(id)
 
 def dummy_test(run_id, next_materials_list, status, generation):
 
