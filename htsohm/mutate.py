@@ -5,7 +5,8 @@ import numpy as np
 from random import random, choice
 
 from htsohm import binning as bng
-from htsohm.simulate import get_value, id_to_mat
+from htsohm import simulate as sim
+#from htsohm.simulate import get_value, id_to_mat
 
 def first_s(run_id, strength_0):       # Creates `strength` array
 
@@ -40,11 +41,11 @@ def calculate_s(run_id, generation):
     parent_ids = []
     parent_bins = []
     for i in child_ids:
-        parent_id = get_value(run_id, i, "material_id")
+        parent_id = sim.get_value(run_id, i, "material_id")
         parent_ids.append( parent_id )
-        parent_ml_bin = get_value(run_id, parent_id, "methane_loading_bin")
-        parent_sa_bin = get_value(run_id, parent_id, "surface_area_bin")
-        parent_vf_bin = get_value(run_id, parent_id, "void_fraction_bin")
+        parent_ml_bin = sim.get_value(run_id, parent_id, "methane_loading_bin")
+        parent_sa_bin = sim.get_value(run_id, parent_id, "surface_area_bin")
+        parent_vf_bin = sim.get_value(run_id, parent_id, "void_fraction_bin")
 
         parent_bin = [ parent_ml_bin, parent_sa_bin, parent_vf_bin ]
         parent_bins.append( parent_bin )
@@ -54,12 +55,12 @@ def calculate_s(run_id, generation):
     grandparent_ids = []
     grandparent_bins = []
     for i in parent_generation_ids:
-        grandparent_id = get_value(run_id, i, "id")
+        grandparent_id = sim.get_value(run_id, i, "id")
         grandparent_ids.append( grandparent_id )
 
-        grandparent_ml_bin = get_value(run_id, grandparent_id, "methane_loading_bin")
-        grandparent_sa_bin = get_value(run_id, grandparent_id, "surface_area_bin")
-        grandparent_vf_bin = get_value(run_id, grandparent_id, "void_fraction_bin")
+        grandparent_ml_bin = sim.get_value(run_id, grandparent_id, "methane_loading_bin")
+        grandparent_sa_bin = sim.get_value(run_id, grandparent_id, "surface_area_bin")
+        grandparent_vf_bin = sim.get_value(run_id, grandparent_id, "void_fraction_bin")
         grandparent_bin = [ grandparent_ml_bin, grandparent_sa_bin, grandparent_vf_bin ]
         grandparent_bins.append( grandparent_bin )
     
@@ -85,9 +86,9 @@ def calculate_s(run_id, generation):
         for j in range(len(grandparent_bins)):
             if parent_bin == grandparent_bins[j]:
                 id_ = j + children_per_generation
-                methane_loading_bin = get_value(run_id, id_, "methane_loading_bin")
-                surface_area_bin = get_value(run_id, id_, "surface_area_bin")
-                void_fraction_bin = get_value(run_id, id_, "void_fraction_bin")
+                methane_loading_bin = sim.get_value(run_id, id_, "methane_loading_bin")
+                surface_area_bin = sim.get_value(run_id, id_, "surface_area_bin")
+                void_fraction_bin = sim.get_value(run_id, id_, "void_fraction_bin")
                 child_bin = [ methane_loading_bin, surface_area_bin, void_fraction_bin ]
 
                 if child_bin not in child_bins:
@@ -215,11 +216,11 @@ def mutate(run_id, generation):
 
     for i in child_ids:
         child_id = str(i)
-        p = get_value(run_id, child_id, "parent_id")                   # Find parent ID
-        parent_id = id_to_mat(p)
-        parent_ml_bin = get_value(run_id, parent_id, "methane_loading_bin")         # Find parent-bin coordinates
-        parent_sa_bin = get_value(run_id, parent_id, "surface_area_bin")
-        parent_vf_bin = get_value(run_id, parent_id, "void_fraction_bin")
+        p = sim.get_value(run_id, child_id, "parent_id")                   # Find parent ID
+        parent_id = sim.id_to_mat(p)
+        parent_ml_bin = sim.get_value(run_id, parent_id, "methane_loading_bin")         # Find parent-bin coordinates
+        parent_sa_bin = sim.get_value(run_id, parent_id, "surface_area_bin")
+        parent_vf_bin = sim.get_value(run_id, parent_id, "void_fraction_bin")
         strength = strength_array[parent_ml_bin, parent_sa_bin, parent_vf_bin]
         
         pd = "%s/%s-%s" % (fd, run_id, parent_id)               # Parent's forcefield directory

@@ -6,11 +6,11 @@ import datetime
 
 import numpy as np
 
-from  htsohm import generate as gen
+from htsohm import generate as gen
 from htsohm import simulate as sim
 from htsohm import binning as bng
 from htsohm import mutate as mut
-
+from htsohm.runDB_declarative import RunData, session
 
 def write_run_file(children_per_generation,
                    number_of_atomtypes,
@@ -60,10 +60,12 @@ def seed_generation(run_id):
     children_per_generation, number_of_atomtypes = grep_run_file(run_id)
     generation = 0
     ids = gen_ids(generation, children_per_generation)
-
+    for i in ids:
+        new_material = RunData(run_id, i, generation)
+        session.add(new_material)
     gen.generate(children_per_generation, number_of_atomtypes, run_id)
-    sim.add_rows(run_id, generation, ids)
-    sim.simulate(run_id, ids)
+    for i in ids:
+        sim.run_all_simulations(i)
 
 
 def first_generation(run_id, strength_0):
@@ -71,14 +73,16 @@ def first_generation(run_id, strength_0):
     children_per_generation, number_of_atomtypes = grep_run_file(run_id)
     generation = 1
     ids = gen_ids(generation, children_per_generation)
-
+    for i in ids:
+        new_material = RunData(run_id, i, generation)
+        session.add(new_material)
+ 
     status = "Dummy test:   RUNNING"
     while status == "Dummy test:   RUNNING":
         # Select parents, add IDs to database...
         next_materials_list = bng.select_parents(run_id,
                                                  children_per_generation,
                                                  generation)
-        sim.add_rows(run_id, generation, ids)
         bng.add_parent_ids(run_id, next_materials_list)
         status = sim.dummy_test(run_id,
                                 next_materials_list,
@@ -86,21 +90,24 @@ def first_generation(run_id, strength_0):
                                 generation)
     mut.first_s(run_id, strength_0)    # Create strength-parameter array `run_id`.npy
     mut.mutate(run_id, generation)     # Create first generation of child-materials
-    sim.simulate( run_id, gen_ids(generation, children_per_generation) )
+    for i in ids:
+        sim.run_all_simulations(i)
 
 
 def next_generation(run_id, generation):
 
     children_per_generation, number_of_atomtypes = grep_run_file(run_id)
     ids = gen_ids(generation, children_per_generation)
-
+    for i in ids:
+        new_material = RunData(run_id, i, generation)
+        session.add(new_material)
+ 
     status = "Dummy test:   RUNNING"
     while status == "Dummy test:   RUNNING":
         # Select parents, add IDs to database...
         next_materials_list = bng.select_parents(run_id,
                                                  children_per_generation,
                                                  generation)
-        sim.add_rows(run_id, generation, ids)
         bng.add_parent_ids(run_id, next_materials_list)
         status = sim.dummy_test(run_id,
                                 next_materials_list,
@@ -109,7 +116,8 @@ def next_generation(run_id, generation):
 
     mut.calculate_s(run_id, generation)
     mut.mutate(run_id, generation)
-    sim.simulate( run_id, ids )
+    for i in ids:
+        sim.run_all_simulations(i)
 
 
 def htsohm(children_per_generation,    # number of materials per generation

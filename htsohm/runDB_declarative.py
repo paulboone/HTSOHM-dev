@@ -36,6 +36,27 @@ class RunData(Base):
     dummy_test_result = Column(String(4))                  # "pass" = material passes
                                                            # "fail" = material fails
 
+    def __init__(self, run_id, material_id, generation):
+        self.run_id = run_id
+        self.material_id = material_id
+        self.generation = generation
+        self.absolute_volumetric_loading = None
+        self.absolute_gravimetric_loading = None
+        self.absolute_molar_loading = None
+        self.excess_volumetric_loading = None
+        self.excess_gravimetric_loading = None
+        self.excess_molar_loading = None
+        self.unit_cell_surface_area = None
+        self.volumetric_surface_area = None
+        self.gravimetric_surface_area = None
+        self.helium_void_fraction = None
+        self.parent_id = None
+        self.methane_loading_bin = None
+        self.surface_area_bin = None
+        self.void_fraction = None
+        self.dummy_test_result = None
+
+
 with open('database.yaml', 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)
 
