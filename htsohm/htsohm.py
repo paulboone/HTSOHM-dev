@@ -60,11 +60,17 @@ def seed_generation(run_id):
     children_per_generation, number_of_atomtypes = grep_run_file(run_id)
     generation = 0
     ids = gen_ids(generation, children_per_generation)
+    
+    primary_keys = []
     for i in ids:
-        new_material = RunData(run_id, i, generation)
+        new_material = RunData(run_id, str(i), generation)
         session.add(new_material)
+        session.commit()
+        primary_keys.append(new_material.id)
+
     gen.generate(children_per_generation, number_of_atomtypes, run_id)
-    for i in ids:
+
+    for i in primary_keys:
         sim.run_all_simulations(i)
 
 
@@ -73,9 +79,13 @@ def first_generation(run_id, strength_0):
     children_per_generation, number_of_atomtypes = grep_run_file(run_id)
     generation = 1
     ids = gen_ids(generation, children_per_generation)
+
+    primary_keys = []
     for i in ids:
-        new_material = RunData(run_id, i, generation)
+        new_material = RunData(run_id, str(i), generation)
         session.add(new_material)
+        session.commit()
+        primary_keys.append(new_material.id)
  
     status = "Dummy test:   RUNNING"
     while status == "Dummy test:   RUNNING":
@@ -90,7 +100,7 @@ def first_generation(run_id, strength_0):
                                 generation)
     mut.first_s(run_id, strength_0)    # Create strength-parameter array `run_id`.npy
     mut.mutate(run_id, generation)     # Create first generation of child-materials
-    for i in ids:
+    for i in primary_keys:
         sim.run_all_simulations(i)
 
 
@@ -98,9 +108,13 @@ def next_generation(run_id, generation):
 
     children_per_generation, number_of_atomtypes = grep_run_file(run_id)
     ids = gen_ids(generation, children_per_generation)
+
+    primary_keys = []
     for i in ids:
-        new_material = RunData(run_id, i, generation)
+        new_material = RunData(run_id, str(i), generation)
         session.add(new_material)
+        session.commit()
+        primary_keys.append(new_material.id)
  
     status = "Dummy test:   RUNNING"
     while status == "Dummy test:   RUNNING":
@@ -116,7 +130,7 @@ def next_generation(run_id, generation):
 
     mut.calculate_s(run_id, generation)
     mut.mutate(run_id, generation)
-    for i in ids:
+    for i in primary_keys:
         sim.run_all_simulations(i)
 
 
