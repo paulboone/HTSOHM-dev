@@ -83,22 +83,22 @@ def run_all_simulations(id):
 
 def dummy_test(run_id, next_materials_list, status, generation):
 
-    s = create_session()
     tolerance = 0.05
     number_of_trials = 1
 
     failed = []
     for i in next_materials_list:
         parent_id = i[1]
-        material_id = id_to_mat(run_id, parent_id)
-        if get_value(run_id, material_id, "dummy_test_result") != "pass":
+        parent = session.query(RunData).get(id)
+#material_id = id_to_mat(run_id, parent_id)
+        if parent.dummy_test_result != "pass":
             print( "\nRe-Simulating %s-%s...\n" % (run_id, material_id) )
-            ml_o = get_value(run_id, material_id,
-                             "absolute_volumetric_loading")
-            sa_o = get_value(run_id, material_id, 
-                             "volumetric_surface_area")
-            vf_o = get_value(run_id, material_id, 
-                             "helium_void_fraction")
+#            ml_o = get_value(run_id, material_id,
+#                             "absolute_volumetric_loading")
+#            sa_o = get_value(run_id, material_id, 
+#                             "volumetric_surface_area")
+#            vf_o = get_value(run_id, material_id, 
+#                             "helium_void_fraction")
 
             vfs = []                   # re-simulate void fraction calculations
             for j in range(number_of_trials):
@@ -144,19 +144,22 @@ def dummy_test(run_id, next_materials_list, status, generation):
                                 sa_mc = line.split()[2]
                 sas.append( float(sa_mc) )
 
+            ml_o = parent.absolute_volumetric_loading
+            sa_o = parent.volumetric_surface_area
+            vf_o = parent.helium_void_fraction
+            
             if ( abs(np.mean(mls) - ml_o) >= tolerance * ml_o or
                  abs(np.mean(sas) - sa_o) >= tolerance * sa_o or
                  abs(np.mean(vfs) - vf_o) >= tolerance * vf_o ):
-                result = {"dummy_test_result": "fail"}
-                update_table(run_id, material_id, result)			# update_table HAS BEEN REMOVED
+                parent.dummy_test_result = "fail"
                 print( "A MATERIAL HAS FAILED!\n" +
                        "Run:\t%s\n" % (run_id) +
                        "Material:\t%s\n" % (material_id) )
                 failed.append( "%s-%s" % (run_id, material_id) )
                 break
             else:
-                result = {"dummy_test_result": "pass"}
-                update_table(run_id, material_id, result)
+                parent.dummy_test_result = "pass"
+            session.commit()
 
     if len(failed) == 0:
         status = "Dummy test:   COMPLETE"

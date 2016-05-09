@@ -6,7 +6,7 @@ from random import random, choice
 
 from htsohm import binning as bng
 from htsohm import simulate as sim
-#from htsohm.simulate import get_value, id_to_mat
+from htsohm.runDB_declarative import session, RunData
 
 def first_s(run_id, strength_0):       # Creates `strength` array
 
@@ -38,69 +38,121 @@ def calculate_s(run_id, generation):
 
     strength_0 = np.load(wd + '/' + run_id + '.npy')       # Load strength-parameter array
 
-    parent_ids = []
-    parent_bins = []
+    parent_list = []
     for i in child_ids:
-        parent_id = sim.get_value(run_id, i, "material_id")
-        parent_ids.append( parent_id )
-        parent_ml_bin = sim.get_value(run_id, parent_id, "methane_loading_bin")
-        parent_sa_bin = sim.get_value(run_id, parent_id, "surface_area_bin")
-        parent_vf_bin = sim.get_value(run_id, parent_id, "void_fraction_bin")
-
-        parent_bin = [ parent_ml_bin, parent_sa_bin, parent_vf_bin ]
-        parent_bins.append( parent_bin )
+        child = session.query(RunData).filter(RunData.run_id == run_id,
+                                              RunData.material_id == i)
+        for item in child:
+            parent_id = item.parent_id
+        parent = session.query(RunData).get(parent_id)
+        parent_ml_bin = parent.methane_loading_bin
+        parent_sa_bin = parent.surface_area_bin
+        parent_vf_bin = parent.void_fraction_bin
+        parent_bin = [parent_ml_bin, parent_sa_bin, parent_vf_bin]
+        parent_data = [parent_id, parent_bin]
+        parent_list.append(parent_data)
 
     parent_generation_ids = np.arange( first - children_per_generation,
                                        last - children_per_generation )
-    grandparent_ids = []
-    grandparent_bins = []
+    grandparent_list = []
+    all_parents_list = []                        # this isn't really `all` parents, just those in the same bin as a selected parent
     for i in parent_generation_ids:
-        grandparent_id = sim.get_value(run_id, i, "id")
-        grandparent_ids.append( grandparent_id )
-
-        grandparent_ml_bin = sim.get_value(run_id, grandparent_id, "methane_loading_bin")
-        grandparent_sa_bin = sim.get_value(run_id, grandparent_id, "surface_area_bin")
-        grandparent_vf_bin = sim.get_value(run_id, grandparent_id, "void_fraction_bin")
+        parent = session.query(RunData).filter(RunData.run_id == run_id,
+                                               RunData.material_id == i)
+        for item in parent:
+            grandparent_id = item.parent_id
+        grandparent = session.query(RunData).get(grandparent_id)
+        grandparent_ml_bin = grandparent.methane_loading_bin
+        grandparent_sa_bin = grandparent.surface_area_bin
+        grandparent_vf_bin = grandparent.void_fraction_bin
         grandparent_bin = [ grandparent_ml_bin, grandparent_sa_bin, grandparent_vf_bin ]
-        grandparent_bins.append( grandparent_bin )
+        grandparent_data = [grandparent_id, grandparent_bin]
+        grandparent_list.append(grandparent_data)
     
-    bin_list = []
-    for i in parent_bins:
-        if i in grandparent_bins:
-            bin_list.append(i)
+    grandparent_list_redundant = []
+    for i in parent_list:
+        for j in grandparent_bins:
+            if i[1] == j[1]:
+                data = [j]
+                grandparent_list_redundant.append(data)
 
-    change_bin_strength = []
-    for i in bin_list:
-        if i not in change_bin_strength:
-            change_bin_strength.append(i)
+    grandparent_list_clean = []
+    for i in grandparent_list_redundant:
+        if i not in grandparent_list_clean:
+            grandparent_list_clean.append(i)
 
     counts = bng.count_all(run_id)
 
     bin_counts = []
-    for i in change_bin_strength:
-        parent_bin = i
-        parent_count = counts[ i[0],i[1],i[2] ]
-        
-        child_bins = []
-        child_counts = []
-        for j in range(len(grandparent_bins)):
-            if parent_bin == grandparent_bins[j]:
-                id_ = j + children_per_generation
-                methane_loading_bin = sim.get_value(run_id, id_, "methane_loading_bin")
-                surface_area_bin = sim.get_value(run_id, id_, "surface_area_bin")
-                void_fraction_bin = sim.get_value(run_id, id_, "void_fraction_bin")
-                child_bin = [ methane_loading_bin, surface_area_bin, void_fraction_bin ]
-
-                if child_bin not in child_bins:
-                    child_bins.append(child_bin)
-
-                    count = int( counts[ child_bin[0], child_bin[1], child_bin[2] ] )
-                    child_counts.append(count)
-
-        parent_data = [parent_bin, parent_count]
-        child_data = [child_bins, child_counts]
-        row = [parent_data, child_data]
-        bin_counts.append(row)
+    for i in grandparent_count_clean:
+        parent_id = i[1][0]                         # here `parent` refers to the parent of a selected parent
+        parent_bin = i[1][1]
+        child_generation = generation - 1
+        parent_bin_count = session.query(RunData).filter(
+                           RunData.run_id == run_id,
+                           RunData.generation == child_generation,
+                           RunData.methane_loading_bin == parent_bin[0],
+                           RunData.surface_area_bin == parent_bin[1],
+                           RunData.void_fraction_bin == parent_bin[2]).count()
+        children = session.query(RunData).filter(
+                           RunData.run_id == run_id,
+                           RunData.generation == child_generation,
+                           RunData.parent_id == parent_id).all()
+        children_bins = []
+        children_bin_counts = []        
+        for material in children:
+            child_bin = [material.methane_loading_bin,
+                         material.surface_area_bin,
+                         material.void_fraction_bin]
+            if child_bin != parent_bin:
+                children_bins.append(child_bin)
+                child_bin_count = session.query(RunData).filter(
+                     RunData.run_id == run_id,
+                     RunData.generation == child_generation,
+                     RunData.methane_loading_bin == child_bin[0],
+                     RunData.surface_area_bin == child_bin[1],
+                     RunData.void_fraction_bin == child_bin[2]).count()
+                children_bin_counts.append(child_bin_count)
+               
+        data = [[parent_bin, parent_bin_count],
+                [child_bins, children_bin_counts]]
+        bin_counts.append(data)
+#            
+#counts[ parent_bin[0],
+#                               parent_bin[1],
+#                               parent_bin[2] ]       
+#        child_id = i[0][0]                          # here `child` refers to a selected parent
+#        child_bin = i[0][1]
+#        child_count = counts[ child_bin[0],
+#                              child_bin[1],
+#                              child_bin[2] ]
+#
+#        a = parent_bin[0]
+#        b = parent_bin[1]
+#        c = parent_bin[2]
+#child_counts = []
+#        for j in grandparent_list:
+#            if parent_bin == j[1]:
+#                child_id = j[0]
+#                child = session.query(RunData).get(child_id)
+#                child_bin = 
+#                material_id = j + (generation - 1) * children_per_generation
+                
+#                methane_loading_bin = sim.get_value(run_id, id_, "methane_loading_bin")
+#                surface_area_bin = sim.get_value(run_id, id_, "surface_area_bin")
+#                void_fraction_bin = sim.get_value(run_id, id_, "void_fraction_bin")
+#                child_bin = [ methane_loading_bin, surface_area_bin, void_fraction_bin ]
+#
+#                if child_bin not in child_bins:
+#                    child_bins.append(child_bin)
+#
+#                    count = int( counts[ child_bin[0], child_bin[1], child_bin[2] ] )
+#                    child_counts.append(count)
+#
+#        parent_data = [parent_bin, parent_count]
+#        child_data = [child_bins, child_counts]
+#        row = [parent_data, child_data]
+#        bin_counts.append(row)
 
     for i in bin_counts:
 
@@ -216,11 +268,14 @@ def mutate(run_id, generation):
 
     for i in child_ids:
         child_id = str(i)
-        p = sim.get_value(run_id, child_id, "parent_id")                   # Find parent ID
-        parent_id = sim.id_to_mat(p)
-        parent_ml_bin = sim.get_value(run_id, parent_id, "methane_loading_bin")         # Find parent-bin coordinates
-        parent_sa_bin = sim.get_value(run_id, parent_id, "surface_area_bin")
-        parent_vf_bin = sim.get_value(run_id, parent_id, "void_fraction_bin")
+        child = session.query(RunData).filter(RunData.run_id == run_id,
+                                              RunData.material_id == child_id)
+        for item in child:
+            parent_id = item.parent_id
+        parent = session.query(RunData).get(parent_id)
+        parent_ml_bin = parent.methane_loading_bin
+        parent_sa_bin = parent.surface_area_bin
+        parent_vf_bin = parent.void_fraction_bin
         strength = strength_array[parent_ml_bin, parent_sa_bin, parent_vf_bin]
         
         pd = "%s/%s-%s" % (fd, run_id, parent_id)               # Parent's forcefield directory
