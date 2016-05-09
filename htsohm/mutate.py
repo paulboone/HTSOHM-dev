@@ -264,7 +264,7 @@ def mutate(run_id, generation):
     last = (generation + 1) * children_per_generation
     child_ids = np.arange(first, last)
     
-    strength_array = np.load(wd + '/' + run_id + '.npy')         # Load strength-parameter array
+    strength_array = np.load(wd + '/' + run_id + '.npy')   # Load strength-parameter array
 
     for i in child_ids:
         child_id = str(i)
@@ -273,40 +273,42 @@ def mutate(run_id, generation):
         for item in child:
             parent_id = item.parent_id
         parent = session.query(RunData).get(parent_id)
+        parent_material_id = parent.material_id
         parent_ml_bin = parent.methane_loading_bin
         parent_sa_bin = parent.surface_area_bin
         parent_vf_bin = parent.void_fraction_bin
         strength = strength_array[parent_ml_bin, parent_sa_bin, parent_vf_bin]
         
-        pd = "%s/%s-%s" % (fd, run_id, parent_id)               # Parent's forcefield directory
+        pd = "%s/%s-%s" % (fd, run_id, parent_material_id) # Parent's forcefield directory
         cd = "%s/%s-%s" % (fd, run_id, child_id)           # Child's forcefield directory
         os.mkdir(cd)
 
         # Copy force_field.def
         shutil.copy("%s/force_field.def" % (pd), cd)
-        shutil.copy("%s/pseudo_atoms.def" % (pd), cd) # CHANGE THIS WHEN ADDING CHARGES
+        shutil.copy("%s/pseudo_atoms.def" % (pd), cd)      # CHANGE THIS WHEN ADDING CHARGES
 
         # Load data from parent's definition files
-        n1, n2, ep_o, sig_o = np.genfromtxt("%s/force_field_mixing_rules.def" % (pd),
-                                            unpack=True,
-                                            skip_header=7,
-                                            skip_footer=9)
-        cif_atype = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
-                                  usecols=0, dtype=str, skip_header=16)
-        n1, n2, x_o, y_o, z_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
-                                              unpack=True, skip_header=16)
+        n1, n2, ep_o, sig_o = np.genfromtxt(
+                                  "%s/force_field_mixing_rules.def" % (pd),
+                                  unpack=True, skip_header=7, skip_footer=9)
+        cif_atype = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, 
+                        parent_material_id), usecols=0, dtype=str,
+                        skip_header=16)
+        n1, n2, x_o, y_o, z_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, 
+                                    parent_material_id), unpack=True,
+                                    skip_header=16)
         a_foot = len(x_o) + 11
         b_foot = len(x_o) + 10
         c_foot = len(x_o) + 9
-        n1, a_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
-                                unpack=True, skip_header=4,
-                                skip_footer=a_foot)
-        n1, b_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
-                                unpack=True, skip_header=5,
-                                skip_footer=b_foot)
-        n1, c_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id, parent_id),
-                                unpack=True, skip_header=6,
-                                skip_footer=c_foot)
+        n1, a_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id,
+                      parent_material_id), unpack=True, skip_header=4,
+                      skip_footer=a_foot)
+        n1, b_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id,
+                      parent_material_id), unpack=True, skip_header=5,
+                      skip_footer=b_foot)
+        n1, c_o = np.genfromtxt("%s/%s-%s.cif" % (md, run_id,
+                      parent_material_id), unpack=True, skip_header=6,
+                      skip_footer=c_foot)
 
         # Open child definition files
         cif_file = open("%s/%s-%s.cif" % (md, run_id, child_id), "w")
