@@ -1,4 +1,3 @@
-
 import os
 import subprocess
 import shlex
@@ -63,7 +62,9 @@ def run_all_simulations(id):
     session.commit()
     
     ### RUN METHANE LOADING
-    results = methane_loading_simulation.run(run_data.run_id, run_data.material_id, run_data.helium_void_fraction)
+    results = methane_loading_simulation.run(run_data.run_id, 
+                                             run_data.material_id,
+                                             run_data.helium_void_fraction)
     run_data.absolute_volumetric_loading    = results['ML_a_cc']
     run_data.absolute_gravimetric_loading   = results['ML_a_cg']
     run_data.absolute_molar_loading         = results['ML_a_mk']
@@ -82,80 +83,47 @@ def run_all_simulations(id):
     get_bins(id)
 
 def dummy_test(run_id, next_materials_list, status, generation):
-
     tolerance = 0.05
     number_of_trials = 1
-
     failed = []
     for i in next_materials_list:
-        parent_id = i[1]
-        parent = session.query(RunData).get(id)
-#material_id = id_to_mat(run_id, parent_id)
+        parent_id = str(i[1])
+        parent = session.query(RunData).get(parent_id)
+        
         if parent.dummy_test_result != "pass":
-            print( "\nRe-Simulating %s-%s...\n" % (run_id, material_id) )
-#            ml_o = get_value(run_id, material_id,
-#                             "absolute_volumetric_loading")
-#            sa_o = get_value(run_id, material_id, 
-#                             "volumetric_surface_area")
-#            vf_o = get_value(run_id, material_id, 
-#                             "helium_void_fraction")
+            print( "\nRe-Simulating %s-%s...\n" % (run_id, parent.material_id) )
 
-            vfs = []                   # re-simulate void fraction calculations
+            void_fractions = []                   # re-simulate void fraction calculations
             for j in range(number_of_trials):
-                void_fraction(run_id, material_id)
-                vf_data = ( "Output/System_0/output_" +
-                            "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
-                            )
-                with open(vf_data) as origin:
-                    for line in origin:
-                        if "Average Widom Rosenbluth-weight:" in line:
-                            vf_val = line.split()[4]
-                vfs.append( float(vf_val) )
+                vf_result = helium_void_fraction_simulation.run(run_id,
+                                parent.material_id)
+                void_fractions.append( float(vf_result["VF_val"]) )
 
-            mls = []                   # re-simulate methane loading calculations
+            methane_loadings = []                   # re-simulate methane loading calculations
             for j in range(number_of_trials):
-                methane_loading(run_id, material_id)
-                ml_data = ( "Output/System_0/output_" + 
-                            "%s-%s_1.1.1_298.000000_" % (run_id, material_id) +
-                            "3.5e+06.data" )
-                with open(ml_data) as origin:
-                    for line in origin:
-                        if "absolute [cm^3 (STP)/c" in line:
-                            ml_a_cc = line.split()[6]
-                mls.append( float(ml_a_cc) )
+                ml_result = methane_loading_simulation.run(run_id,
+                                parent.material_id,
+                                np.mean(void_fractions))
+                methane_loadings.append( float(ml_result["ML_a_cc"]) )
 
-            sas = []                   # re-simulate surface area calculations
+            surface_areas = []                   # re-simulate surface area calculations
             for j in range(number_of_trials):
-                surface_area(run_id, material_id)
-                sa_data = ( "Output/System_0/output_" + 
-                            "%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
-                            )
-                with open(sa_data) as origin:
-                    count = 0
-                    for line in origin:
-                        if "Surface area" in line:
-                            if count == 0:
-                                sa_a2 = line.split()[2]
-                                count = count + 1
-                            elif count == 1:
-                                sa_mg = line.split()[2]
-                                count = count + 1
-                            elif count == 2:
-                                sa_mc = line.split()[2]
-                sas.append( float(sa_mc) )
+                sa_result = surface_area_simulation.run(run_id,
+                                parent.material_id)
+                surface_areas.append( float(sa_result["SA_mc"]) )
 
             ml_o = parent.absolute_volumetric_loading
             sa_o = parent.volumetric_surface_area
             vf_o = parent.helium_void_fraction
             
-            if ( abs(np.mean(mls) - ml_o) >= tolerance * ml_o or
-                 abs(np.mean(sas) - sa_o) >= tolerance * sa_o or
-                 abs(np.mean(vfs) - vf_o) >= tolerance * vf_o ):
+            if ( abs(np.mean(methane_loadings) - ml_o) >= tolerance * ml_o or
+                 abs(np.mean(surface_areas) - sa_o) >= tolerance * sa_o or
+                 abs(np.mean(void_fractions) - vf_o) >= tolerance * vf_o ):
                 parent.dummy_test_result = "fail"
                 print( "A MATERIAL HAS FAILED!\n" +
                        "Run:\t%s\n" % (run_id) +
-                       "Material:\t%s\n" % (material_id) )
-                failed.append( "%s-%s" % (run_id, material_id) )
+                       "Material:\t%s\n" % (parent.material_id) )
+                failed.append( "%s-%s" % (run_id, parent.material_id) )
                 break
             else:
                 parent.dummy_test_result = "pass"

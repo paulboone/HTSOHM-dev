@@ -14,7 +14,7 @@ def count_bin(run_id, ml_bin, sa_bin, vf_bin):
                                         RunData.methane_loading_bin == ml_bin,
                                         RunData.surface_area_bin == sa_bin,
                                         RunData.void_fraction_bin == vf_bin,
-                                        RunData.dummy_test_result == 'Pass').count()
+                                        RunData.dummy_test_result == 'pass').count()
     bin_count = c0 + c1
 
     return bin_count
@@ -69,7 +69,7 @@ def select_parents(run_id, children_per_generation, generation):
                                               RunData.methane_loading_bin == i,
                                               RunData.surface_area_bin == j,
                                               RunData.void_fraction_bin == k,
-                                              RunData.dummy_test_result == 'Pass'
+                                              RunData.dummy_test_result == 'pass'
                                               ).all()
                 for item in res:
                     bin_ids.append(item.id)
