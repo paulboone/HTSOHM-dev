@@ -65,12 +65,21 @@ def run_all_simulations(id):
     results = methane_loading_simulation.run(run_data.run_id, 
                                              run_data.material_id,
                                              run_data.helium_void_fraction)
-    run_data.absolute_volumetric_loading    = results['ML_a_cc']
-    run_data.absolute_gravimetric_loading   = results['ML_a_cg']
-    run_data.absolute_molar_loading         = results['ML_a_mk']
-    run_data.excess_volumetric_loading      = results['ML_e_cc']
-    run_data.excess_gravimetric_loading     = results['ML_e_cg']
-    run_data.excess_molar_loading           = results['ML_e_mk']
+    run_data.absolute_volumetric_loading   = results['ML_a_cc']
+    run_data.absolute_gravimetric_loading  = results['ML_a_cg']
+    run_data.absolute_molar_loading        = results['ML_a_mk']
+    run_data.excess_volumetric_loading     = results['ML_e_cc']
+    run_data.excess_gravimetric_loading    = results['ML_e_cg']
+    run_data.excess_molar_loading          = results['ML_e_mk']
+    run_data.host_host_avg                 = results['host_host_avg']
+    run_data.host_host_vdw                 = results['host_host_vdw']
+    run_data.host_host_cou                 = results['host_host_cou']
+    run_data.adsorbate_adsorbate_avg       = results['adsorbate_adsorbate_avg']
+    run_data.adsorbate_adsorbate_vdw       = results['adsorbate_adsorbate_vdw']
+    run_data.adsorbate_adsorbate_cou       = results['adsorbate_adsorbate_cou']
+    run_data.host_adsorbate_avg            = results['host_adsorbate_avg']
+    run_data.host_adsorbate_vdw            = results['host_adsorbate_vdw']
+    run_data.host_adsorbate_cou            = results['host_adsorbate_cou']
     session.commit()
     
     ### RUN SURFACE AREA

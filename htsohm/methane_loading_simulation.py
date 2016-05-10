@@ -31,6 +31,7 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
 def parse_output(output_file):
     results = {}
     with open(output_file) as origin:
+        line_counter = 1
         for line in origin:
             if "absolute [mol/kg" in line:
                 results['ML_a_mk'] = line.split()[5]
@@ -44,6 +45,30 @@ def parse_output(output_file):
                 results['ML_e_cg'] = line.split()[6]
             elif "excess [cm^3 (STP)/c" in line:
                 results['ML_e_cc'] = line.split()[6]
+            elif "Average Host-Host energy:" in line:
+                host_host_line = line_counter + 8
+            elif "Average Adsorbate-Adsorbate energy:" in line:
+                adsorbate_adsorbate_line = line_counter + 8
+            elif "Average Host-Adsorbate energy:" in line:
+                host_adsorbate_line = line_counter + 8
+            line_counter += 1
+
+    with open(output_file) as origin:
+        line_counter = 1
+        for line in origin:
+            if line_counter == host_host_line:
+                results['host_host_avg'] = line.split()[1]
+                results['host_host_vdw'] = line.split()[5]
+                results['host_host_cou'] = line.split()[7]
+            if line_counter == adsorbate_adsorbate_line:
+                results['adsorbate_adsorbate_avg'] = line.split()[1]
+                results['adsorbate_adsorbate_vdw'] = line.split()[5]
+                results['adsorbate_adsorbate_cou'] = line.split()[7]
+            if line_counter == host_adsorbate_line:
+                results['host_adsorbate_avg'] = line.split()[1]
+                results['host_adsorbate_vdw'] = line.split()[5]
+                results['host_adsorbate_cou'] = line.split()[7]
+            line_counter += 1
     
     print("\nMETHANE LOADING\tabsolute\texcess\n" +
             "mol/kg\t\t%s\t%s\n" % (results['ML_a_mk'], results['ML_e_mk']) +
@@ -64,6 +89,6 @@ def run(run_id, material_id, helium_void_fraction):
     results = parse_output(output_file)
 
     #STILL NEED TO GREP HEATDESORP
-    shutil.rmtree("output")
+#    shutil.rmtree("output")
     
     return results
