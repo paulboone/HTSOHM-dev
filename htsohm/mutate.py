@@ -41,7 +41,7 @@ def calculate_s(run_id, generation):
     parent_list = []
     for i in child_ids:
         child = session.query(RunData).filter(RunData.run_id == run_id,
-                                              RunData.material_id == i)
+                                              RunData.material_id == str(i))
         for item in child:
             parent_id = item.parent_id
         parent = session.query(RunData).get(parent_id)
@@ -58,7 +58,7 @@ def calculate_s(run_id, generation):
     all_parents_list = []                        # this isn't really `all` parents, just those in the same bin as a selected parent
     for i in parent_generation_ids:
         parent = session.query(RunData).filter(RunData.run_id == run_id,
-                                               RunData.material_id == i)
+                                               RunData.material_id == str(i))
         for item in parent:
             grandparent_id = item.parent_id
         grandparent = session.query(RunData).get(grandparent_id)
@@ -71,9 +71,9 @@ def calculate_s(run_id, generation):
     
     grandparent_list_redundant = []
     for i in parent_list:
-        for j in grandparent_bins:
+        for j in grandparent_list:
             if i[1] == j[1]:
-                data = [j]
+                data = [i, j]
                 grandparent_list_redundant.append(data)
 
     grandparent_list_clean = []
@@ -84,7 +84,7 @@ def calculate_s(run_id, generation):
     counts = bng.count_all(run_id)
 
     bin_counts = []
-    for i in grandparent_count_clean:
+    for i in grandparent_list_clean:
         parent_id = i[1][0]                         # here `parent` refers to the parent of a selected parent
         parent_bin = i[1][1]
         child_generation = generation - 1
@@ -115,47 +115,10 @@ def calculate_s(run_id, generation):
                 children_bin_counts.append(child_bin_count)
                
         data = [[parent_bin, parent_bin_count],
-                [child_bins, children_bin_counts]]
+                [children_bins, children_bin_counts]]
         bin_counts.append(data)
-#            
-#counts[ parent_bin[0],
-#                               parent_bin[1],
-#                               parent_bin[2] ]       
-#        child_id = i[0][0]                          # here `child` refers to a selected parent
-#        child_bin = i[0][1]
-#        child_count = counts[ child_bin[0],
-#                              child_bin[1],
-#                              child_bin[2] ]
-#
-#        a = parent_bin[0]
-#        b = parent_bin[1]
-#        c = parent_bin[2]
-#child_counts = []
-#        for j in grandparent_list:
-#            if parent_bin == j[1]:
-#                child_id = j[0]
-#                child = session.query(RunData).get(child_id)
-#                child_bin = 
-#                material_id = j + (generation - 1) * children_per_generation
-                
-#                methane_loading_bin = sim.get_value(run_id, id_, "methane_loading_bin")
-#                surface_area_bin = sim.get_value(run_id, id_, "surface_area_bin")
-#                void_fraction_bin = sim.get_value(run_id, id_, "void_fraction_bin")
-#                child_bin = [ methane_loading_bin, surface_area_bin, void_fraction_bin ]
-#
-#                if child_bin not in child_bins:
-#                    child_bins.append(child_bin)
-#
-#                    count = int( counts[ child_bin[0], child_bin[1], child_bin[2] ] )
-#                    child_counts.append(count)
-#
-#        parent_data = [parent_bin, parent_count]
-#        child_data = [child_bins, child_counts]
-#        row = [parent_data, child_data]
-#        bin_counts.append(row)
 
     for i in bin_counts:
-
         parent_bin = i[0][0]
         parent_count = i[0][1]
 

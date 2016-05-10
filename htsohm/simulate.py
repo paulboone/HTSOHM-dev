@@ -83,7 +83,7 @@ def run_all_simulations(id):
     get_bins(id)
 
 def dummy_test(run_id, next_materials_list, status, generation):
-    tolerance = 0.05
+    tolerance = 0.5
     number_of_trials = 1
     failed = []
     for i in next_materials_list:
