@@ -20,7 +20,7 @@ def first_s(run_id, strength_0):       # Creates `strength` array
                 s_array[i, j, k] = strength_0
 
     wd = os.environ['HTSOHM_DIR']
-    np.save(wd + '/' + run_id, s_array)
+    np.save(wd + '/output' + run_id, s_array)
 
 
 def calculate_s(run_id, generation):
