@@ -1,5 +1,6 @@
 import os
 import shutil
+import yaml
 
 import numpy as np
 from random import random, choice
@@ -20,23 +21,22 @@ def first_s(run_id, strength_0):       # Creates `strength` array
                 s_array[i, j, k] = strength_0
 
     wd = os.environ['HTSOHM_DIR']
-    np.save(wd + '/output' + run_id, s_array)
+    np.save(wd + '/config/' + run_id, s_array)
 
 
 def calculate_s(run_id, generation):
 
     wd = os.environ['HTSOHM_DIR']
 
-    with open(wd + '/' + run_id + '.txt') as origin:
-        for line in origin:
-            if "Children per generation:" in line:
-                children_per_generation = int(line.split()[3])
+    with open(wd + '/config/' + run_id + '.yaml') as yaml_file:
+        config = yaml.load(yaml_file)
+    children_per_generation = config["children-per-generation"]
     first = generation * children_per_generation
     last = (generation + 1) * children_per_generation
     child_ids = np.arange(first, last)
     seed_ids = np.arange(0, children_per_generation)
 
-    strength_0 = np.load(wd + '/' + run_id + '.npy')       # Load strength-parameter array
+    strength_0 = np.load(wd + '/config/' + run_id + '.npy')       # Load strength-parameter array
 
     parent_list = []
     for i in child_ids:
@@ -149,7 +149,7 @@ def calculate_s(run_id, generation):
             if parent_count >= 3 * val:
                 strength_0[a, b, c] = 1.5 * s_0
 
-    strength_array_file = "%s/%s.npy" % (wd, run_id)
+    strength_array_file = "%s/config/%s.npy" % (wd, run_id)
     os.remove(strength_array_file)
     np.save(strength_array_file, strength_0)
 
@@ -196,38 +196,39 @@ def mutate(run_id, generation):
     fd = os.environ['FF_DIR']
 
     # Load parameter boundaries from `run_id`.txt
-    with open(wd + '/' + run_id + '.txt') as origin:
-        for line in origin:
-            if "Children per generation:" in line:
-                children_per_generation = int(line.split()[3])
-            elif "Number of atom-types:" in line:
-                number_of_atomtypes = int(line.split()[3])
-            elif "Number density:" in line:
-                ndenmin = float(line.split()[2])
-                ndenmax = float(line.split()[4])
-            elif "Lattice constant, a:" in line:
-                xmin = float(line.split()[3])
-                xmax = float(line.split()[5])
-            elif "Lattice constant, b:" in line:
-                ymin = float(line.split()[3])
-                ymax = float(line.split()[5])
-            elif "Lattice constant, c:" in line:
-                zmin = float(line.split()[3])
-                zmax = float(line.split()[5])
-            elif "Epsilon:" in line:
-                epmin = float(line.split()[1])
-                epmax = float(line.split()[3])
-            elif "Sigma:" in line:
-                sigmin = float(line.split()[1])
-                sigmax = float(line.split()[3])
-            elif "Elemental charge:" in line:
-                eq = float(line.split()[2])
+    with open(wd + '/config/' + run_id + '.yaml') as yaml_file:
+        config = yaml.load(yaml_file)
+    
+    children_per_generation = config["children-per-generation"]
+    number_of_atomtypes = config["number-of-atom-types"]
+    
+    number_density_limits = config["number-density-limits"]
+    ndenmin = number_density_limits[0]
+    ndenmax = number_density_limits[1]
+
+    lattice_constant_limits = config["lattice-constant-limits"]
+    xmin = lattice_constant_limits[0]
+    xmax = lattice_constant_limits[1]
+    ymin = lattice_constant_limits[0]
+    ymax = lattice_constant_limits[1]
+    zmin = lattice_constant_limits[0]
+    zmax = lattice_constant_limits[1]
+
+    epsilon_limits = config["epsilon-limits"]
+    epmin = epsilon_limits[0]
+    epmax = epsilon_limits[1]
+
+    sigma_limits = config["sigma-limits"]
+    sigmin = sigma_limits[0]
+    sigmax = sigma_limits[1]
+
+    eq = config["elemental-charge"]
 
     first = generation * children_per_generation
     last = (generation + 1) * children_per_generation
     child_ids = np.arange(first, last)
     
-    strength_array = np.load(wd + '/' + run_id + '.npy')   # Load strength-parameter array
+    strength_array = np.load(wd + '/config/' + run_id + '.npy')   # Load strength-parameter array
 
     for i in child_ids:
         child_id = str(i)

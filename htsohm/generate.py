@@ -29,12 +29,8 @@ def generate(
         run_id,
         max_number_density=0.084086,
         min_number_density=0.000013907,
-        max_x=52.392,
-        min_x=13.098,
-        max_y=52.392,
-        min_y=13.098,
-        max_z=52.392,
-        min_z=13.098,
+        max_abc=52.392,
+        min_abc=13.098,
         max_epsilon=513.264,
         min_epsilon=1.258,
         max_sigma=6.549,
@@ -44,16 +40,20 @@ def generate(
 
     wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
 
-    run_file = open(wd + '/' + run_id + '.txt',"a")
-    run_file.write( "\nBOUNDARIES\n" +
-                    "Number density:\t%s\t-\t%s\n" % (min_number_density, 
-                                                      max_number_density) +
-                    "Lattice constant, a:\t%s\t-\t%s\n" % (min_x, max_x) +
-                    "Lattice constant, b:\t%s\t-\t%s\n" % (min_y, max_y) +
-                    "Lattice constant, c:\t%s\t-\t%s\n" % (min_z, max_z) +
-                    "Epsilon:\t\t%s\t-\t%s\n" % (min_epsilon, max_epsilon) +
-                    "Sigma:\t\t\t%s\t-\t%s\n" % (min_sigma, max_sigma) +
-                    "Elemental charge:\t%s\n" % (elem_charge))
+    run_file = open(wd + '/config/' + run_id + '.yaml',"a")
+    run_file.write( "number-density-limits:\n" +
+                    "  - %s\n" % (min_number_density) +
+                    "  - %s\n" % (max_number_density) +
+                    "lattice-constant-limits:\n" +
+                    "  - %s\n" % (min_abc) +
+                    "  - %s\n" % (max_abc) +
+                    "epsilon-limits:\n" +
+                    "  - %s\n" % (min_epsilon) +
+                    "  - %s\n" % (max_epsilon) +
+                    "sigma-limits:\n" +
+                    "  - %s\n" % (min_sigma) +
+                    "  - %s\n" % (max_sigma) +
+                    "elemental-charge:  %s\n" % (elem_charge))
 
     ff_dir = os.environ['FF_DIR']      # output force-field files to $FF_DIR
     mat_dir = os.environ['MAT_DIR']    # output .cif-files to $MAT_DIR
@@ -70,9 +70,9 @@ def generate(
         for_file = open(def_dir + '/force_field.def', "w")              # to overwrite LJ
         psu_file = open(def_dir + '/pseudo_atoms.def', "w")             # define atom-types
 
-        xdim_ = round(random() * (max_x - min_x) + min_x, 4)
-        ydim_ = round(random() * (max_y - min_y) + min_y, 4)
-        zdim_ = round(random() * (max_z - min_z) + min_z, 4)
+        xdim_ = round(random() * (max_abc - min_abc) + min_abc, 4)
+        ydim_ = round(random() * (max_abc - min_abc) + min_abc, 4)
+        zdim_ = round(random() * (max_abc - min_abc) + min_abc, 4)
 
         n_max = int(max_number_density * xdim_ * ydim_ * zdim_)
         n_ = randrange(2, n_max, 1)

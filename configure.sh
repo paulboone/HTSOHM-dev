@@ -3,6 +3,8 @@
 HTSOHM_DIR=${PWD}          # specifies HTSOHM directory
 RASPA_DIR=$(raspa-dir)    # specifies RASPA directory
 
+mkdir $HTSOHM_DIR/config
+
 #writing environment variables to .bashrc
 DEST=~/.bashrc
 echo $'\n# HTSOHM directories' >> $DEST

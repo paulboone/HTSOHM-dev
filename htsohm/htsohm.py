@@ -3,6 +3,7 @@
 import sys
 import os
 import datetime
+import yaml
 
 import numpy as np
 
@@ -27,30 +28,27 @@ def write_run_file(children_per_generation,
 
     wd = os.environ['HTSOHM_DIR']      # specify working directory
 
-    run_file = open( wd + '/' + run_id + '.txt', "w")
-    run_file.write( "Date:\t\t\t\t%s:%s:%s\n" % (start.day, start.month,
-                                                 start.year) +
-                    "Time:\t\t\t\t%s:%s:%s\n" % (start.hour, start.minute,
-                                                 start.second) +
-                    "Children per generation:\t%s\n" % (
-                                                 children_per_generation) +
-                    "Number of atom-types:\t\t%s\n" % (number_of_atomtypes) +
-                    "Initial mutation strength:\t%s\n" % (strength_0) +
-                    "Number of bins:\t\t\t%s\n" % (number_of_bins))
-    run_file.close()
+    with open( wd + '/config/' + run_id + '.yaml', "w") as run_file:
+        run_file.write( "date:  %s-%s-%s\n" % (start.year, start.month,
+                                                     start.day) +
+                        "time:  %s:%s:%s\n" % (start.hour, start.minute,
+                                                     start.second) +
+                        "children-per-generation:  %s\n" % (
+                                                     children_per_generation) +
+                        "number-of-atom-types:  %s\n" % (number_of_atomtypes) +
+                        "initial-mutation-strength:  %s\n" % (strength_0) +
+                        "number-of-bins:  %s\n" % (number_of_bins))
+        run_file.close()
 
     return run_id
 
 
 def grep_run_file(run_id):
-
     wd = os.environ['HTSOHM_DIR']
-    with open( wd + '/' + run_id + '.txt' ) as origin:
-        for line in origin:
-            if "Children per generation:" in line:
-                children_per_generation = int( line.split()[3] )
-            elif "Number of atom-types:" in line:
-                number_of_atomtypes = int( line.split()[3] )
+    with open( wd + '/config/' + run_id + '.yaml' ) as yaml_file:
+        config = yaml.load(yaml_file)
+        children_per_generation = config['children-per-generation']
+        number_of_atomtypes = config['number-of-atom-types']
 
     return children_per_generation, number_of_atomtypes
 
