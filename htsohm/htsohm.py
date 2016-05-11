@@ -64,6 +64,7 @@ def seed_generation(run_id):
 
     for i in primary_keys:
         sim.run_all_simulations(i)
+    session.commit()
 
 
 def first_generation(run_id, strength_0):
@@ -84,12 +85,14 @@ def first_generation(run_id, strength_0):
         # Select parents, add IDs to database...
         next_materials_list = bng.select_parents(run_id,
             children_per_generation, generation)
-        bng.add_parent_ids(run_id, next_materials_list)
+        session.commit()               # parent_ids staged by bng.select_parents()
         status = sim.dummy_test(run_id, next_materials_list, status, generation)
+        session.commit()               # within loop so "fail" parents aren't re-selected
     mut.first_s(run_id, strength_0)    # Create strength-parameter array `run_id`.npy
     mut.mutate(run_id, generation)     # Create first generation of child-materials
     for i in primary_keys:
         sim.run_all_simulations(i)
+    session.commit()
 
 def next_generation(run_id, generation):
     children_per_generation, number_of_atomtypes = grep_run_file(run_id)
@@ -107,13 +110,14 @@ def next_generation(run_id, generation):
         # Select parents, add IDs to database...
         next_materials_list = bng.select_parents(run_id,
             children_per_generation, generation)
-        bng.add_parent_ids(run_id, next_materials_list)
+        session.commit()               # parent_ids staged by bng.select_parent()
         status = sim.dummy_test(run_id, next_materials_list, status, generation)
-
+        session.commit()               # within loop so "fail" parents aren't re-selected
     mut.calculate_s(run_id, generation)
     mut.mutate(run_id, generation)
     for i in primary_keys:
         sim.run_all_simulations(i)
+    session.commit()
 
 def htsohm(children_per_generation,    # number of materials per generation
            number_of_atomtypes,        # number of atom-types per material

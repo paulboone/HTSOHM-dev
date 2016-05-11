@@ -14,11 +14,8 @@ from htsohm import surface_area_simulation
 def id_to_mat(id):
     return session.query(RunData).get(id).material_id
 
-def get_bins(id):
+def get_bins(id, methane_loading, surface_area, void_fraction):
     run_data = session.query(RunData).get(id)
-    ml = run_data.absolute_volumetric_loading
-    sa = run_data.volumetric_surface_area
-    vf = run_data.helium_void_fraction
 
     # Arbitary structure-property space "boundaries"
     ml_min = 0.
@@ -39,11 +36,11 @@ def get_bins(id):
     vf_edges = np.arange(vf_min, vf_max + vf_step, vf_step)
 
     for i in range( bins ):
-        if sa >= sa_edges[i] and sa < sa_edges[i + 1]:
+        if surface_area >= sa_edges[i] and surface_area < sa_edges[i + 1]:
             sa_bin = i
-        if ml >= ml_edges[i] and ml < ml_edges[i + 1]:
+        if methane_loading >= ml_edges[i] and methane_loading < ml_edges[i + 1]:
             ml_bin = i
-        if vf >= vf_edges[i] and vf < vf_edges[i + 1]:
+        if void_fraction >= vf_edges[i] and void_fraction < vf_edges[i + 1]:
             vf_bin = i
 
     print("\nBINS\t%s\t%s\t%s\n" % (ml_bin, sa_bin, vf_bin))
@@ -60,7 +57,7 @@ def run_all_simulations(id):
     ### RUN HELIUM VOID FRACTION
     results = helium_void_fraction_simulation.run(run_data.run_id, run_data.material_id)
     run_data.helium_void_fraction = results['VF_val']
-    session.commit()
+    void_fraction = float(results['VF_val'])
     
     ### RUN METHANE LOADING
     results = methane_loading_simulation.run(run_data.run_id, 
@@ -81,21 +78,20 @@ def run_all_simulations(id):
     run_data.host_adsorbate_avg            = results['host_adsorbate_avg']
     run_data.host_adsorbate_vdw            = results['host_adsorbate_vdw']
     run_data.host_adsorbate_cou            = results['host_adsorbate_cou']
-    session.commit()
+    methane_loading = float(results['ML_a_cc'])
     
     ### RUN SURFACE AREA
     results = surface_area_simulation.run(run_data.run_id, run_data.material_id)
     run_data.unit_cell_surface_area     = results['SA_a2']
     run_data.volumetric_surface_area    = results['SA_mc']
     run_data.gravimetric_surface_area   = results['SA_mg']
-    session.commit()
+    surface_area = float(results['SA_mc'])
     
     ### GET BIN
-    results = get_bins(id)
+    results = get_bins(id, methane_loading, surface_area, void_fraction)
     run_data.methane_loading_bin = results['ml_bin']
     run_data.surface_area_bin = results['sa_bin']
     run_data.void_fraction_bin = results['vf_bin']
-    session.commit()
 
 def dummy_test(run_id, next_materials_list, status, generation):
     tolerance = 0.5
@@ -142,7 +138,6 @@ def dummy_test(run_id, next_materials_list, status, generation):
                 break
             else:
                 parent.dummy_test_result = "pass"
-            session.commit()
 
     if len(failed) == 0:
         status = "Dummy test:   COMPLETE"

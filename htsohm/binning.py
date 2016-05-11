@@ -88,10 +88,8 @@ def select_parents(run_id, children_per_generation, generation):
         next_material = [ i, parent_id ]
         next_materials_list.append(next_material)
 
-    return next_materials_list
-
-def add_parent_ids(run_id, next_materials_list):
     for i in next_materials_list:
         row = session.query(RunData).get(i[0])
         row.parent_id = str(i[1])
-        session.commit()
+
+    return next_materials_list

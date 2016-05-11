@@ -300,7 +300,7 @@ def mutate(run_id, generation):
             y = delta_x(y_o[l], y_r, strength)
             z = delta_x(z_o[l], z_r, strength)
             charge = 0.  # if no charge in .cif---ERRRORRR
-            cif_file.write("%s\tC\t%s\t%s\t%s\n" % (cif_atype[l], x, y, z)
+            cif_file.write("%s\tC\t%s\t%s\t%s\n" % (cif_atype[l], x, y, z))
         # Add pseudo-atoms to unit cell (if necessary)...
         if n > n_o:
             add_n = n - n_o
@@ -310,7 +310,7 @@ def mutate(run_id, generation):
                 x = round(random(), 4)
                 y = round(random(), 4)
                 z = round(random(), 4)
-                cif_file.write( "%s\tC\t%s\t%s\t%s\n" % (cif_atype[l], x, y, z)
+                cif_file.write( "%s\tC\t%s\t%s\t%s\n" % (cif_atype[l], x, y, z))
 
         mix_file.write(
             "# general rule for shifted vs truncated\n" +
@@ -329,7 +329,7 @@ def mutate(run_id, generation):
             sig_r = round(random() * (sigmax - sigmin) + sigmin, 4)
             epsilon = round(ep_o[o] + strength * (ep_r - ep_o[o]), 4)
             sigma = round(sig_o[o] + strength * (sig_r - sig_o[o]), 4)
-            row = "A_%s\tlennard-jones\t%s\t%s\n" % (o, epsilon, sigma))
+            row = "A_%s\tlennard-jones\t%s\t%s\n" % (o, epsilon, sigma)
             mix_file.write(row)
 
         mix_file.write(
