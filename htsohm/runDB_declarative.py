@@ -8,7 +8,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
-
 class RunData(Base):
     __tablename__ = 'data_table'
     # COLUMN                                                 UNITS
@@ -48,12 +47,10 @@ class RunData(Base):
 
 with open('database.yaml', 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)
-
 connection_string = dbconfig['connection_string']
 engine = create_engine(connection_string)
 
 # Create tables in the engine, if they don't exist already.
 Base.metadata.create_all(engine)
 Base.metadata.bind = engine
-
 session = sessionmaker(bind=engine)()

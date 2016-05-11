@@ -13,11 +13,8 @@ from htsohm import binning as bng
 from htsohm import mutate as mut
 from htsohm.runDB_declarative import RunData, session
 
-def write_run_file(children_per_generation,
-                   number_of_atomtypes,
-                   strength_0,
-                   number_of_bins,
-                   max_generations):
+def write_run_file(children_per_generation, number_of_atomtypes, strength_0,
+    number_of_bins, max_generations):
 
     sys.path.insert(0, os.environ['HTSOHM_DIR'] + '/htsohm')
 
@@ -29,15 +26,13 @@ def write_run_file(children_per_generation,
     wd = os.environ['HTSOHM_DIR']      # specify working directory
 
     with open( wd + '/config/' + run_id + '.yaml', "w") as run_file:
-        run_file.write( "date:  %s-%s-%s\n" % (start.year, start.month,
-                                                     start.day) +
-                        "time:  %s:%s:%s\n" % (start.hour, start.minute,
-                                                     start.second) +
-                        "children-per-generation:  %s\n" % (
-                                                     children_per_generation) +
-                        "number-of-atom-types:  %s\n" % (number_of_atomtypes) +
-                        "initial-mutation-strength:  %s\n" % (strength_0) +
-                        "number-of-bins:  %s\n" % (number_of_bins))
+        run_file.write(
+            "date:  %s-%s-%s\n" % (start.year, start.month, start.day) +
+            "time:  %s:%s:%s\n" % (start.hour, start.minute, start.second) +
+            "children-per-generation:  %s\n" % (children_per_generation) +
+            "number-of-atom-types:  %s\n" % (number_of_atomtypes) +
+            "initial-mutation-strength:  %s\n" % (strength_0) +
+            "number-of-bins:  %s\n" % (number_of_bins))
         run_file.close()
 
     return run_id
@@ -51,7 +46,6 @@ def grep_run_file(run_id):
         number_of_atomtypes = config['number-of-atom-types']
 
     return children_per_generation, number_of_atomtypes
-
 
 def seed_generation(run_id):
 
@@ -89,21 +83,15 @@ def first_generation(run_id, strength_0):
     while status == "Dummy test:   RUNNING":
         # Select parents, add IDs to database...
         next_materials_list = bng.select_parents(run_id,
-                                                 children_per_generation,
-                                                 generation)
+            children_per_generation, generation)
         bng.add_parent_ids(run_id, next_materials_list)
-        status = sim.dummy_test(run_id,
-                                next_materials_list,
-                                status,
-                                generation)
+        status = sim.dummy_test(run_id, next_materials_list, status, generation)
     mut.first_s(run_id, strength_0)    # Create strength-parameter array `run_id`.npy
     mut.mutate(run_id, generation)     # Create first generation of child-materials
     for i in primary_keys:
         sim.run_all_simulations(i)
 
-
 def next_generation(run_id, generation):
-
     children_per_generation, number_of_atomtypes = grep_run_file(run_id)
     ids = gen_ids(generation, children_per_generation)
 
@@ -118,19 +106,14 @@ def next_generation(run_id, generation):
     while status == "Dummy test:   RUNNING":
         # Select parents, add IDs to database...
         next_materials_list = bng.select_parents(run_id,
-                                                 children_per_generation,
-                                                 generation)
+            children_per_generation, generation)
         bng.add_parent_ids(run_id, next_materials_list)
-        status = sim.dummy_test(run_id,
-                                next_materials_list,
-                                status,
-                                generation)
+        status = sim.dummy_test(run_id, next_materials_list, status, generation)
 
     mut.calculate_s(run_id, generation)
     mut.mutate(run_id, generation)
     for i in primary_keys:
         sim.run_all_simulations(i)
-
 
 def htsohm(children_per_generation,    # number of materials per generation
            number_of_atomtypes,        # number of atom-types per material
@@ -138,11 +121,8 @@ def htsohm(children_per_generation,    # number of materials per generation
            number_of_bins,             # number of bins for analysis
            max_generations=20):        # maximum number of generations
 
-    run_id = write_run_file(children_per_generation,
-                            number_of_atomtypes,
-                            strength_0,
-                            number_of_bins,
-                            max_generations)
+    run_id = write_run_file(children_per_generation, number_of_atomtypes,
+        strength_0, number_of_bins, max_generations)
 
     for i in range(max_generations):
         if i == 0:                     # SEED GENERATION
@@ -152,9 +132,7 @@ def htsohm(children_per_generation,    # number of materials per generation
         elif i >= 2:                   # SECOND GENERATION(S), and on...
             next_generation(run_id, i)
 
-
 def gen_ids(generation, children_per_generation):
-
     first = generation * children_per_generation
     last = (generation + 1) * children_per_generation
     gen_ids = np.arange(first, last)

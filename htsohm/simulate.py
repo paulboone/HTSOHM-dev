@@ -34,9 +34,9 @@ def get_bins(id):
     sa_step = sa_max / float(bins)
     vf_step = vf_max / float(bins)
 
-    ml_edges = np.arange( ml_min, ml_max + ml_step, ml_step )
-    sa_edges = np.arange( sa_min, sa_max + sa_step, sa_step )
-    vf_edges = np.arange( vf_min, vf_max + vf_step, vf_step )
+    ml_edges = np.arange(ml_min, ml_max + ml_step, ml_step)
+    sa_edges = np.arange(sa_min, sa_max + sa_step, sa_step)
+    vf_edges = np.arange(vf_min, vf_max + vf_step, vf_step)
 
     for i in range( bins ):
         if sa >= sa_edges[i] and sa < sa_edges[i + 1]:
@@ -47,11 +47,12 @@ def get_bins(id):
             vf_bin = i
 
     print("\nBINS\t%s\t%s\t%s\n" % (ml_bin, sa_bin, vf_bin))
+    results = {}
+    results['ml_bin'] = ml_bin
+    results['sa_bin'] = sa_bin
+    results['vf_bin'] = vf_bin
 
-    run_data.methane_loading_bin = ml_bin
-    run_data.surface_area_bin = sa_bin
-    run_data.void_fraction_bin = vf_bin
-    session.commit()
+    return results
 
 def run_all_simulations(id):
     run_data = session.query(RunData).get(id)
@@ -89,7 +90,12 @@ def run_all_simulations(id):
     run_data.gravimetric_surface_area   = results['SA_mg']
     session.commit()
     
-    get_bins(id)
+    ### GET BIN
+    results = get_bins(id)
+    run_data.methane_loading_bin = results['ml_bin']
+    run_data.surface_area_bin = results['sa_bin']
+    run_data.void_fraction_bin = results['vf_bin']
+    session.commit()
 
 def dummy_test(run_id, next_materials_list, status, generation):
     tolerance = 0.5
@@ -104,21 +110,20 @@ def dummy_test(run_id, next_materials_list, status, generation):
 
             void_fractions = []                   # re-simulate void fraction calculations
             for j in range(number_of_trials):
-                vf_result = helium_void_fraction_simulation.run(run_id,
-                                parent.material_id)
+                vf_result = helium_void_fraction_simulation.run(
+                    run_id, parent.material_id)
                 void_fractions.append( float(vf_result["VF_val"]) )
 
             methane_loadings = []                   # re-simulate methane loading calculations
             for j in range(number_of_trials):
-                ml_result = methane_loading_simulation.run(run_id,
-                                parent.material_id,
-                                np.mean(void_fractions))
+                ml_result = methane_loading_simulation.run(
+                    run_id, parent.material_id, np.mean(void_fractions))
                 methane_loadings.append( float(ml_result["ML_a_cc"]) )
 
             surface_areas = []                   # re-simulate surface area calculations
             for j in range(number_of_trials):
-                sa_result = surface_area_simulation.run(run_id,
-                                parent.material_id)
+                sa_result = surface_area_simulation.run(
+                    run_id, parent.material_id)
                 surface_areas.append( float(sa_result["SA_mc"]) )
 
             ml_o = parent.absolute_volumetric_loading
@@ -129,10 +134,11 @@ def dummy_test(run_id, next_materials_list, status, generation):
                  abs(np.mean(surface_areas) - sa_o) >= tolerance * sa_o or
                  abs(np.mean(void_fractions) - vf_o) >= tolerance * vf_o ):
                 parent.dummy_test_result = "fail"
-                print( "A MATERIAL HAS FAILED!\n" +
-                       "Run:\t%s\n" % (run_id) +
-                       "Material:\t%s\n" % (parent.material_id) )
-                failed.append( "%s-%s" % (run_id, parent.material_id) )
+                print( 
+                    "A MATERIAL HAS FAILED!\n" +
+                    "Run:\t%s\n" % (run_id) +
+                    "Material:\t%s\n" % (parent.material_id))
+                failed.append("%s-%s" % (run_id, parent.material_id))
                 break
             else:
                 parent.dummy_test_result = "pass"

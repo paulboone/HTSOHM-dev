@@ -6,16 +6,14 @@ from htsohm.runDB_declarative import Base, RunData, session
 from htsohm import simulate as sim
 
 def count_bin(run_id, ml_bin, sa_bin, vf_bin):
-    c0 = session.query(RunData).filter(RunData.run_id == run_id,              # Not dummy-tested
-                                        RunData.methane_loading_bin == ml_bin,
-                                        RunData.surface_area_bin == sa_bin,
-                                        RunData.void_fraction_bin == vf_bin,
-                                        RunData.dummy_test_result == None).count()
-    c1 = session.query(RunData).filter(RunData.run_id == run_id,              # Passed dummy-test
-                                        RunData.methane_loading_bin == ml_bin,
-                                        RunData.surface_area_bin == sa_bin,
-                                        RunData.void_fraction_bin == vf_bin,
-                                        RunData.dummy_test_result == 'pass').count()
+    c0 = session.query(RunData).filter(          # Not dummy-tested
+        RunData.run_id == run_id, RunData.methane_loading_bin == ml_bin,
+        RunData.surface_area_bin == sa_bin, RunData.void_fraction_bin == vf_bin,
+        RunData.dummy_test_result == None).count()
+    c1 = session.query(RunData).filter(          # Passed dummy-test
+        RunData.run_id == run_id, RunData.methane_loading_bin == ml_bin,
+        RunData.surface_area_bin == sa_bin, RunData.void_fraction_bin == vf_bin,
+        RunData.dummy_test_result == 'pass').count()
     bin_count = c0 + c1
 
     return bin_count
@@ -57,20 +55,18 @@ def select_parents(run_id, children_per_generation, generation):
             w_list = np.concatenate( [w_list, weights[i,j,:]] )
             for k in range(bins):
                 bin_ids = []
-                res = session.query(RunData).filter(RunData.run_id == run_id,
-                                              RunData.methane_loading_bin == i,
-                                              RunData.surface_area_bin == j,
-                                              RunData.void_fraction_bin == k,
-                                              RunData.dummy_test_result == None
-                                              ).all()
+                res = session.query(RunData).filter(
+                    RunData.run_id == run_id, RunData.methane_loading_bin == i,
+                    RunData.surface_area_bin == j,
+                    RunData.void_fraction_bin == k,
+                    RunData.dummy_test_result == None).all()
                 for item in res:
                     bin_ids.append(item.id)
-                res = session.query(RunData).filter(RunData.run_id == run_id,
-                                              RunData.methane_loading_bin == i,
-                                              RunData.surface_area_bin == j,
-                                              RunData.void_fraction_bin == k,
-                                              RunData.dummy_test_result == 'pass'
-                                              ).all()
+                res = session.query(RunData).filter(
+                    RunData.run_id == run_id, RunData.methane_loading_bin == i,
+                    RunData.surface_area_bin == j,
+                    RunData.void_fraction_bin == k,
+                    RunData.dummy_test_result == 'pass').all()
                 for item in res:
                     bin_ids.append(item.id)
                 id_list = id_list + [bin_ids]
@@ -80,8 +76,8 @@ def select_parents(run_id, children_per_generation, generation):
     new_material_ids = np.arange(first, last)              # IDs for next generation of materials
     new_material_primary_keys = []
     for i in new_material_ids:
-        res = session.query(RunData).filter(RunData.run_id == run_id,
-                                            RunData.material_id == str(i))
+        res = session.query(RunData).filter(
+            RunData.run_id == run_id, RunData.material_id == str(i))
         for item in res:
             new_material_primary_keys.append(item.id)
 
@@ -90,7 +86,7 @@ def select_parents(run_id, children_per_generation, generation):
         parent_bin = np.random.choice(id_list, p=w_list)
         parent_id = np.random.choice(parent_bin)           # Select parent for new material
         next_material = [ i, parent_id ]
-        next_materials_list.append( next_material )
+        next_materials_list.append(next_material)
 
     return next_materials_list
 
