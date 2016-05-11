@@ -49,14 +49,14 @@ def parse_output(output_file):
 
 def run(run_id, material_id):
     os.makedirs('output', exist_ok=True)
-    filename = 'output/SurfaceArea.input'
+    filename = os.path.join('output', 'SurfaceArea.input')
     write_raspa_file(filename, run_id, material_id)
     subprocess.run(
         ['simulate', './SurfaceArea.input'], check=True, cwd='output')
 
-    output_dir = "output/Output/System_0/"
-    output_file = "%soutput_%s-%s_1.1.1_298.000000_0.data" % (
-        output_dir, run_id, material_id)
+    output_dir = os.path.join('output', 'Output', 'System_0')
+    filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
+    output_file = os.path.join(output_dir, filename)
     results = parse_output(output_file)
     shutil.rmtree("output")
 

@@ -20,7 +20,8 @@ def count_bin(run_id, ml_bin, sa_bin, vf_bin):
 
 def check_number_of_bins(run_id):
     wd = os.environ['HTSOHM_DIR']
-    with open( wd + '/config/' + run_id + '.yaml' ) as yaml_file:
+    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    with open(config_file) as yaml_file:
         config = yaml.load(yaml_file)
     bins = config['number-of-bins']
 

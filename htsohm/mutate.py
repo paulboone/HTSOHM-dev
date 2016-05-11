@@ -9,23 +9,24 @@ from htsohm import binning as bng
 from htsohm import simulate as sim
 from htsohm.runDB_declarative import session, RunData
 
-def first_s(run_id, strength_0):       # Creates `strength` array
+def first_s(run_id, strength_0):                           # Creates `strength` array
     bins = bng.check_number_of_bins(run_id)
-    s_array = np.zeros([bins, bins, bins])
+    strength_array = np.zeros([bins, bins, bins])
 
     for i in range(bins):
         for j in range(bins):
             for k in range(bins):
-                s_array[i, j, k] = strength_0
+                strength_array[i, j, k] = strength_0
 
     wd = os.environ['HTSOHM_DIR']
-    np.save(wd + '/config/' + run_id, s_array)
+    strength_array_file = os.path.join(wd, 'config', run_id)
+    np.save(strength_array_file, strength_array)
 
 def calculate_s(run_id, generation):
 
     wd = os.environ['HTSOHM_DIR']
-
-    with open(wd + '/config/' + run_id + '.yaml') as yaml_file:
+    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    with open(config_file) as yaml_file:
         config = yaml.load(yaml_file)
     children_per_generation = config["children-per-generation"]
     first = generation * children_per_generation
@@ -33,7 +34,8 @@ def calculate_s(run_id, generation):
     child_ids = np.arange(first, last)
     seed_ids = np.arange(0, children_per_generation)
 
-    strength_0 = np.load(wd + '/config/' + run_id + '.npy')       # Load strength-parameter array
+    strength_array_file = os.path.join(wd, 'config', run_id + '.npy')
+    strength_0 = np.load(strength_array_file)              # Load strength-parameter array
 
     parent_list = []
     for i in child_ids:
@@ -139,9 +141,8 @@ def calculate_s(run_id, generation):
             if parent_count >= 3 * val:
                 strength_0[a, b, c] = 1.5 * s_0
 
-    strength_array_file = "%s/config/%s.npy" % (wd, run_id)
-    os.remove(strength_array_file)
-    np.save(strength_array_file, strength_0)
+    os.remove(strength_array_file)               # remove old file
+    np.save(strength_array_file, strength_0)     # write new file
 
 # function for finding "closest" distance over periodic boundaries
 def closest_distance(x_o, x_r):
@@ -176,7 +177,8 @@ def mutate(run_id, generation):
     md = os.environ['MAT_DIR']
     fd = os.environ['FF_DIR']
     # Load parameter boundaries from ../config/<run_data>.yaml
-    with open(wd + '/config/' + run_id + '.yaml') as yaml_file:
+    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    with open(config_file) as yaml_file:
         config = yaml.load(yaml_file)
     
     children_per_generation = config["children-per-generation"]
@@ -222,19 +224,22 @@ def mutate(run_id, generation):
         parent_vf_bin = parent.void_fraction_bin
         strength = strength_array[parent_ml_bin, parent_sa_bin, parent_vf_bin]
         
-        pd = "%s/%s-%s" % (fd, run_id, parent_material_id) # Parent's forcefield directory
-        cd = "%s/%s-%s" % (fd, run_id, child_id)           # Child's forcefield directory
+        pd = os.path.join(fd, run_id + '-' + str(parent_material_id)) # parent FF directory
+        cd = os.path.join(fd, run_id + '-' + str(child_id))           # child FF directory 
         os.mkdir(cd)
 
         # Copy force_field.def
-        shutil.copy("%s/force_field.def" % (pd), cd)
-        shutil.copy("%s/pseudo_atoms.def" % (pd), cd)      # CHANGE THIS WHEN ADDING CHARGES
+        parent_force = os.path.join(pd, 'force_field.def')
+        shutil.copy(parent_force, cd)
+        parent_pseudo = os.path.join(pd, 'pseudo_atoms.def')
+        shutil.copy(parent_pseudo, cd)
 
         # Load data from parent's definition files
-        parent_mixing = "%s/force_field_mixing_rules.def" % (pd)
+        parent_mixing = os.path.join(pd, 'force_field_mixing_rules.def')
         n1, n2, ep_o, sig_o = np.genfromtxt(parent_mixing, unpack=True,
             skip_header=7, skip_footer=9)
-        parent_cif = "%s/%s-%s.cif" % (md, run_id, parent_material_id)
+        parent_cif_filename = "%s-%s.cif" % (run_id, parent_material_id)
+        parent_cif = os.path.join(md, parent_cif_filename)
         cif_atype = np.genfromtxt(parent_cif, usecols=0, dtype=str, 
             skip_header=16)
         n1, n2, x_o, y_o, z_o = np.genfromtxt(parent_cif, unpack=True,
@@ -250,8 +255,9 @@ def mutate(run_id, generation):
             skip_footer=c_foot)
 
         # Open child definition files
-        cif_file = open("%s/%s-%s.cif" % (md, run_id, child_id), "w")
-        mix_file = open("%s/force_field_mixing_rules.def" % (cd), "w")
+        child_cif_filename = "%s-%s.cif" % (run_id, child_id)
+        cif_file = os.path.join(md, child_cif_filename)
+        mix_file = os.path.join(cd, 'force_field_mixing_rules.def')
 
         # Perturb crystal lattice parameters, then write to file
         a_r = round(random() * (xmax - xmin) + xmin, 4)
@@ -261,22 +267,23 @@ def mutate(run_id, generation):
         b_n = round(b_o + strength * (b_r - b_o), 4)
         c_n = round(c_o + strength * (c_r - c_o), 4)
 
-        cif_file.write(
-            "\nloop_\n" +
-            "_symmetry_equiv_pos_as_xyz\n" +
-            "  x,y,z\n" +
-            "_cell_length_a\t%s\n" % (a_n) +
-            "_cell_length_b\t%s\n" % (b_n) +
-            "_cell_length_c\t%s\n" % (c_n) +
-            "_cell_angle_alpha\t90.0000\n" +
-            "_cell_angle_beta\t90.0000\n" +
-            "_cell_angle_gamma\t90.0000\n" +
-            "loop_\n" +
-            "_atom_site_label\n" +
-            "_atom_site_type_symbol\n" +
-            "_atom_site_fract_x\n" +
-            "_atom_site_fract_y\n" +
-            "_atom_site_fract_z\n")
+        with open(cif_file, "w") as file:
+            file.write(
+                "\nloop_\n" +
+                "_symmetry_equiv_pos_as_xyz\n" +
+                "  x,y,z\n" +
+                "_cell_length_a\t%s\n" % (a_n) +
+                "_cell_length_b\t%s\n" % (b_n) +
+                "_cell_length_c\t%s\n" % (c_n) +
+                "_cell_angle_alpha\t90.0000\n" +
+                "_cell_angle_beta\t90.0000\n" +
+                "_cell_angle_gamma\t90.0000\n" +
+                "loop_\n" +
+                "_atom_site_label\n" +
+                "_atom_site_type_symbol\n" +
+                "_atom_site_fract_x\n" +
+                "_atom_site_fract_y\n" +
+                "_atom_site_fract_z\n")
 
         # Perturb number density
         n_o = len(x_o)
@@ -300,7 +307,8 @@ def mutate(run_id, generation):
             y = delta_x(y_o[l], y_r, strength)
             z = delta_x(z_o[l], z_r, strength)
             charge = 0.  # if no charge in .cif---ERRRORRR
-            cif_file.write("%s\tC\t%s\t%s\t%s\n" % (cif_atype[l], x, y, z))
+            with open(cif_file, "a") as file:
+                file.write("%s\tC\t%s\t%s\t%s\n" % (cif_atype[l], x, y, z))
         # Add pseudo-atoms to unit cell (if necessary)...
         if n > n_o:
             add_n = n - n_o
@@ -310,18 +318,20 @@ def mutate(run_id, generation):
                 x = round(random(), 4)
                 y = round(random(), 4)
                 z = round(random(), 4)
-                cif_file.write( "%s\tC\t%s\t%s\t%s\n" % (cif_atype[l], x, y, z))
+                with open(cif_file, "a") as file:
+                    file.write( "%s\tC\t%s\t%s\t%s\n" % (cif_atype[l], x, y, z))
 
-        mix_file.write(
-            "# general rule for shifted vs truncated\n" +
-            "shifted\n" +
-            "# general rule tailcorrections\n" +
-            "no\n" +
-            "# number of defined interactions\n" +
-            "%s\n" % (number_of_atomtypes + 8) +
-            "# type interaction, parameters.    IMPORTANT:" +
-            " define shortest matches first, so that more " +
-            "specific ones overwrites these\n")
+        with open(mix_file, "w") as file:
+            file.write(
+                "# general rule for shifted vs truncated\n" +
+                "shifted\n" +
+                "# general rule tailcorrections\n" +
+                "no\n" +
+                "# number of defined interactions\n" +
+                "%s\n" % (number_of_atomtypes + 8) +
+                "# type interaction, parameters.    IMPORTANT:" +
+                " define shortest matches first, so that more " +
+                "specific ones overwrites these\n")
 
         # Perturbing LJ parameters (sigma, epsilon)...
         for o in range(number_of_atomtypes):
@@ -330,20 +340,20 @@ def mutate(run_id, generation):
             epsilon = round(ep_o[o] + strength * (ep_r - ep_o[o]), 4)
             sigma = round(sig_o[o] + strength * (sig_r - sig_o[o]), 4)
             row = "A_%s\tlennard-jones\t%s\t%s\n" % (o, epsilon, sigma)
-            mix_file.write(row)
+            with open(mix_file, "a") as file:
+                file.write(row)
 
-        mix_file.write(
-            "N_n2\tlennard-jones\t36.0\t3.31\n" +
-            "N_com\tnone\n" +
-            "C_co2\tlennard-jones\t27.0\t2.80\n" +
-            "O_co2\tlennard-jones\t79.0\t3.05\n" +
-            "CH4_sp3\tlennard-jones\t158.5\t3.72\n" +
-            "He\tlennard-jones\t10.9\t2.64\n" +
-            "H_h2\tnone\n" +
-            "H_com\tlennard-jones\t36.7\t2.958\n" +
-            "# general mixing rule for Lennard-Jones\n" +
-            "Lorentz-Berthelot")
-        cif_file.close()
-        mix_file.close()
+        with open(mix_file, "a") as file:
+            file.write(
+                "N_n2\tlennard-jones\t36.0\t3.31\n" +
+                "N_com\tnone\n" +
+                "C_co2\tlennard-jones\t27.0\t2.80\n" +
+                "O_co2\tlennard-jones\t79.0\t3.05\n" +
+                "CH4_sp3\tlennard-jones\t158.5\t3.72\n" +
+                "He\tlennard-jones\t10.9\t2.64\n" +
+                "H_h2\tnone\n" +
+                "H_com\tlennard-jones\t36.7\t2.958\n" +
+                "# general mixing rule for Lennard-Jones\n" +
+                "Lorentz-Berthelot")
 
     print( "...done!\n" )
