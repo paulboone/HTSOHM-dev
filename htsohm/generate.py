@@ -1,6 +1,6 @@
 import os
 
-from random import choice, random, randrange, randint
+from random import choice, random, randrange, uniform
 from functools import reduce
 from math import fsum
 import numpy as np
@@ -8,8 +8,17 @@ from math import floor
 import yaml
 
 def write_material_config(run_id):
+    """ Write material-parameters to run-configuration file.
+    The parameters written by this function define the limits for different values written to the 
+    structure and forcefield definition files for RASPA. Among the limits defined here are crystal
+    lattice constants, number density, partial atomic charges, and Lennard-Jones parameters (sigma
+    and epsilon).
+    """"
     wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
     config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    with open(config_file) as file:
+        run_config = yaml.load(file)
+    os.remove(config_file)
     material_config = {
         "number-density-limits"     : [0.000013907, 0.084086],
         "lattice-constant-limits"   : [13.098, 52.392],
@@ -17,15 +26,10 @@ def write_material_config(run_id):
         "sigma-limits"              : [1.052, 6.549],
         "charge-limit"              : 0.,
         "elemental-charge"          : 0.0001}
-    with open(config_file, "a") as file:
+    with open(config_file, "w") as file:
+        yaml.dump(run_config, file, default_flow_style=False)
         yaml.dump(material_config, file, default_flow_style=False)
     return material_config
-
-def random_value(limits):
-    x_min = limits[0]
-    x_max = limits[1]
-    x = round(random() * (x_max - x_min) + x_min, 4)
-    return x
 
 def random_number_density(number_density_limits, lattice_constants):
     max_number_density = number_density_limits[1]
@@ -125,9 +129,20 @@ def write_force_field(for_file):
             "0")
 
 def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes):
-#    run_id                  = run_config["run-id"]
-#    number_of_materials     = run_config["children-per-generation"]
-#    number_of_atomtypes     = run_config["number-of-atom-types"]
+    """Write .def and .cif files for a randomly-generated porous material.
+    Each material is defined by it's structural information (stored in a .cif-file) and force field
+    definition files:
+    - <material_name>.cif            contains structural information including crystal lattice
+                                     parameters and atom-site positions (and corresponding chemical
+                                     species).
+    - force_field.def                this file can be used to overwrite previously-defined 
+                                     interactions. by default there are no exceptions.
+    - force_field_mixing_rules.def   this file contains sigma and epsilon values to define Lennard-
+                                     Jones type interactions.
+    - pseudo_atoms.def               this file contains pseudo-atom definitions, including partial
+                                     charge, atomic mass, atomic radii, and more.
+    """"
+
     material_config = write_material_config(run_id)
     lattice_limits          = material_config["lattice-constant-limits"]
     number_density_limits   = material_config["number-density-limits"]
@@ -142,52 +157,53 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
 
     materials = []
     for material in range(number_of_materials):           # each iteration creates a new material
-        material_id = run_id + '-' + str(material)
+        material_id = run_id + '-' + str(material)        # this will be replaced with primary_key
 
         def_dir = os.path.join(ff_dir, material_id)       # directory for material's force field
         os.mkdir(def_dir)
-        mix_file = os.path.join(def_dir, 'force_field_mixing_rules.def') # LJ-parameters
-        for_file = os.path.join(def_dir, 'force_field.def')              # to overwrite LJ
-        psu_file = os.path.join(def_dir, 'pseudo_atoms.def')             # define atom-types
-        write_force_field(for_file)
+        force_field_file = os.path.join(def_dir, 'force_field.def')      # for overwriting LJ-params
+        write_force_field(force_field_file)
 
-        cif_file = os.path.join(mat_dir, material_id + ".cif")              # structure file
-        lattice_constants = {"a" : random_value(lattice_limits),
-                             "b" : random_value(lattice_limits),
-                             "c" : random_value(lattice_limits)}
-        number_of_atoms, number_density = random_number_density(number_density_limits, 
-            lattice_constants)
+        ########################################################################
+        # randomly-assign dimensions (crystal lattice constants) and number of atoms per unit cell
+        lattice_constants = {"a" : round(uniform(*lattice_limits), 4),
+                             "b" : round(uniform(*lattice_limits), 4),
+                             "c" : round(uniform(*lattice_limits), 4)}
+        number_of_atoms   = random_number_density(number_density_limits, *lattice_constants)
 
+        ########################################################################
+        # populate unit cell with randomly-positioned atoms of a randomly-selected species
+        atom_sites = []
+        for atom_site in range(number_of_atoms):
+            atom_type = choice(atom_types)
+            atom_site = {
+                "chemical-id" : atom_type["chemical_id"],
+                "x-frac"      : round(random(), 4),
+                "y-frac"      : round(random(), 4),
+                "z-frac"      : round(random(), 4),
+            atom_sites.append(atom_site)
+
+        cif_file = os.path.join(mat_dir, material_id + ".cif")           # structure file
+        write_cif_file(cif_file, lattice_constants, atom_sites)
+
+        ########################################################################
+        # define pseudo atom types by randomly-generating sigma and epsilon values
         atom_types = []
-        chemical_id = 0
-        for atom_type in range(number_of_atomtypes):
-            epsilon = random_value(epsilon_limits)
-            sigma = random_value(sigma_limits)
-            charge = 0.
+        for chemical_id in range(number_of_atomtypes):
+            epsilon   = round(*uniform(epsilon_limits), 4)
+            sigma     = round(*uniform(sigma_limits), 4)
+            charge    = 0.             # charge assignment to be re-implemented!!!
             atom_type = {
                 "chemical-id" : chemical_id,
                 "charge"      : charge,
                 "epsilon"     : epsilon,
                 "sigma"       : sigma}
             atom_types.append(atom_type)
-            chemical_id += 1
-        write_mixing_rules(mix_file, atom_types)
-        write_pseudo_atoms(psu_file, atom_types)
 
-        atom_sites = []
-        for atom_site in range(number_of_atoms):
-            atom_type = choice(atom_types)
-            chemical_id = atom_type["chemical-id"]
-            x_fraction = round(random(), 4)
-            y_fraction = round(random(), 4)
-            z_fraction = round(random(), 4)
-            atom_site = {
-                "chemical-id" : chemical_id,
-                "x-frac"      : x_fraction,
-                "y-frac"      : y_fraction,
-                "z-frac"      : z_fraction}
-            atom_sites.append(atom_site)
-        write_cif_file(cif_file, lattice_constants, atom_sites)
-        material = {"atom-types" : atom_types, "atom-sites" : atom_sites}
-        materials.append(material)
-    return materials
+        mix_file = os.path.join(def_dir, 'force_field_mixing_rules.def') # LJ-parameters
+        write_mixing_rules(mix_file, atom_types)
+        psu_file = os.path.join(def_dir, 'pseudo_atoms.def')             # define atom-types
+        write_pseudo_atoms(psu_file, atom_types)
+#        material = {"atom-types" : atom_types, "atom-sites" : atom_sites}
+#        materials.append(material)
+#    return materials
