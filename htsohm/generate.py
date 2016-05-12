@@ -135,7 +135,7 @@ def write_force_field(for_file):
             "# mixing rules to overwrite\n" +
             "0")
 
-def generate(run_id, number_of_materials, number_of_atomtypes):
+def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes):
 #    run_id                  = run_config["run-id"]
 #    number_of_materials     = run_config["children-per-generation"]
 #    number_of_atomtypes     = run_config["number-of-atom-types"]
