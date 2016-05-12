@@ -7,6 +7,7 @@ from functools import reduce
 from math import fsum
 import numpy as np
 from math import floor
+import yaml
 
 def gcd(a, b):
     while b:
@@ -28,25 +29,18 @@ def generate(number_of_materials, atom_types, run_id,
     min_sigma=1.052, max_charge=0.0, elem_charge=0.0001):
 
     wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
-    run_file = os.path.join(wd, 'config', run_id + '.yaml')
-    with open(run_file, "a") as file:
-        file.write(
-            "number-density-limits:\n" +
-            "  - %s\n" % (min_number_density) +
-            "  - %s\n" % (max_number_density) +
-            "lattice-constant-limits:\n" +
-            "  - %s\n" % (min_abc) +
-            "  - %s\n" % (max_abc) +
-            "epsilon-limits:\n" +
-            "  - %s\n" % (min_epsilon) +
-            "  - %s\n" % (max_epsilon) +
-            "sigma-limits:\n" +
-            "  - %s\n" % (min_sigma) +
-            "  - %s\n" % (max_sigma) +
-            "elemental-charge:  %s\n" % (elem_charge))
+    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    config = {
+        "number-density-limits" : [min_number_density, max_number_density],
+        "lattice-constant-limits" : [min_abc, max_abc],
+        "epsilon-limits" : [min_epsilon, max_epsilon],
+        "sigma-limits" : [min_sigma, max_sigma],
+        "elemental-charge" : elem_charge}
+    with open(config_file, "a") as file:
+        yaml.dump(config, file, default_flow_style=False)
+
     ff_dir = os.environ['FF_DIR']      # output force-field files to $FF_DIR
     mat_dir = os.environ['MAT_DIR']    # output .cif-files to $MAT_DIR
-
     for i in range(number_of_materials):         # each iteration creates a new material
         mat_name = run_id + '-' + str(i)
         def_dir = ff_dir + '/' + mat_name        # directory for material's force field

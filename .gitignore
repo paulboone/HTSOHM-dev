@@ -8,3 +8,5 @@ HTSOHM-dev.db
 *_*.npy
 database.yaml
 *.input
+output
+config
