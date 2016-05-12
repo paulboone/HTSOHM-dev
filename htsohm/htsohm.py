@@ -21,52 +21,45 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
         "children-per-generation" : children_per_generation,
         "number-of-atom-types" : number_of_atomtypes,
         "initial-mutation-strength" : strength_0,
-        "number-of-bins" : number_of_bins }
+        "number-of-bins" : number_of_bins,
+        "max-number-of-generations" : max_generations}
     with open(config_file, "w") as file:
         yaml.dump(run_config, file, default_flow_style=False)
-    return config_file, run_id
+    return run_config
 
-def read_config(config_file):
-    with open(config_file) as yaml_file:
-        config = yaml.load(yaml_file)
-        children_per_generation = config['children-per-generation']
-        number_of_atomtypes = config['number-of-atom-types']
+def read_config(run_config):
+    run_id = run_config["run-id"]
+    children_per_generation = run_config["children-per-generation"]
+    number_of_atomtypes = run_config["number-of-atom-types"]
 
-    return children_per_generation, number_of_atomtypes
+    return run_id, children_per_generation, number_of_atomtypes
 
-def seed_generation(config_file, run_id):
-
-    children_per_generation, number_of_atomtypes = read_config(config_file)
+def seed_generation(run_config):
+    run_id, children_per_generation, number_of_atomtypes = read_config(run_config)
     generation = 0
     ids = gen_ids(generation, children_per_generation)
-    
     primary_keys = []
     for i in ids:
         new_material = RunData(run_id, str(i), generation)
         session.add(new_material)
         session.commit()
         primary_keys.append(new_material.id)
-
     gen.generate(children_per_generation, number_of_atomtypes, run_id)
-
     for i in primary_keys:
         sim.run_all_simulations(i)
     session.commit()
 
-
-def first_generation(config_file, run_id, strength_0):
-
-    children_per_generation, number_of_atomtypes = read_config(config_file)
+def first_generation(run_config):
+    run_id, children_per_generation, number_of_atomtypes = read_config(run_config)
+    strength_0 = run_config["initial-mutation-strength"]
     generation = 1
     ids = gen_ids(generation, children_per_generation)
-
     primary_keys = []
     for i in ids:
         new_material = RunData(run_id, str(i), generation)
         session.add(new_material)
         session.commit()
         primary_keys.append(new_material.id)
- 
     status = "Dummy test:   RUNNING"
     while status == "Dummy test:   RUNNING":
         # Select parents, add IDs to database...
@@ -81,17 +74,16 @@ def first_generation(config_file, run_id, strength_0):
         sim.run_all_simulations(i)
     session.commit()
 
-def next_generation(config_file, run_id, generation):
-    children_per_generation, number_of_atomtypes = read_config(config_file)
+def next_generation(run_config, generation):
+    run_id, children_per_generation, number_of_atomtypes = read_config(run_config)
+    strength_0 = run_config["initial-mutation-strength"]
     ids = gen_ids(generation, children_per_generation)
-
     primary_keys = []
     for i in ids:
         new_material = RunData(run_id, str(i), generation)
         session.add(new_material)
         session.commit()
         primary_keys.append(new_material.id)
- 
     status = "Dummy test:   RUNNING"
     while status == "Dummy test:   RUNNING":
         # Select parents, add IDs to database...
@@ -112,16 +104,16 @@ def htsohm(children_per_generation,    # number of materials per generation
            number_of_bins,             # number of bins for analysis
            max_generations=20):        # maximum number of generations
 
-    config_file, run_id = write_config_file(children_per_generation,
+    run_config = write_config_file(children_per_generation,
         number_of_atomtypes, strength_0, number_of_bins, max_generations)
 
-    for i in range(max_generations):
-        if i == 0:                     # SEED GENERATION
-            seed_generation(config_file, run_id)
-        elif i == 1:                   # FIRST GENERATION
-            first_generation(config_file, run_id, strength_0)
-        elif i >= 2:                   # SECOND GENERATION(S), and on...
-            next_generation(config_file, run_id, i)
+    for generation in range(max_generations):
+        if generation == 0:                     # SEED GENERATION
+            seed_generation(run_config)
+        elif generation == 1:                   # FIRST GENERATION
+            first_generation(run_config)
+        elif generation >= 2:                   # SECOND GENERATION(S), and on...
+            next_generation(run_config, generation)
 
 def gen_ids(generation, children_per_generation):
     first = generation * children_per_generation
