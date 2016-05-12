@@ -7,17 +7,6 @@ import numpy as np
 from math import floor
 import yaml
 
-def gcd(a, b):
-    while b:
-        a, b = b, a % b
-    return a
-
-def lcm(a, b):
-    return a * b // gcd(a, b)
-
-def lcmm(*args):
-    return reduce(lcm, args)
-
 def write_material_config(run_id):
     wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
     config_file = os.path.join(wd, 'config', run_id + '.yaml')
