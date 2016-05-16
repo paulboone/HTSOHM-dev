@@ -7,6 +7,8 @@ import numpy as np
 from math import floor
 import yaml
 
+from htsohm.runDB_declarative import session, RunData
+
 def write_material_config(run_id):
     """ Write material-parameters to run-configuration file.
     The parameters written by this function define the limits for different values written to the 
@@ -142,6 +144,10 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
     - pseudo_atoms.def               this file contains pseudo-atom definitions, including partial
                                      charge, atomic mass, atomic radii, and more.
     """"
+    seed = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == 0).all()
+    seed_ids = []
+    for material in seed:              # get list of seed-material IDs
+        seed_ids.append(material.id)
 
     material_config = write_material_config(run_id)
     lattice_limits          = material_config["lattice-constant-limits"]
@@ -156,7 +162,7 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
     mat_dir = os.environ['MAT_DIR']    # output .cif-files to $MAT_DIR
 
     materials = []
-    for material in range(number_of_materials):           # each iteration creates a new material
+    for material in seed_ids:           # each iteration creates a new material
         material_id = run_id + '-' + str(material)        # this will be replaced with primary_key
 
         def_dir = os.path.join(ff_dir, material_id)       # directory for material's force field
