@@ -9,140 +9,85 @@ from htsohm import binning as bng
 from htsohm import simulate as sim
 from htsohm.runDB_declarative import session, RunData
 
-def first_s(run_id, strength_0):                           # Creates `strength` array
-    bins = bng.check_number_of_bins(run_id)
-    strength_array = np.zeros([bins, bins, bins])
-
-    for i in range(bins):
-        for j in range(bins):
-            for k in range(bins):
-                strength_array[i, j, k] = strength_0
-
-    wd = os.environ['HTSOHM_DIR']
-    strength_array_file = os.path.join(wd, 'config', run_id)
-    np.save(strength_array_file, strength_array)
-
-def calculate_s(run_id, generation):
-
+def create_strength_array(run_id):
+    """Create 3-dimensional array of strength parameters.
+    The method divides the 3-dimensional materials parameter space into congruent bins. Each bin
+    has its own mutation strength, which is automatically increased or decreased depending upon
+    the distribution of children whose parent belong to that bin. This function initializes a
+    3-dimensional strength-parameter bin with the initial mutation strength chosen for the run.
+    """
     wd = os.environ['HTSOHM_DIR']
     config_file = os.path.join(wd, 'config', run_id + '.yaml')
     with open(config_file) as yaml_file:
         config = yaml.load(yaml_file)
-    children_per_generation = config["children-per-generation"]
-    first = generation * children_per_generation
-    last = (generation + 1) * children_per_generation
-    child_ids = np.arange(first, last)
-    seed_ids = np.arange(0, children_per_generation)
+    bins               = config["number-of-bins"]
+    initial_strength   = config["initial-mutation-strength"]
+    strength_array = initial_strength * np.ones([bins, bins, bins])
+    filename = os.path.join(wd, 'config', run_id)
+    np.save(strength_array, filename)
 
-    strength_array_file = os.path.join(wd, 'config', run_id + '.npy')
-    strength_0 = np.load(strength_array_file)              # Load strength-parameter array
-
-    parent_list = []
-    for i in child_ids:
-        child = session.query(RunData).filter(RunData.run_id == run_id, 
-            RunData.material_id == str(i))
-        for item in child:
-            parent_id = item.parent_id
-        parent = session.query(RunData).get(parent_id)
-        parent_ml_bin = parent.methane_loading_bin
-        parent_sa_bin = parent.surface_area_bin
-        parent_vf_bin = parent.void_fraction_bin
-        parent_bin = [parent_ml_bin, parent_sa_bin, parent_vf_bin]
-        parent_data = [parent_id, parent_bin]
-        parent_list.append(parent_data)
-
-    parent_generation_ids = np.arange(first - children_per_generation, 
-        last - children_per_generation)
-    grandparent_list = []
-    all_parents_list = []                        # this isn't really `all` parents, just those in the same bin as a selected parent
-    for i in parent_generation_ids:
-        parent = session.query(RunData).filter(RunData.run_id == run_id,
-            RunData.material_id == str(i))
-        for item in parent:
-            grandparent_id = item.parent_id
-        grandparent = session.query(RunData).get(grandparent_id)
-        grandparent_ml_bin = grandparent.methane_loading_bin
-        grandparent_sa_bin = grandparent.surface_area_bin
-        grandparent_vf_bin = grandparent.void_fraction_bin
-        grandparent_bin = [grandparent_ml_bin, grandparent_sa_bin,
-            grandparent_vf_bin]
-        grandparent_data = [grandparent_id, grandparent_bin]
-        grandparent_list.append(grandparent_data)
+def recalculate_strength_array(run_id, generation):
+    """Rewrite 3-dimensional array of stregnth parameters.
+    In the event that a particular bin contains parents whose children exhibit radically
+    divergent properties, the strength paramter for the bin is modified. In order to deftermine
+    which bins to adjust, the script refers to the distribution of children in the previous
+    generation which share a common parent. The criteria follows:
+     ________________________________________________________________
+     - if none of the children share  |  decrease strength parameter
+       the parent's bin               |  by 50 %
+     - if all other child-bin-counts  |  
+       are at least 10% greater than  |
+       the parent-bin-count           |
+     _________________________________|_____________________________
+     - if the parent-bin-count is at  |  increase strength parameter
+       least 3 times greater than     |  by 50 %
+       all other child-bin-counts     |
+     _________________________________|_____________________________
+    """
+    s = session
+    db = RunData
     
-    grandparent_list_redundant = []
-    for i in parent_list:
-        for j in grandparent_list:
-            if i[1] == j[1]:
-                data = [i, j]
-                grandparent_list_redundant.append(data)
+    parent_list = []
+    children = s.query(db).filter(db.run_id == run_id, db.generation == generation)
+    for item in children:
+        p = s.query(db).get(item.parent_id)
+        parent = {
+            "id"  : item.parent_id,
+            "bin" : [p.methane_loading_bin, p.surface_area_bin, p.void_fraction_bin]}
+        parent_list.append(parent)
 
-    grandparent_list_clean = []
-    for i in grandparent_list_redundant:
-        if i not in grandparent_list_clean:
-            grandparent_list_clean.append(i)
+    wd = os.environ['HTSOHM_DIR']
+    strength_array_file = os.path.join(wd, 'config', run_id + '.npy')
+    strength_array = np.load(strength_array_file)
 
-    counts = bng.count_all(run_id)
-
-    bin_counts = []
-    for i in grandparent_list_clean:
-        parent_id = i[1][0]                         # here `parent` refers to the parent of a selected parent
-        parent_bin = i[1][1]
-        child_generation = generation - 1
-        parent_bin_count = session.query(RunData).filter(
-            RunData.run_id == run_id, RunData.generation == child_generation,
-            RunData.methane_loading_bin == parent_bin[0],
-            RunData.surface_area_bin == parent_bin[1],
-            RunData.void_fraction_bin == parent_bin[2]).count()
-        children = session.query(RunData).filter(
-            RunData.run_id == run_id, RunData.generation == child_generation,
-            RunData.parent_id == parent_id).all()
-        children_bins = []
-        children_bin_counts = []
-        for material in children:
-            child_bin = [
-                material.methane_loading_bin,
-                material.surface_area_bin,
-                material.void_fraction_bin
-                        ]
-            if child_bin != parent_bin:
-                children_bins.append(child_bin)
-                child_bin_count = session.query(RunData).filter(
-                     RunData.run_id == run_id,
-                     RunData.generation == child_generation,
-                     RunData.methane_loading_bin == child_bin[0],
-                     RunData.surface_area_bin == child_bin[1],
-                     RunData.void_fraction_bin == child_bin[2]).count()
-                children_bin_counts.append(child_bin_count)
-
-        data = [[parent_bin, parent_bin_count], [children_bins, 
-        children_bin_counts]]
-        bin_counts.append(data)
-
-    for i in bin_counts:
-        parent_bin = i[0][0]
-        parent_count = i[0][1]
-        child_bins = i[1][0]
-        child_counts = i[1][1]
-        a = parent_bin[0]
-        b = parent_bin[1]
-        c = parent_bin[2]
-        s_0 = strength_0[a, b, c]
+    for parent in parent_list:
+        parent_id    = parent["id"]
+        parent_bin   = parent["bin"]
+        child_bins   = []
+        child_counts = []
+        children = s.query(db).filter(db.run_id == run_id, db.generation == generation - 1,
+            db.parent_id == parent_id).all()
+        for child in children:
+            child_bin = [child.methane_loading_bin, child.surface_area_bin, child.void_fraction_bin]
+            bin_count = s.query(db).filter(db.run_id == run_id,
+                db.generation == generation - 1, db.parent_id == parent_id,
+                db.methane_load_bin == child[0], db.surface_area_bin == child[1],
+                db.void_fraction_bin == child[2]).count()
+            if child_bin not in child_bins:
+                child_bins.append(child_bin)
+                child.counts.append(bin_count)
         if parent_bin not in child_bins:
-            strength_0[a, b, c] = 0.5 * s_0
-        if parent_bin in child_bins:
-            if parent_count < 1.1 * min(child_counts):
-                strength_0[a, b, c] = 0.5 * s_0
-            pos = child_bins.index(parent_bin)
-            val = 0
-            for j in range(len(child_bins)):
-                if j != pos:
-                    if child_counts[j] > val:
-                        val = child_counts[j]
-            if parent_count >= 3 * val:
-                strength_0[a, b, c] = 1.5 * s_0
+            strength_array[parent_bin] = 0.5 * strength_array[parent_bin]
+        elif parent_bin in child_bins:
+            parent_bin_count = child_counts[child_bins.index(parent_bin)]
+            del child_counts[child_bins.index(parent_bin)]
+            if parent_bin_count < 1.1 * min(child_counts):
+                strength_array[parent_bin] = 0.5 * strength_array[parent_bin]
+            if parent_bin_count >= 3 * min(child_counts):
+                strength_array[parent_bin] = 1.5 * strength_array[parent_bin]
 
-    os.remove(strength_array_file)               # remove old file
-    np.save(strength_array_file, strength_0)     # write new file
+    os.remove(strength_array_file)                   # remove old file
+    np.save(strength_array_file, strength_array)     # write new file
 
 # function for finding "closest" distance over periodic boundaries
 def closest_distance(x_o, x_r):
