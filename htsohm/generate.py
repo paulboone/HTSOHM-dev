@@ -165,28 +165,6 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
         write_force_field(force_field_file)
 
         ########################################################################
-        # randomly-assign dimensions (crystal lattice constants) and number of atoms per unit cell
-        lattice_constants = {"a" : round(uniform(*lattice_limits), 4),
-                             "b" : round(uniform(*lattice_limits), 4),
-                             "c" : round(uniform(*lattice_limits), 4)}
-        number_of_atoms   = random_number_density(number_density_limits, *lattice_constants)
-
-        ########################################################################
-        # populate unit cell with randomly-positioned atoms of a randomly-selected species
-        atom_sites = []
-        for atom_site in range(number_of_atoms):
-            atom_type = choice(atom_types)
-            atom_site = {
-                "chemical-id" : atom_type["chemical_id"],
-                "x-frac"      : round(random(), 4),
-                "y-frac"      : round(random(), 4),
-                "z-frac"      : round(random(), 4),
-            atom_sites.append(atom_site)
-
-        cif_file = os.path.join(mat_dir, material_id + ".cif")           # structure file
-        write_cif_file(cif_file, lattice_constants, atom_sites)
-
-        ########################################################################
         # define pseudo atom types by randomly-generating sigma and epsilon values
         atom_types = []
         for chemical_id in range(number_of_atomtypes):
@@ -204,6 +182,25 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
         write_mixing_rules(mix_file, atom_types)
         psu_file = os.path.join(def_dir, 'pseudo_atoms.def')             # define atom-types
         write_pseudo_atoms(psu_file, atom_types)
-#        material = {"atom-types" : atom_types, "atom-sites" : atom_sites}
-#        materials.append(material)
-#    return materials
+
+        ########################################################################
+        # randomly-assign dimensions (crystal lattice constants) and number of atoms per unit cell
+        lattice_constants = {"a" : round(uniform(*lattice_limits), 4),
+                             "b" : round(uniform(*lattice_limits), 4),
+                             "c" : round(uniform(*lattice_limits), 4)}
+        number_of_atoms   = random_number_density(number_density_limits, *lattice_constants)
+
+        ########################################################################
+        # populate unit cell with randomly-positioned atoms of a randomly-selected species
+        atom_sites = []
+        for atom_site in range(number_of_atoms):
+            atom_type = choice(atom_types)
+            atom_site = {
+                "chemical-id" : atom_type["chemical_id"],
+                "x-frac"      : round(random(), 4),
+                "y-frac"      : round(random(), 4),
+                "z-frac"      : round(random(), 4)}
+            atom_sites.append(atom_site)
+
+        cif_file = os.path.join(mat_dir, material_id + ".cif")           # structure file
+        write_cif_file(cif_file, lattice_constants, atom_sites)
