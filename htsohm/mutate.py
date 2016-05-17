@@ -47,7 +47,9 @@ def recalculate_strength_array(run_id, generation):
     """
     s = session
     db = RunData
-    
+
+    ############################################################################
+    # create list of parent-materials from next generation    
     parent_list = []
     children = s.query(db).filter(db.run_id == run_id, db.generation == generation)
     for item in children:
@@ -57,6 +59,8 @@ def recalculate_strength_array(run_id, generation):
             "bin" : [p.methane_loading_bin, p.surface_area_bin, p.void_fraction_bin]}
         parent_list.append(parent)
 
+    ############################################################################
+    # load strength-parameter array
     wd = os.environ['HTSOHM_DIR']
     strength_array_file = os.path.join(wd, 'config', run_id + '.npy')
     strength_array = np.load(strength_array_file)
@@ -69,28 +73,39 @@ def recalculate_strength_array(run_id, generation):
         c = parent_bin[2]
         child_bins   = []
         child_counts = []
+        ########################################################################
+        # for each parent in list, find all children from the previous generation
         children = s.query(db).filter(db.run_id == run_id, db.generation == generation - 1,
             db.parent_id == parent_id).all()
         for child in children:
+            ####################################################################
+            # record which bins contain these children and how many
             child_bin = [child.methane_loading_bin, child.surface_area_bin, child.void_fraction_bin]
-            bin_count = s.query(db).filter(db.run_id == run_id,
-                db.generation == generation - 1, db.parent_id == parent_id,
-                db.methane_loading_bin == child_bin[0], db.surface_area_bin == child_bin[1],
-                db.void_fraction_bin == child_bin[2]).count()
+            bin_count = s.query(db).filter(db.run_id==run_id, db.generation==generation - 1,
+                db.parent_id==parent_id, db.methane_loading_bin==a, db.surface_area_bin==b,
+                db.void_fraction_bin==c).count()
             if child_bin not in child_bins:
                 child_bins.append(child_bin)
                 child_counts.append(bin_count)
+        ########################################################################
+        # CASE 1:  no children in parent bin
         if parent_bin not in child_bins:
             strength_array[a, b, c] = 0.5 * strength_array[a, b, c]
         elif parent_bin in child_bins:
             parent_bin_count = child_counts[child_bins.index(parent_bin)]
+            ####################################################################
+            # CASE 2:  parent-bin-count less than 110% of any child-bin-count
             if parent_bin_count < 1.1 * min(child_counts):
                 strength_array[a, b, c] = 0.5 * strength_array[a, b, c]
+            ####################################################################
+            # CASE 3:  parent-bin-count 300% greater than any child-bin-count
             if parent_bin_count >= 3 * min(child_counts):
                 strength_array[a, b, c] = 1.5 * strength_array[a, b, c]
 
-    os.remove(strength_array_file)                   # remove old file
-    np.save(strength_array_file, strength_array)     # write new file
+    ############################################################################
+    # delete only strength-array file, write new one
+    os.remove(strength_array_file)
+    np.save(strength_array_file, strength_array)
 
 def closest_distance(x, y):
     """Find the `closest` distance over a periodic boundary.
