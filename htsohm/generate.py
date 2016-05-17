@@ -1,12 +1,14 @@
+# standard library imports
 import os
-
-from random import choice, random, randrange, uniform
-from functools import reduce
-from math import fsum
-import numpy as np
 from math import floor
+from random import choice, random, randrange, uniform
+
+# it stat third party imports
+from functools import reduce
+import numpy as np
 import yaml
 
+# local application/library specific imports
 from htsohm.runDB_declarative import session, RunData
 import htsohm.utilities as utl
 
