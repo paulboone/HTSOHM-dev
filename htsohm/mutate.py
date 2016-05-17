@@ -133,7 +133,7 @@ def random_position(x_o, x_r, strength):
         xfrac = round(x_o + strength * dx, 4)
     return xfrac
 
-def write_mutant_definition_files(run_id, generation):
+def write_children_definition_files(run_id, generation):
     """Mutate a parent-material's definition files to create new, child-material.
     At this point, a generation of materials has been initialized with parent-material IDs (primary
     keys). This function loads the necessary parameters from the selected parent's definition

@@ -79,7 +79,7 @@ def next_generation(run_id, children_per_generation, generation):
         mut.create_strength_array(run_id)                  # create strength-parameter array `run_id`.npy
     elif generation >= 2:
         mut.recalculate_strength_array(run_id, generation) # recalculate strength-parameters, as needed
-    mut.write_mutant_definition_files(run_id, generation)  # create child-materials
+    mut.write_children_definition_files(run_id, generation)  # create child-materials
 
     ############################################################################
     # simulate methane loading, helium void fraction, and surface area for seed population
