@@ -77,10 +77,10 @@ def select_parents(run_id, children_per_generation, generation):
     new_material_ids = np.arange(first, last)              # IDs for next generation of materials
     new_material_primary_keys = []
     for i in new_material_ids:
-        res = session.query(RunData).filter(
-            RunData.run_id == run_id, RunData.material_id == str(i))
-        for item in res:
-            new_material_primary_keys.append(item.id)
+        materials = session.query(RunData).filter(RunData.run_id == run_id,
+            RunData.generation == generation).all()
+        for material in materials:
+            new_material_primary_keys.append(material.id)
 
     next_materials_list = []
     for i in new_material_primary_keys:

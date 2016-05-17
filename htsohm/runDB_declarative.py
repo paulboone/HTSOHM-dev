@@ -13,7 +13,6 @@ class RunData(Base):
     # COLUMN                                                 UNITS
     id = Column(Integer, primary_key=True)                 # dimm.
     run_id = Column(String(50))                            # dimm.
-    material_id = Column(Integer)                          # dimm.
     generation = Column(Integer)                           # generation#
     absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
     absolute_gravimetric_loading = Column(Float)           # cm^3 / g
@@ -40,9 +39,8 @@ class RunData(Base):
     void_fraction_bin = Column(Integer)                    # dimm.
     dummy_test_result = Column(String(4))                  # "pass" = material passes
                                                            # "fail" = material fails
-    def __init__(self, run_id, material_id, generation):
+    def __init__(self, run_id, generation):
         self.run_id = run_id
-        self.material_id = material_id
         self.generation = generation
 
 with open('database.yaml', 'r') as yaml_file:

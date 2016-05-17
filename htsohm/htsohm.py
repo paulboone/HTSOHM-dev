@@ -25,77 +25,40 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
         "max-number-of-generations" : max_generations}
     with open(config_file, "w") as file:
         yaml.dump(run_config, file, default_flow_style=False)
-    return run_config
+    return run_config["run-id"]
 
-def read_config(run_config):
-    run_id = run_config["run-id"]
-    children_per_generation = run_config["children-per-generation"]
-    number_of_atomtypes = run_config["number-of-atom-types"]
-
-    return run_id, children_per_generation, number_of_atomtypes
-
-def seed_generation(run_config):
-    run_id, children_per_generation, number_of_atomtypes = read_config(run_config)
+def seed_generation(run_id, children_per_generation, number_of_atomtypes):
     generation = 0
-    ids = gen_ids(generation, children_per_generation)
-    primary_keys = []
-    for i in ids:
-        new_material = RunData(run_id, str(i), generation)
+    for material in range(children_per_generation):
+        new_material = RunData(run_id, generation)
         session.add(new_material)
-        session.commit()
-        primary_keys.append(new_material.id)
-    gen.generate(children_per_generation, number_of_atomtypes, run_id)
-    for i in primary_keys:
-        sim.run_all_simulations(i)
+    session.commit()
+    gen.write_seed_definition_files(run_id, children_per_generation, number_of_atomtypes)
+    seed = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == 0).all()
+    for material in seed:
+        sim.run_all_simulations(material.id)
     session.commit()
 
-def first_generation(run_config):
-    run_id, children_per_generation, number_of_atomtypes = read_config(run_config)
-    strength_0 = run_config["initial-mutation-strength"]
-    generation = 1
-    ids = gen_ids(generation, children_per_generation)
-    primary_keys = []
-    for i in ids:
-        new_material = RunData(run_id, str(i), generation)
+def next_generation(run_id, children_per_generation, generation):
+    for material in range(children_per_generation):
+        new_material = RunData(run_id, generation)
         session.add(new_material)
-        session.commit()
-        primary_keys.append(new_material.id)
+    session.commit()
     status = "Dummy test:   RUNNING"
     while status == "Dummy test:   RUNNING":
         # Select parents, add IDs to database...
-        next_materials_list = bng.select_parents(run_id,
-            children_per_generation, generation)
-        session.commit()               # parent_ids staged by bng.select_parents()
+        next_materials_list = bng.select_parents(run_id, children_per_generation, generation)
+        session.commit()                                       # parent_ids staged by bng.select_parents()
         status = sim.dummy_test(run_id, next_materials_list, status, generation)
-        session.commit()               # within loop so "fail" parents aren't re-selected
-    mut.first_s(run_id, strength_0)    # Create strength-parameter array `run_id`.npy
-    mut.mutate(run_id, generation)     # Create first generation of child-materials
-    for i in primary_keys:
-        sim.run_all_simulations(i)
-    session.commit()
-
-def next_generation(run_config, generation):
-    run_id, children_per_generation, number_of_atomtypes = read_config(run_config)
-    strength_0 = run_config["initial-mutation-strength"]
-    ids = gen_ids(generation, children_per_generation)
-    primary_keys = []
-    for i in ids:
-        new_material = RunData(run_id, str(i), generation)
-        session.add(new_material)
-        session.commit()
-        primary_keys.append(new_material.id)
-    status = "Dummy test:   RUNNING"
-    while status == "Dummy test:   RUNNING":
-        # Select parents, add IDs to database...
-        next_materials_list = bng.select_parents(run_id,
-            children_per_generation, generation)
-        session.commit()               # parent_ids staged by bng.select_parent()
-        status = sim.dummy_test(run_id, next_materials_list, status, generation)
-        session.commit()               # within loop so "fail" parents aren't re-selected
-    mut.calculate_s(run_id, generation)
-    mut.mutate(run_id, generation)
-    for i in primary_keys:
-        sim.run_all_simulations(i)
+        session.commit()                                       # within loop so "fail" parents aren't re-selected
+    if generation == 1:
+        mut.create_strength_array(run_id)                      # Create strength-parameter array `run_id`.npy
+    elif generation > 1:
+        mut.recalculate_strength_array(run_id, generation)     # Recalculate strength-parameters, as needed
+    mut.write_mutant_definition_files(run_id, generation)      # Create first generation of child-materials
+    children = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation ==1).all()
+    for material in children:
+        sim.run_all_simulations(material.id)
     session.commit()
 
 def htsohm(children_per_generation,    # number of materials per generation
@@ -104,20 +67,11 @@ def htsohm(children_per_generation,    # number of materials per generation
            number_of_bins,             # number of bins for analysis
            max_generations=20):        # maximum number of generations
 
-    run_config = write_config_file(children_per_generation,
-        number_of_atomtypes, strength_0, number_of_bins, max_generations)
+    run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0, 
+        number_of_bins, max_generations)
 
     for generation in range(max_generations):
         if generation == 0:                     # SEED GENERATION
-            seed_generation(run_config)
-        elif generation == 1:                   # FIRST GENERATION
-            first_generation(run_config)
-        elif generation >= 2:                   # SECOND GENERATION(S), and on...
-            next_generation(run_config, generation)
-
-def gen_ids(generation, children_per_generation):
-    first = generation * children_per_generation
-    last = (generation + 1) * children_per_generation
-    gen_ids = np.arange(first, last)
-
-    return gen_ids
+            seed_generation(run_id, children_per_generation, number_of_atomtypes)
+        elif generation >= 1:                   # FIRST GENERATION, AND ON...
+            next_generation(run_id, children_per_generation, generation)

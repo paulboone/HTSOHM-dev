@@ -6,9 +6,9 @@ def write_raspa_file(filename, run_id, material_id):
     with open(filename, "w") as config:
         config.write(
             "SimulationType\t\t\tMonteCarlo\n" +
-            "NumberOfCycles\t\t\t1000\n" +     # number of MonteCarlo cycles
-            "PrintEvery\t\t\t100\n" +
-            "PrintPropertiesEvery\t\t100\n" +
+            "NumberOfCycles\t\t\t100\n" +     # number of MonteCarlo cycles
+            "PrintEvery\t\t\t10\n" +
+            "PrintPropertiesEvery\t\t10\n" +
             "\n" +
             "Forcefield\t\t\t%s-%s\n" % (run_id, material_id) +
             "CutOff\t\t\t\t12.8\n" +           # LJ interaction cut-off, Angstroms
@@ -30,7 +30,7 @@ def parse_output(output_file):
             if not "Average Widom Rosenbluth-weight:" in line:
                 continue
             try:
-                results['VF_val'] = float(line.split()[4][:-1])
+                results['VF_val'] = float(line.split()[4])
             except IndexError:
                 print()
     print("\nVOID FRACTION :   %s\n" % (results['VF_val']))
@@ -44,7 +44,6 @@ def run(run_id, material_id):
     subprocess.run(['simulate', './VoidFraction.input'], check=True, cwd='output')
 
     output_dir = os.path.join('output', 'Output', 'System_0')
-#    output_dir = "output/Output/System_0/"
     filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
     output_file = os.path.join(output_dir, filename)
     results = parse_output(output_file)

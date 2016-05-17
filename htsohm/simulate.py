@@ -36,11 +36,11 @@ def get_bins(id, methane_loading, surface_area, void_fraction):
     vf_edges = np.arange(vf_min, vf_max + vf_step, vf_step)
 
     for i in range( bins ):
-        if surface_area >= sa_edges[i] and surface_area < sa_edges[i + 1]:
+        if surface_area >= sa_edges[i] and surface_area <= sa_edges[i + 1]:
             sa_bin = i
-        if methane_loading >= ml_edges[i] and methane_loading < ml_edges[i + 1]:
+        if methane_loading >= ml_edges[i] and methane_loading <= ml_edges[i + 1]:
             ml_bin = i
-        if void_fraction >= vf_edges[i] and void_fraction < vf_edges[i + 1]:
+        if void_fraction >= vf_edges[i] and void_fraction <= vf_edges[i + 1]:
             vf_bin = i
 
     print("\nBINS\t%s\t%s\t%s\n" % (ml_bin, sa_bin, vf_bin))
@@ -55,13 +55,13 @@ def run_all_simulations(id):
     run_data = session.query(RunData).get(id)
     
     ### RUN HELIUM VOID FRACTION
-    results = helium_void_fraction_simulation.run(run_data.run_id, run_data.material_id)
+    results = helium_void_fraction_simulation.run(run_data.run_id, run_data.id)
     run_data.helium_void_fraction = results['VF_val']
     void_fraction = float(results['VF_val'])
     
     ### RUN METHANE LOADING
     results = methane_loading_simulation.run(run_data.run_id, 
-                                             run_data.material_id,
+                                             run_data.id,
                                              run_data.helium_void_fraction)
     run_data.absolute_volumetric_loading   = results['ML_a_cc']
     run_data.absolute_gravimetric_loading  = results['ML_a_cg']
@@ -81,14 +81,14 @@ def run_all_simulations(id):
     methane_loading = float(results['ML_a_cc'])
     
     ### RUN SURFACE AREA
-    results = surface_area_simulation.run(run_data.run_id, run_data.material_id)
+    results = surface_area_simulation.run(run_data.run_id, run_data.id)
     run_data.unit_cell_surface_area     = results['SA_a2']
     run_data.volumetric_surface_area    = results['SA_mc']
     run_data.gravimetric_surface_area   = results['SA_mg']
     surface_area = float(results['SA_mc'])
     
     ### GET BIN
-    results = get_bins(id, methane_loading, surface_area, void_fraction)
+    results = get_bins(run_data.id, methane_loading, surface_area, void_fraction)
     run_data.methane_loading_bin = results['ml_bin']
     run_data.surface_area_bin = results['sa_bin']
     run_data.void_fraction_bin = results['vf_bin']
@@ -102,24 +102,24 @@ def dummy_test(run_id, next_materials_list, status, generation):
         parent = session.query(RunData).get(parent_id)
         
         if parent.dummy_test_result != "pass":
-            print( "\nRe-Simulating %s-%s...\n" % (run_id, parent.material_id) )
+            print( "\nRe-Simulating %s-%s...\n" % (run_id, parent.id) )
 
             void_fractions = []                   # re-simulate void fraction calculations
             for j in range(number_of_trials):
                 vf_result = helium_void_fraction_simulation.run(
-                    run_id, parent.material_id)
+                    run_id, parent.id)
                 void_fractions.append( float(vf_result["VF_val"]) )
 
             methane_loadings = []                   # re-simulate methane loading calculations
             for j in range(number_of_trials):
                 ml_result = methane_loading_simulation.run(
-                    run_id, parent.material_id, np.mean(void_fractions))
+                    run_id, parent.id, np.mean(void_fractions))
                 methane_loadings.append( float(ml_result["ML_a_cc"]) )
 
             surface_areas = []                   # re-simulate surface area calculations
             for j in range(number_of_trials):
                 sa_result = surface_area_simulation.run(
-                    run_id, parent.material_id)
+                    run_id, parent.id)
                 surface_areas.append( float(sa_result["SA_mc"]) )
 
             ml_o = parent.absolute_volumetric_loading
@@ -133,8 +133,8 @@ def dummy_test(run_id, next_materials_list, status, generation):
                 print( 
                     "A MATERIAL HAS FAILED!\n" +
                     "Run:\t%s\n" % (run_id) +
-                    "Material:\t%s\n" % (parent.material_id))
-                failed.append("%s-%s" % (run_id, parent.material_id))
+                    "Material:\t%s\n" % (parent.id))
+                failed.append("%s-%s" % (run_id, parent.id))
                 break
             else:
                 parent.dummy_test_result = "pass"

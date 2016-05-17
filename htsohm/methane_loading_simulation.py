@@ -6,9 +6,9 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
     with open(filename, "w") as config:
         config.write(
             "SimulationType\t\t\tMonteCarlo\n" +
-            "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
-            "NumberOfInitializationCycles\t500\n" +    # number of initialization cycles
-            "PrintEvery\t\t\t100\n" +
+            "NumberOfCycles\t\t\t100\n" +             # number of MonteCarlo cycles
+            "NumberOfInitializationCycles\t50\n" +    # number of initialization cycles
+            "PrintEvery\t\t\t10\n" +
             "RestartFile\t\t\tno\n" +
             "\n" +
             "Forcefield\t\t\t%s-%s\n" % (run_id, material_id) +

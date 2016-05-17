@@ -25,7 +25,7 @@ def create_strength_array(run_id):
     initial_strength   = config["initial-mutation-strength"]
     strength_array = initial_strength * np.ones([bins, bins, bins])
     filename = os.path.join(wd, 'config', run_id)
-    np.save(strength_array, filename)
+    np.save(filename, strength_array)
 
 def recalculate_strength_array(run_id, generation):
     """Rewrite 3-dimensional array of stregnth parameters.
@@ -64,6 +64,9 @@ def recalculate_strength_array(run_id, generation):
     for parent in parent_list:
         parent_id    = parent["id"]
         parent_bin   = parent["bin"]
+        a = parent_bin[0]
+        b = parent_bin[1]
+        c = parent_bin[2]
         child_bins   = []
         child_counts = []
         children = s.query(db).filter(db.run_id == run_id, db.generation == generation - 1,
@@ -72,20 +75,19 @@ def recalculate_strength_array(run_id, generation):
             child_bin = [child.methane_loading_bin, child.surface_area_bin, child.void_fraction_bin]
             bin_count = s.query(db).filter(db.run_id == run_id,
                 db.generation == generation - 1, db.parent_id == parent_id,
-                db.methane_load_bin == child[0], db.surface_area_bin == child[1],
-                db.void_fraction_bin == child[2]).count()
+                db.methane_loading_bin == child_bin[0], db.surface_area_bin == child_bin[1],
+                db.void_fraction_bin == child_bin[2]).count()
             if child_bin not in child_bins:
                 child_bins.append(child_bin)
-                child.counts.append(bin_count)
+                child_counts.append(bin_count)
         if parent_bin not in child_bins:
-            strength_array[parent_bin] = 0.5 * strength_array[parent_bin]
+            strength_array[a, b, c] = 0.5 * strength_array[a, b, c]
         elif parent_bin in child_bins:
             parent_bin_count = child_counts[child_bins.index(parent_bin)]
-            del child_counts[child_bins.index(parent_bin)]
             if parent_bin_count < 1.1 * min(child_counts):
-                strength_array[parent_bin] = 0.5 * strength_array[parent_bin]
+                strength_array[a, b, c] = 0.5 * strength_array[a, b, c]
             if parent_bin_count >= 3 * min(child_counts):
-                strength_array[parent_bin] = 1.5 * strength_array[parent_bin]
+                strength_array[a, b, c] = 1.5 * strength_array[a, b, c]
 
     os.remove(strength_array_file)                   # remove old file
     np.save(strength_array_file, strength_array)     # write new file
@@ -134,7 +136,6 @@ def write_mutant_definition_files(run_id, generation):
     materials = []
     for child in children:
         child_id = child.id
-        print("CHILD\t%s\n" % (child_id))
         ########################################################################
         # write force_field.def
         child_forcefield_directory = os.path.join(fd, run_id + '-' + str(child_id))
@@ -145,7 +146,6 @@ def write_mutant_definition_files(run_id, generation):
         ########################################################################
         # copy pseudo_atoms.def
         parent_id = str(child.parent_id)
-        print("PARENT\t%s\n" % (parent_id))
         parent_forcefield_directory = os.path.join(fd, run_id + '-' + parent_id)
         parent_pseudo_file = os.path.join(parent_forcefield_directory, 'pseudo_atoms.def')
         shutil.copy(parent_pseudo_file, child_forcefield_directory)    # COPY PSEUDO_ATOMS.DEF
@@ -154,11 +154,10 @@ def write_mutant_definition_files(run_id, generation):
         # get mutation strength parameter
         parent = session.query(RunData).get(parent_id)
         parent_bin = [parent.methane_loading_bin, parent.surface_area_bin, parent.void_fraction_bin]
-        mutation_strength = strength_array[parent_bin]                 # GET BIN-STRENGTH PARAMETER
+        mutation_strength = strength_array[parent_bin[0], parent_bin[1], parent_bin[2]]
 
         ########################################################################
         # load boundaries from config-file
-        wd = os.environ['HTSOHM_DIR']
         config_file = os.path.join(wd, 'config', run_id + '.yaml')
         with open(config_file) as yaml_file:
             config = yaml.load(yaml_file)
@@ -176,9 +175,9 @@ def write_mutant_definition_files(run_id, generation):
             usecols=0, dtype=str)
         atom_types = []
         for i in range(len(chemical_ids)):
-            epsilon = round( old_epsilons[i] + mutation_strength * (uniform(**epsilon_limits) - 
+            epsilon = round( old_epsilons[i] + mutation_strength * (uniform(*epsilon_limits) - 
                 old_epsilons[i]), 4)
-            sigma = round( old_sigmas[i] + mutation_strength * (uniform(**sigma_limits) - 
+            sigma = round( old_sigmas[i] + mutation_strength * (uniform(*sigma_limits) - 
                 old_sigmas[i]), 4)
             atom_type = {
                 "chemical-id" : chemical_ids[i],
@@ -208,7 +207,7 @@ def write_mutant_definition_files(run_id, generation):
         a = round(old_a + mutation_strength * (random_a - old_a), 4) 
         b = round(old_b + mutation_strength * (random_b - old_b), 4)
         c = round(old_c + mutation_strength * (random_c - old_c), 4)
-        lattice_constants = [a, b, c]
+        lattice_constants = {"a" : a, "b" : b, "c" : c}
         ########################################################################
         # calulate new number density, number of atoms
         old_ND = len(old_x) / (old_a * old_b * old_c)
@@ -219,9 +218,9 @@ def write_mutant_definition_files(run_id, generation):
         # remove excess atom-sites, if any
         if number_of_atoms < len(old_x):
             difference = len(old_x) - number_of_atoms
-            del old_x[-difference:]
-            del old_y[-difference:]
-            del old_z[-difference:]
+            old_x = old_x[:-difference]
+            old_y = old_y[:-difference]
+            old_z = old_z[:-difference]
         ########################################################################
         # perturb atom-site positions
         atom_sites = []
@@ -247,8 +246,6 @@ def write_mutant_definition_files(run_id, generation):
                     "z-frac"      : round(random(), 4)}
                 atom_sites.append(atom_site)
 
-        cif_file = os.path.join(md, run_id + '-' + child_id + '.cif')
+        cif_file = os.path.join(md, run_id + '-' + str(child_id) + '.cif')
         utl.write_cif_file(cif_file, lattice_constants, atom_sites)
-        material = [child_id, atom_types, atom_sites]
-        materials.append(material)
     print( "...done!\n" )

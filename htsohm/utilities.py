@@ -1,13 +1,4 @@
-
-def random_number_density(number_density_limits, lattice_constants):
-    max_number_density = number_density_limits[1]
-    a = lattice_constants["a"]
-    b = lattice_constants["b"]
-    c = lattice_constants["c"]
-    max_number_of_atoms = int(max_number_density * a * b * c)
-    number_of_atoms = randrange(2, max_number_of_atoms, 1)
-    number_density = round(number_of_atoms / (a * b * c))
-    return number_of_atoms, number_density
+import os
 
 def write_cif_file(cif_file, lattice_constants, atom_sites):
     with open(cif_file, "w") as file:
@@ -32,7 +23,7 @@ def write_cif_file(cif_file, lattice_constants, atom_sites):
             x         = atom_site["x-frac"]
             y         = atom_site["y-frac"]
             z         = atom_site["z-frac"]
-            file.write("%s\t%s\t%s\t%s\n" % (chemical, x, y, z))
+            file.write("%s\tC\t%s\t%s\t%s\n" % (chemical, x, y, z))
 
 def write_mixing_rules(mix_file, atom_types):
     with open(mix_file, "w") as file:
@@ -51,7 +42,7 @@ def write_mixing_rules(mix_file, atom_types):
             epsilon    = atom_type["epsilon"]
             sigma      = atom_type["sigma"]
             file.write(
-                "A_%s\tlennard-jones\t%s\t%s\n" % (atom_id, epsilon, sigma))
+                "%s\tlennard-jones\t%s\t%s\n" % (atom_id, epsilon, sigma))
         file.write(
             "N_n2\tlennard-jones\t36.0\t3.31\n" +
             "N_com\tnone\n" +
