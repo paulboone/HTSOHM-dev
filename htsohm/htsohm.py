@@ -36,9 +36,8 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
 
     return run_config["run-id"]
 
-
-
 def init_materials_in_database(run_id, children_per_generation, generation):
+    """initialize materials in database with run_id and generation"""
     for material in range(children_per_generation):
         new_material = RunData(run_id, generation, 'none')
         session.add(new_material)
@@ -51,6 +50,24 @@ def simulate_all_materials(run_id, generation):
         sim.run_all_simulations(material.id)
     session.commit()
 
+def screen_parents(run_id, children_per_generation, generation):
+    """select potential parent-materials and run them in dummy-test"""
+    test_complete = False
+    while not test_complete:
+        next_generation_list = bng.select_parents(run_id, children_per_generation, generation)
+        session.commit()             # parent_ids added to database
+        test_complete = sim.dummy_test(run_id, next_generation_list, generation)
+        session.commit()             # dummy_test_results added to database
+
+def create_next_generation(run_id, generation):
+    """once screened, parent-materials are mutated to create next generation"""
+    if generation == 1:
+        mut.create_strength_array(run_id)                  # create strength-parameter array `run_id`.npy
+    elif generation >= 2:
+        mut.recalculate_strength_array(run_id, generation) # recalculate strength-parameters, as needed
+    mut.write_children_definition_files(run_id, generation)      # create child-materials
+
+
 def seed_generation(run_id, children_per_generation, number_of_atomtypes):
     generation = 0
 
@@ -60,28 +77,9 @@ def seed_generation(run_id, children_per_generation, number_of_atomtypes):
 
 
 def next_generation(run_id, children_per_generation, generation):
-    s = session    # rename database objects to shorted queries
-    db = RunData
-
     init_materials_in_database(run_id, children_per_generation, generation)
-
-    ############################################################################
-    # select potential parent-materials and run them in dummy-test
-    test_complete = False
-    while not test_complete:
-        next_generation_list = bng.select_parents(run_id, children_per_generation, generation)
-        s.commit()             # parent_ids added to database
-        test_complete = sim.dummy_test(run_id, next_generation_list, generation)
-        s.commit()             # dummy_test_results added to database
-
-    ############################################################################
-    # selected parent-materials are mutated to create next generation
-    if generation == 1:
-        mut.create_strength_array(run_id)                  # create strength-parameter array `run_id`.npy
-    elif generation >= 2:
-        mut.recalculate_strength_array(run_id, generation) # recalculate strength-parameters, as needed
-    mut.write_children_definition_files(run_id, generation)  # create child-materials
-
+    screen_parents(run_id, children_per_generation, generation)
+    create_next_generation(run_id, generation)
     simulate_all_materials(run_id, generation)
 
 def htsohm(children_per_generation,    # number of materials per generation
