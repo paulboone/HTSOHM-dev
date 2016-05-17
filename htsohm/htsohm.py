@@ -30,7 +30,7 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
 def seed_generation(run_id, children_per_generation, number_of_atomtypes):
     generation = 0
     for material in range(children_per_generation):
-        new_material = RunData(run_id, generation)
+        new_material = RunData(run_id, generation, 'none')
         session.add(new_material)
     session.commit()
     gen.write_seed_definition_files(run_id, children_per_generation, number_of_atomtypes)
@@ -41,15 +41,15 @@ def seed_generation(run_id, children_per_generation, number_of_atomtypes):
 
 def next_generation(run_id, children_per_generation, generation):
     for material in range(children_per_generation):
-        new_material = RunData(run_id, generation)
+        new_material = RunData(run_id, generation, 'none')
         session.add(new_material)
     session.commit()
     status = "Dummy test:   RUNNING"
     while status == "Dummy test:   RUNNING":
         # Select parents, add IDs to database...
-        next_materials_list = bng.select_parents(run_id, children_per_generation, generation)
+        next_generation_list = bng.select_parents(run_id, children_per_generation, generation)
         session.commit()                                       # parent_ids staged by bng.select_parents()
-        status = sim.dummy_test(run_id, next_materials_list, status, generation)
+        status = sim.dummy_test(run_id, next_generation_list, status, generation)
         session.commit()                                       # within loop so "fail" parents aren't re-selected
     if generation == 1:
         mut.create_strength_array(run_id)                      # Create strength-parameter array `run_id`.npy

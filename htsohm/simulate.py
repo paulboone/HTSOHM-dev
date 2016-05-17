@@ -93,11 +93,11 @@ def run_all_simulations(id):
     run_data.surface_area_bin = results['sa_bin']
     run_data.void_fraction_bin = results['vf_bin']
 
-def dummy_test(run_id, next_materials_list, status, generation):
+def dummy_test(run_id, next_generation_list, status, generation):
     tolerance = 0.5
     number_of_trials = 1
     failed = []
-    for i in next_materials_list:
+    for i in next_generation_list:
         parent_id = str(i[1])
         parent = session.query(RunData).get(parent_id)
         

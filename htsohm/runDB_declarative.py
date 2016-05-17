@@ -39,9 +39,10 @@ class RunData(Base):
     void_fraction_bin = Column(Integer)                    # dimm.
     dummy_test_result = Column(String(4))                  # "pass" = material passes
                                                            # "fail" = material fails
-    def __init__(self, run_id, generation):
+    def __init__(self, run_id, generation, dummy_test_result):
         self.run_id = run_id
         self.generation = generation
+        self.dummy_test_result = dummy_test_result
 
 with open('database.yaml', 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)
