@@ -23,20 +23,22 @@ def create_strength_array(run_id):
         config = yaml.load(yaml_file)
     bins               = config["number-of-bins"]
     initial_strength   = config["initial-mutation-strength"]
+
     strength_array = initial_strength * np.ones([bins, bins, bins])
     filename = os.path.join(wd, 'config', run_id)
     np.save(filename, strength_array)
 
 def recalculate_strength_array(run_id, generation):
     """Rewrite 3-dimensional array of stregnth parameters.
+
     In the event that a particular bin contains parents whose children exhibit radically
-    divergent properties, the strength paramter for the bin is modified. In order to deftermine
+    divergent properties, the strength parameter for the bin is modified. In order to determine
     which bins to adjust, the script refers to the distribution of children in the previous
     generation which share a common parent. The criteria follows:
      ________________________________________________________________
      - if none of the children share  |  decrease strength parameter
        the parent's bin               |  by 50 %
-     - if all other child-bin-counts  |  
+     - if all other child-bin-counts  |
        are at least 10% greater than  |
        the parent-bin-count           |
      _________________________________|_____________________________
@@ -49,15 +51,15 @@ def recalculate_strength_array(run_id, generation):
     db = RunData
 
     ############################################################################
-    # create list of parent-materials from next generation    
+    # create list of parent-materials from next generation
     parent_list = []
     children = s.query(db).filter(db.run_id == run_id, db.generation == generation)
-    for item in children:
-        p = s.query(db).get(item.parent_id)
-        parent = {
-            "id"  : item.parent_id,
-            "bin" : [p.methane_loading_bin, p.surface_area_bin, p.void_fraction_bin]}
-        parent_list.append(parent)
+    for material in children:
+        p = s.query(db).get(material.parent_id)
+        parent_list.append({
+            "id"  : material.parent_id,
+            "bin" : [p.methane_loading_bin, p.surface_area_bin, p.void_fraction_bin]
+        })
 
     ############################################################################
     # load strength-parameter array
@@ -139,7 +141,7 @@ def write_children_definition_files(run_id, generation):
     keys). This function loads the necessary parameters from the selected parent's definition
     files, perturbs all of these values, and then writes them to new definition-files, creating
     a new material. The degree to which each value is perturbed is controlled by the mutation-
-    strength-parameter.""" 
+    strength-parameter."""
     print( "\nCreating generation :\t%s" % (generation) )
     md = os.environ['MAT_DIR']
     fd = os.environ['FF_DIR']
@@ -180,7 +182,7 @@ def write_children_definition_files(run_id, generation):
         number_density_limits   = config["number-density-limits"]
         epsilon_limits          = config["epsilon-limits"]
         sigma_limits            = config["sigma-limits"]
-        
+
         ########################################################################
         # perturb LJ-parameters, write force_field_mixing_rules.def
         p_mix = os.path.join(fd, run_id + '-' + parent_id, 'force_field_mixing_rules.def')
@@ -190,9 +192,9 @@ def write_children_definition_files(run_id, generation):
             usecols=0, dtype=str)
         atom_types = []
         for i in range(len(chemical_ids)):
-            epsilon = round( old_epsilons[i] + mutation_strength * (uniform(*epsilon_limits) - 
+            epsilon = round( old_epsilons[i] + mutation_strength * (uniform(*epsilon_limits) -
                 old_epsilons[i]), 4)
-            sigma = round( old_sigmas[i] + mutation_strength * (uniform(*sigma_limits) - 
+            sigma = round( old_sigmas[i] + mutation_strength * (uniform(*sigma_limits) -
                 old_sigmas[i]), 4)
             atom_type = {
                 "chemical-id" : chemical_ids[i],
@@ -219,7 +221,7 @@ def write_children_definition_files(run_id, generation):
         random_a = round(uniform(*lattice_limits), 4)
         random_b = round(uniform(*lattice_limits), 4)
         random_c = round(uniform(*lattice_limits), 4)
-        a = round(old_a + mutation_strength * (random_a - old_a), 4) 
+        a = round(old_a + mutation_strength * (random_a - old_a), 4)
         b = round(old_b + mutation_strength * (random_b - old_b), 4)
         c = round(old_c + mutation_strength * (random_c - old_c), 4)
         lattice_constants = {"a" : a, "b" : b, "c" : c}

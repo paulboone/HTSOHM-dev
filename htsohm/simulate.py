@@ -48,6 +48,7 @@ def get_bins(id, methane_loading, surface_area, void_fraction):
         if void_fraction >= vf_edges[i] and void_fraction <= vf_edges[i + 1]:
             vf_bin = i
     print("\nBINS\t%s\t%s\t%s\n" % (ml_bin, sa_bin, vf_bin))
+
     results = {}
     results['ml_bin'] = ml_bin
     results['sa_bin'] = sa_bin
@@ -56,6 +57,7 @@ def get_bins(id, methane_loading, surface_area, void_fraction):
 
 def run_all_simulations(id):
     """Simulate helium void fraction, methane loading, and surface area.
+
     For a given material (id) three simulations are run using RASPA. First a helium void fraction
     is calculated, and then it is used to run a methane loading simulation (void fraction needed to
     calculate excess v. absolute loading). Finally, a surface area is calculated and the material is
