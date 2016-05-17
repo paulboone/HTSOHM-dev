@@ -21,15 +21,19 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
     run_id = datetime.now().isoformat()
     wd = os.environ['HTSOHM_DIR']      # specify working directory
     config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    
     run_config = {
         "run-id" : run_id,
         "children-per-generation" : children_per_generation,
         "number-of-atom-types" : number_of_atomtypes,
         "initial-mutation-strength" : strength_0,
         "number-of-bins" : number_of_bins,
-        "max-number-of-generations" : max_generations}
+        "max-number-of-generations" : max_generations
+    }
+
     with open(config_file, "w") as file:
         yaml.dump(run_config, file, default_flow_style=False)
+
     return run_config["run-id"]
 
 def seed_generation(run_id, children_per_generation, number_of_atomtypes):
