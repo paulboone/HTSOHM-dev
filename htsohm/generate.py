@@ -37,13 +37,23 @@ def write_material_config(run_id):
     return run_config
 
 def random_number_density(number_density_limits, lattice_constants):
+    """Returns some random number of atoms per unit cell, within the defined density limits.
+    There are two inputs :
+        - number_density limits        a list of the form [minimum, maximum]
+        - lattice_constants            a dictionary of crystal lattice parameters of the form
+                                           {"a" : <float>,
+                                            "b" : <float>,
+                                            "c" : <float>}
+    And one output:
+        - number_of_atoms              some random number of atoms per unit cell, according to
+                                       predefined limits.
+    """
     max_number_density = number_density_limits[1]
     a = lattice_constants["a"]
     b = lattice_constants["b"]
     c = lattice_constants["c"]
     max_number_of_atoms = int(max_number_density * a * b * c)
     number_of_atoms = randrange(2, max_number_of_atoms, 1)
-    number_density = round(number_of_atoms / (a * b * c))
     return number_of_atoms
 
 def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes):
