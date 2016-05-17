@@ -58,6 +58,7 @@ def random_number_density(number_density_limits, lattice_constants):
 
 def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes):
     """Write .def and .cif files for a randomly-generated porous material.
+
     Each material is defined by it's structural information (stored in a .cif-file) and force field
     definition files:
     - <material_name>.cif            contains structural information including crystal lattice
@@ -70,12 +71,8 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
     - pseudo_atoms.def               this file contains pseudo-atom definitions, including partial
                                      charge, atomic mass, atomic radii, and more.
     """
-    seed = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == 0).all()
-    seed_ids = []
-    for material in seed:              # get list of seed-material IDs
-        seed_ids.append(material.id)
 
-    material_config = write_material_config(run_id)
+    material_config         = write_material_config(run_id)
     lattice_limits          = material_config["lattice-constant-limits"]
     number_density_limits   = material_config["number-density-limits"]
     epsilon_limits          = material_config["epsilon-limits"]
@@ -87,11 +84,11 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
     ff_dir = os.environ['FF_DIR']      # output force-field files to $FF_DIR
     mat_dir = os.environ['MAT_DIR']    # output .cif-files to $MAT_DIR
 
-    materials = []
-    for material in seed_ids:           # each iteration creates a new material
-        material_id = run_id + '-' + str(material)        # this will be replaced with primary_key
+    materials = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == 0).all()
+    for material in materials:           # each iteration creates a new material
+        material_name = run_id + '-' + str(material.id)        # this will be replaced with primary_key
 
-        def_dir = os.path.join(ff_dir, material_id)       # directory for material's force field
+        def_dir = os.path.join(ff_dir, material_name)       # directory for material's force field
         os.mkdir(def_dir)
         force_field_file = os.path.join(def_dir, 'force_field.def')      # for overwriting LJ-params
         utl.write_force_field(force_field_file)
@@ -100,15 +97,12 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
         # define pseudo atom types by randomly-generating sigma and epsilon values
         atom_types = []
         for chemical_id in range(number_of_atomtypes):
-            epsilon   = round(uniform(*epsilon_limits), 4)
-            sigma     = round(uniform(*sigma_limits), 4)
-            charge    = 0.             # charge assignment to be re-implemented!!!
-            atom_type = {
+            atom_types.append({
                 "chemical-id" : "A_%s" % chemical_id,
-                "charge"      : charge,
-                "epsilon"     : epsilon,
-                "sigma"       : sigma}
-            atom_types.append(atom_type)
+                "charge"      : 0.,    # charge assignment to be re-implemented!!!,
+                "epsilon"     : round(uniform(*epsilon_limits), 4),
+                "sigma"       : round(uniform(*sigma_limits), 4)
+            })
 
         mix_file = os.path.join(def_dir, 'force_field_mixing_rules.def') # LJ-parameters
         utl.write_mixing_rules(mix_file, atom_types)
@@ -126,13 +120,12 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
         # populate unit cell with randomly-positioned atoms of a randomly-selected species
         atom_sites = []
         for atom in range(number_of_atoms):
-            atom_type = choice(atom_types)
-            atom_site = {
-                "chemical-id" : atom_type["chemical-id"],
+            atom_sites.append({
+                "chemical-id" : choice(atom_types)["chemical-id"],
                 "x-frac"      : round(random(), 4),
                 "y-frac"      : round(random(), 4),
-                "z-frac"      : round(random(), 4)}
-            atom_sites.append(atom_site)
+                "z-frac"      : round(random(), 4)
+            })
 
-        cif_file = os.path.join(mat_dir, material_id + ".cif")           # structure file
+        cif_file = os.path.join(mat_dir, material_name + ".cif")           # structure file
         utl.write_cif_file(cif_file, lattice_constants, atom_sites)
