@@ -15,26 +15,31 @@ def id_to_mat(id):
     return session.query(RunData).get(id).material_id
 
 def get_bins(id, methane_loading, surface_area, void_fraction):
+    """Returns methane_loading_bin, surface_area_bin, and void_fraction_bin.
+    Each material is sorted into a bin corresponding to its combination of structure-properties.
+    First, the structure property space is subdivided into arbitrary quadrants, or bins, then
+    the simulated properties for a particular material are used to assigned it to a particular
+    bin."""
     run_data = session.query(RunData).get(id)
 
-    # Arbitary structure-property space "boundaries"
+    ############################################################################
+    # assign arbitrary maxima and subdivide the parameter space.
     ml_min = 0.
     ml_max = 350.
     sa_min = 0.
     sa_max = 4500.
     vf_min = 0.
     vf_max = 1.
-
     bins = bng.check_number_of_bins(run_data.run_id)
-
     ml_step = ml_max / float(bins)
     sa_step = sa_max / float(bins)
     vf_step = vf_max / float(bins)
-
     ml_edges = np.arange(ml_min, ml_max + ml_step, ml_step)
     sa_edges = np.arange(sa_min, sa_max + sa_step, sa_step)
     vf_edges = np.arange(vf_min, vf_max + vf_step, vf_step)
 
+    ############################################################################
+    # assign material to its respective bin
     for i in range( bins ):
         if surface_area >= sa_edges[i] and surface_area <= sa_edges[i + 1]:
             sa_bin = i
@@ -42,24 +47,29 @@ def get_bins(id, methane_loading, surface_area, void_fraction):
             ml_bin = i
         if void_fraction >= vf_edges[i] and void_fraction <= vf_edges[i + 1]:
             vf_bin = i
-
     print("\nBINS\t%s\t%s\t%s\n" % (ml_bin, sa_bin, vf_bin))
     results = {}
     results['ml_bin'] = ml_bin
     results['sa_bin'] = sa_bin
     results['vf_bin'] = vf_bin
-
     return results
 
 def run_all_simulations(id):
+    """Simulate helium void fraction, methane loading, and surface area.
+    For a given material (id) three simulations are run using RASPA. First a helium void fraction
+    is calculated, and then it is used to run a methane loading simulation (void fraction needed to
+    calculate excess v. absolute loading). Finally, a surface area is calculated and the material is
+    assigned to its appropriate bin."""
     run_data = session.query(RunData).get(id)
     
-    ### RUN HELIUM VOID FRACTION
+    ############################################################################
+    # run helium void fraction simulation
     results = helium_void_fraction_simulation.run(run_data.run_id, run_data.id)
     run_data.helium_void_fraction = results['VF_val']
     void_fraction = float(results['VF_val'])
     
-    ### RUN METHANE LOADING
+    ############################################################################
+    # run methane loading simulation
     results = methane_loading_simulation.run(run_data.run_id, 
                                              run_data.id,
                                              run_data.helium_void_fraction)
@@ -79,57 +89,75 @@ def run_all_simulations(id):
     run_data.host_adsorbate_vdw            = results['host_adsorbate_vdw']
     run_data.host_adsorbate_cou            = results['host_adsorbate_cou']
     methane_loading = float(results['ML_a_cc'])
-    
-    ### RUN SURFACE AREA
+
+    ############################################################################
+    # run surface area simulation
     results = surface_area_simulation.run(run_data.run_id, run_data.id)
     run_data.unit_cell_surface_area     = results['SA_a2']
     run_data.volumetric_surface_area    = results['SA_mc']
     run_data.gravimetric_surface_area   = results['SA_mg']
     surface_area = float(results['SA_mc'])
     
-    ### GET BIN
+    ############################################################################
+    # assign material to bin
     results = get_bins(run_data.id, methane_loading, surface_area, void_fraction)
     run_data.methane_loading_bin = results['ml_bin']
     run_data.surface_area_bin = results['sa_bin']
     run_data.void_fraction_bin = results['vf_bin']
 
 def dummy_test(run_id, next_generation_list, status, generation):
+    """Recalculate material structure-properties to prevent statistical errors.
+    Because methane loading, surface area, and helium void fractions are calculated using
+    statistical methods (namely grand canonic Monte Carlo simulations) they are susceptible
+    to statistical errors. To mitigate this, after a material has been selected as a potential
+    parent, it's combination of structure-properties is resimulated some number of times and
+    compared to the initally-calculated material. If the resimulated values differ from the
+    initially-calculated value beyond an accpetable tolerance, the material fails the `dummy-test`
+    and is flagged, preventing it from being used to generate new materials in the future."""
     tolerance = 0.5
     number_of_trials = 1
+
     failed = []
     for i in next_generation_list:
+        ########################################################################
+        # iterate over all selected-parents for the next generation
         parent_id = str(i[1])
         parent = session.query(RunData).get(parent_id)
         
-        if parent.dummy_test_result != "pass":
+        if parent.dummy_test_result != "pass":       # materials are not re-tested
             print( "\nRe-Simulating %s-%s...\n" % (run_id, parent.id) )
 
-            void_fractions = []                   # re-simulate void fraction calculations
+            ####################################################################
+            # resimulate helium void fraction(s)
+            void_fractions = []
             for j in range(number_of_trials):
-                vf_result = helium_void_fraction_simulation.run(
-                    run_id, parent.id)
-                void_fractions.append( float(vf_result["VF_val"]) )
+                vf_result = helium_void_fraction_simulation.run(run_id, parent.id)
+                void_fractions.append(float(vf_result["VF_val"]))
 
-            methane_loadings = []                   # re-simulate methane loading calculations
+            ####################################################################
+            # resimulate methane loading(s)
+            methane_loadings = []
             for j in range(number_of_trials):
-                ml_result = methane_loading_simulation.run(
-                    run_id, parent.id, np.mean(void_fractions))
-                methane_loadings.append( float(ml_result["ML_a_cc"]) )
+                ml_result = methane_loading_simulation.run(run_id, parent.id,
+                    np.mean(void_fractions))
+                methane_loadings.append(float(ml_result["ML_a_cc"]))
 
-            surface_areas = []                   # re-simulate surface area calculations
+            ####################################################################
+            # resimulate surface area(s)
+            surface_areas = []
             for j in range(number_of_trials):
-                sa_result = surface_area_simulation.run(
-                    run_id, parent.id)
+                sa_result = surface_area_simulation.run(run_id, parent.id)
                 surface_areas.append( float(sa_result["SA_mc"]) )
 
-            ml_o = parent.absolute_volumetric_loading
+            ####################################################################
+            # compare average of resimulated values to originals
+            ml_o = parent.absolute_volumetric_loading    # initally-calculated values
             sa_o = parent.volumetric_surface_area
             vf_o = parent.helium_void_fraction
-            
             if ( abs(np.mean(methane_loadings) - ml_o) >= tolerance * ml_o or
                  abs(np.mean(surface_areas) - sa_o) >= tolerance * sa_o or
                  abs(np.mean(void_fractions) - vf_o) >= tolerance * vf_o ):
-                parent.dummy_test_result = "fail"
+                parent.dummy_test_result = "fail"        # flag failed material
                 print( 
                     "A MATERIAL HAS FAILED!\n" +
                     "Run:\t%s\n" % (run_id) +
@@ -137,10 +165,10 @@ def dummy_test(run_id, next_generation_list, status, generation):
                 failed.append("%s-%s" % (run_id, parent.id))
                 break
             else:
-                parent.dummy_test_result = "pass"
-
+                parent.dummy_test_result = "pass"        # prevents from future re-testing
+    ############################################################################
+    # if any materials fail, then new parents are selected and tested (see : htsohm/htsohm.py)
     if len(failed) == 0:
         status = "Dummy test:   COMPLETE"
     print (status)
-
     return status
