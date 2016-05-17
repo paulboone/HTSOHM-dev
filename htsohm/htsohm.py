@@ -44,19 +44,20 @@ def init_materials_in_database(run_id, children_per_generation, generation):
         session.add(new_material)
     session.commit()
 
+def simulate_all_materials(run_id, generation):
+    """simulate methane loading, helium void fraction, and surface area for seed population"""
+    materials = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == generation).all()
+    for material in materials:
+        sim.run_all_simulations(material.id)
+    session.commit()
+
 def seed_generation(run_id, children_per_generation, number_of_atomtypes):
     generation = 0
 
     init_materials_in_database(run_id, children_per_generation, generation)
-
     gen.write_seed_definition_files(run_id, children_per_generation, number_of_atomtypes)
+    simulate_all_materials(run_id, generation)
 
-    ############################################################################
-    # simulate methane loading, helium void fraction, and surface area for seed population
-    materials = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == 0).all()
-    for material in materials:
-        sim.run_all_simulations(material.id)
-    session.commit()
 
 def next_generation(run_id, children_per_generation, generation):
     s = session    # rename database objects to shorted queries
@@ -81,12 +82,7 @@ def next_generation(run_id, children_per_generation, generation):
         mut.recalculate_strength_array(run_id, generation) # recalculate strength-parameters, as needed
     mut.write_children_definition_files(run_id, generation)  # create child-materials
 
-    ############################################################################
-    # simulate methane loading, helium void fraction, and surface area for seed population
-    children = s.query(db).filter(db.run_id == run_id, db.generation == generation).all()
-    for material in children:
-        sim.run_all_simulations(material.id)
-    s.commit()
+    simulate_all_materials(run_id, generation)
 
 def htsohm(children_per_generation,    # number of materials per generation
            number_of_atomtypes,        # number of atom-types per material
