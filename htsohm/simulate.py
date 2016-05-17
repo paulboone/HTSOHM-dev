@@ -61,16 +61,16 @@ def run_all_simulations(id):
     calculate excess v. absolute loading). Finally, a surface area is calculated and the material is
     assigned to its appropriate bin."""
     run_data = session.query(RunData).get(id)
-    
+
     ############################################################################
     # run helium void fraction simulation
     results = helium_void_fraction_simulation.run(run_data.run_id, run_data.id)
     run_data.helium_void_fraction = results['VF_val']
     void_fraction = float(results['VF_val'])
-    
+
     ############################################################################
     # run methane loading simulation
-    results = methane_loading_simulation.run(run_data.run_id, 
+    results = methane_loading_simulation.run(run_data.run_id,
                                              run_data.id,
                                              run_data.helium_void_fraction)
     run_data.absolute_volumetric_loading   = results['ML_a_cc']
@@ -97,7 +97,7 @@ def run_all_simulations(id):
     run_data.volumetric_surface_area    = results['SA_mc']
     run_data.gravimetric_surface_area   = results['SA_mg']
     surface_area = float(results['SA_mc'])
-    
+
     ############################################################################
     # assign material to bin
     results = get_bins(run_data.id, methane_loading, surface_area, void_fraction)
@@ -105,7 +105,7 @@ def run_all_simulations(id):
     run_data.surface_area_bin = results['sa_bin']
     run_data.void_fraction_bin = results['vf_bin']
 
-def dummy_test(run_id, next_generation_list, status, generation):
+def dummy_test(run_id, next_generation_list, generation):
     """Recalculate material structure-properties to prevent statistical errors.
     Because methane loading, surface area, and helium void fractions are calculated using
     statistical methods (namely grand canonic Monte Carlo simulations) they are susceptible
@@ -123,7 +123,7 @@ def dummy_test(run_id, next_generation_list, status, generation):
         # iterate over all selected-parents for the next generation
         parent_id = str(i[1])
         parent = session.query(RunData).get(parent_id)
-        
+
         if parent.dummy_test_result != "pass":       # materials are not re-tested
             print( "\nRe-Simulating %s-%s...\n" % (run_id, parent.id) )
 
@@ -158,7 +158,7 @@ def dummy_test(run_id, next_generation_list, status, generation):
                  abs(np.mean(surface_areas) - sa_o) >= tolerance * sa_o or
                  abs(np.mean(void_fractions) - vf_o) >= tolerance * vf_o ):
                 parent.dummy_test_result = "fail"        # flag failed material
-                print( 
+                print(
                     "A MATERIAL HAS FAILED!\n" +
                     "Run:\t%s\n" % (run_id) +
                     "Material:\t%s\n" % (parent.id))
@@ -169,6 +169,6 @@ def dummy_test(run_id, next_generation_list, status, generation):
     ############################################################################
     # if any materials fail, then new parents are selected and tested (see : htsohm/htsohm.py)
     if len(failed) == 0:
-        status = "Dummy test:   COMPLETE"
-    print (status)
-    return status
+        return True # Success!
+
+    return False #Fail

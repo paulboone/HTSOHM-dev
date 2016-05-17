@@ -66,11 +66,11 @@ def next_generation(run_id, children_per_generation, generation):
 
     ############################################################################
     # select potential parent-materials and run them in dummy-test
-    status = "Dummy test:   RUNNING"
-    while status == "Dummy test:   RUNNING":
+    test_complete = False
+    while not test_complete:
         next_generation_list = bng.select_parents(run_id, children_per_generation, generation)
         s.commit()             # parent_ids added to database
-        status = sim.dummy_test(run_id, next_generation_list, status, generation)
+        test_complete = sim.dummy_test(run_id, next_generation_list, generation)
         s.commit()             # dummy_test_results added to database
 
     ############################################################################
