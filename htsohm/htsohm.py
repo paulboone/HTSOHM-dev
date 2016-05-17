@@ -103,7 +103,7 @@ def htsohm(children_per_generation,    # number of materials per generation
 
     ############################################################################
     # write run-configuration file
-    run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0, 
+    run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
         number_of_bins, max_generations)
 
     for generation in range(max_generations):
