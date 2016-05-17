@@ -12,7 +12,7 @@ import htsohm.utilities as utl
 
 def write_material_config(run_id):
     """ Write material-parameters to run-configuration file.
-    The parameters written by this function define the limits for different values written to the 
+    The parameters written by this function define the limits for different values written to the
     structure and forcefield definition files for RASPA. Among the limits defined here are crystal
     lattice constants, number density, partial atomic charges, and Lennard-Jones parameters (sigma
     and epsilon).
@@ -21,18 +21,20 @@ def write_material_config(run_id):
     config_file = os.path.join(wd, 'config', run_id + '.yaml')
     with open(config_file) as file:
         run_config = yaml.load(file)
-    os.remove(config_file)
-    material_config = {
+
+    run_config.update({
         "number-density-limits"     : [0.000013907, 0.084086],
         "lattice-constant-limits"   : [13.098, 52.392],
         "epsilon-limits"            : [1.258, 513.264],
         "sigma-limits"              : [1.052, 6.549],
         "charge-limit"              : 0.,
-        "elemental-charge"          : 0.0001}
+        "elemental-charge"          : 0.0001
+    })
+
     with open(config_file, "w") as file:
         yaml.dump(run_config, file, default_flow_style=False)
-        yaml.dump(material_config, file, default_flow_style=False)
-    return material_config
+
+    return run_config
 
 def random_number_density(number_density_limits, lattice_constants):
     max_number_density = number_density_limits[1]
@@ -51,7 +53,7 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
     - <material_name>.cif            contains structural information including crystal lattice
                                      parameters and atom-site positions (and corresponding chemical
                                      species).
-    - force_field.def                this file can be used to overwrite previously-defined 
+    - force_field.def                this file can be used to overwrite previously-defined
                                      interactions. by default there are no exceptions.
     - force_field_mixing_rules.def   this file contains sigma and epsilon values to define Lennard-
                                      Jones type interactions.
