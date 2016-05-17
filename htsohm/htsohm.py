@@ -21,7 +21,7 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
     run_id = datetime.now().isoformat()
     wd = os.environ['HTSOHM_DIR']      # specify working directory
     config_file = os.path.join(wd, 'config', run_id + '.yaml')
-    
+
     run_config = {
         "run-id" : run_id,
         "children-per-generation" : children_per_generation,
@@ -36,31 +36,25 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
 
     return run_config["run-id"]
 
-def seed_generation(run_id, children_per_generation, number_of_atomtypes):
-    generation = 0
 
-    ############################################################################
-    # initialize materials in database
+
+def init_materials_in_database(run_id, children_per_generation, generation):
     for material in range(children_per_generation):
         new_material = RunData(run_id, generation, 'none')
         session.add(new_material)
     session.commit()
 
-    ############################################################################
-    # write material-definition files for seed population:
-    #     ___________________________________________________________________________________
-    #       $MAT_DIR/<material-name>.cif                          |  structural information
-    #     ________________________________________________________|__________________________
-    #       $FF_DIR/<material-name>/force_field.def               |  overwrite LJ-parameters
-    #       $FF_DIR/<material-name>/force_field_mixing_rules.def  |  LJ-parameters
-    #       $FF_DIR/<material-name>/pseudo_atoms.def              |  atomic charges, masses
-    #     ________________________________________________________|__________________________
+def seed_generation(run_id, children_per_generation, number_of_atomtypes):
+    generation = 0
+
+    init_materials_in_database(run_id, children_per_generation, generation)
+
     gen.write_seed_definition_files(run_id, children_per_generation, number_of_atomtypes)
 
     ############################################################################
     # simulate methane loading, helium void fraction, and surface area for seed population
-    seed = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == 0).all()
-    for material in seed:
+    materials = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == 0).all()
+    for material in materials:
         sim.run_all_simulations(material.id)
     session.commit()
 
@@ -68,12 +62,7 @@ def next_generation(run_id, children_per_generation, generation):
     s = session    # rename database objects to shorted queries
     db = RunData
 
-    ############################################################################
-    # initialize materials in database
-    for material in range(children_per_generation):
-        new_material = db(run_id, generation, 'none')
-        s.add(new_material)
-    s.commit()
+    init_materials_in_database(run_id, children_per_generation, generation)
 
     ############################################################################
     # select potential parent-materials and run them in dummy-test
