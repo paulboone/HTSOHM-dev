@@ -36,13 +36,14 @@ def count_all(run_id):
 
 def select_parents(run_id, children_per_generation, generation):
     """Use bin-counts to preferentially select a list of rare parents.
+
     Each bin contains some number of materials, and those bins with the fewers materials represent
     the most rare structure-property combinations. These rare materials are preferred as parents
     for new materials, because their children are most likely to display unique properties. This
     function first calculates a `weight` for each bin, based on the number of constituent
     materials. These weights affect the probability of selecting a parent from that bin. Once a bin
     is selected, a parent is randomly-selected from those materials within that bin."""
-    ############################################################################
+
     # Each bin is counted, then assigned a weight
     bins = check_number_of_bins(run_id)
     counts = count_all(run_id)
@@ -73,14 +74,14 @@ def select_parents(run_id, children_per_generation, generation):
                 for material in materials:
                     bin_ids.append(material.id)
                 id_list = id_list + [bin_ids]
+
     ############################################################################
     # A parent-material is selected for each material in the next generation.
     next_generation = s.query(db).filter(db.run_id == run_id, db.generation == generation).all()
-    next_generation_list = []
+
     for material in next_generation:
         parents_list = np.random.choice(id_list, p=weight_list)  # weighted sampling function
         parent_id = np.random.choice(parents_list)
         material.parent_id = str(parent_id)
-        item = [material.id, parent_id]
-        next_generation_list.append(item)
-    return next_generation_list
+
+    return next_generation

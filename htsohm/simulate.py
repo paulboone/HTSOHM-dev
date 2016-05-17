@@ -105,24 +105,25 @@ def run_all_simulations(id):
     run_data.surface_area_bin = results['sa_bin']
     run_data.void_fraction_bin = results['vf_bin']
 
-def dummy_test(run_id, next_generation_list, generation):
+def dummy_test(run_id, next_generation, generation):
     """Recalculate material structure-properties to prevent statistical errors.
+
     Because methane loading, surface area, and helium void fractions are calculated using
     statistical methods (namely grand canonic Monte Carlo simulations) they are susceptible
     to statistical errors. To mitigate this, after a material has been selected as a potential
     parent, it's combination of structure-properties is resimulated some number of times and
     compared to the initally-calculated material. If the resimulated values differ from the
     initially-calculated value beyond an accpetable tolerance, the material fails the `dummy-test`
-    and is flagged, preventing it from being used to generate new materials in the future."""
+    and is flagged, preventing it from being used to generate new materials in the future.
+    """
     tolerance = 0.5
     number_of_trials = 1
 
     failed = []
-    for i in next_generation_list:
+    for material in next_generation:
         ########################################################################
         # iterate over all selected-parents for the next generation
-        parent_id = str(i[1])
-        parent = session.query(RunData).get(parent_id)
+        parent = session.query(RunData).get(material.parent_id)
 
         if parent.dummy_test_result != "pass":       # materials are not re-tested
             print( "\nRe-Simulating %s-%s...\n" % (run_id, parent.id) )
