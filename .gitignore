@@ -10,3 +10,4 @@ database.yaml
 *.input
 output
 config
+hpc.yaml
