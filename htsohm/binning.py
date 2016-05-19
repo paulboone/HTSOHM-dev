@@ -2,16 +2,14 @@ import os
 import yaml
 import numpy as np
 
-from htsohm.runDB_declarative import Base, RunData, session
+from htsohm.runDB_declarative import Base, Material, session
 from htsohm import simulate as sim
 
 def count_bin(run_id, ml_bin, sa_bin, vf_bin):
     """Returns number of materials in a particular bin."""
-    s = session
-    db = RunData
-    bin_count = s.query(db).filter(db.run_id == run_id, db.methane_loading_bin == ml_bin,
-        db.surface_area_bin == sa_bin, db.void_fraction_bin == vf_bin,
-        db.dummy_test_result.in_(('none', 'pass'))).count()
+    bin_count = session.query(Material).filter(Material.run_id == run_id, Material.methane_loading_bin == ml_bin,
+        Material.surface_area_bin == sa_bin, Material.void_fraction_bin == vf_bin,
+        Material.dummy_test_result.in_(('none', 'pass'))).count()
     return bin_count
 
 def check_number_of_bins(run_id):
@@ -55,9 +53,6 @@ def select_parents(run_id, children_per_generation, generation):
                     weights[i,j,k] = counts.sum() / counts[i,j,k]
     weights = weights / weights.sum()
 
-    s = session        # Database objects have been renamed to short queries.
-    db = RunData
-
     ############################################################################
     # The 3-dimensional list of weights is converted into a 1-dimensional list,
     # and another 1-dimensional list of material-IDs is also generated.
@@ -68,16 +63,16 @@ def select_parents(run_id, children_per_generation, generation):
             weight_list = np.concatenate([weight_list, weights[i,j,:]])
             for k in range(bins):
                 bin_ids = []
-                materials = s.query(db).filter(db.run_id == run_id, db.methane_loading_bin == i,
-                    db.surface_area_bin == j, db.void_fraction_bin == k,
-                    db.dummy_test_result.in_(['none', 'pass'])).all()
+                materials = session.query(Material).filter(Material.run_id == run_id, Material.methane_loading_bin == i,
+                    Material.surface_area_bin == j, Material.void_fraction_bin == k,
+                    Material.dummy_test_result.in_(['none', 'pass'])).all()
                 for material in materials:
                     bin_ids.append(material.id)
                 id_list = id_list + [bin_ids]
 
     ############################################################################
     # A parent-material is selected for each material in the next generation.
-    next_generation = s.query(db).filter(db.run_id == run_id, db.generation == generation).all()
+    next_generation = session.query(Material).filter(Material.run_id == run_id, Material.generation == generation).all()
 
     for material in next_generation:
         parents_list = np.random.choice(id_list, p=weight_list)  # weighted sampling function

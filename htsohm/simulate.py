@@ -5,14 +5,14 @@ import shutil
 
 import numpy as np
 
-from htsohm.runDB_declarative import RunData, session
+from htsohm.runDB_declarative import Material, session
 from htsohm import binning as bng
 from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
 from htsohm import surface_area_simulation
 
 def id_to_mat(id):
-    return session.query(RunData).get(id).material_id
+    return session.query(Material).get(id).material_id
 
 def get_bins(id, methane_loading, surface_area, void_fraction):
     """Returns methane_loading_bin, surface_area_bin, and void_fraction_bin.
@@ -20,7 +20,7 @@ def get_bins(id, methane_loading, surface_area, void_fraction):
     First, the structure property space is subdivided into arbitrary quadrants, or bins, then
     the simulated properties for a particular material are used to assigned it to a particular
     bin."""
-    run_data = session.query(RunData).get(id)
+    run_data = session.query(Material).get(id)
 
     ############################################################################
     # assign arbitrary maxima and subdivide the parameter space.
@@ -62,7 +62,7 @@ def run_all_simulations(id):
     is calculated, and then it is used to run a methane loading simulation (void fraction needed to
     calculate excess v. absolute loading). Finally, a surface area is calculated and the material is
     assigned to its appropriate bin."""
-    run_data = session.query(RunData).get(id)
+    run_data = session.query(Material).get(id)
 
     ############################################################################
     # run helium void fraction simulation
@@ -125,7 +125,7 @@ def dummy_test(run_id, next_generation, generation):
     for material in next_generation:
         ########################################################################
         # iterate over all selected-parents for the next generation
-        parent = session.query(RunData).get(material.parent_id)
+        parent = session.query(Material).get(material.parent_id)
 
         if parent.dummy_test_result != "pass":       # materials are not re-tested
             print( "\nRe-Simulating %s-%s...\n" % (run_id, parent.id) )

@@ -9,7 +9,7 @@ import numpy as np
 import yaml
 
 # local application/library specific imports
-from htsohm.runDB_declarative import session, RunData
+from htsohm.runDB_declarative import session, Material
 import htsohm.utilities as utl
 
 def write_material_config(run_id):
@@ -87,7 +87,7 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
     ff_dir = os.environ['FF_DIR']      # output force-field files to $FF_DIR
     mat_dir = os.environ['MAT_DIR']    # output .cif-files to $MAT_DIR
 
-    materials = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == 0).all()
+    materials = session.query(Material).filter(Material.run_id == run_id, Material.generation == 0).all()
     for material in materials:           # each iteration creates a new material
         material_name = run_id + '-' + str(material.id)        # this will be replaced with primary_key
 

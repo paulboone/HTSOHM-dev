@@ -7,7 +7,7 @@ from random import random, choice, uniform
 
 from htsohm import binning as bng
 from htsohm import simulate as sim
-from htsohm.runDB_declarative import session, RunData
+from htsohm.runDB_declarative import session, Material
 from htsohm import utilities as utl
 
 def create_strength_array(run_id):
@@ -47,15 +47,12 @@ def recalculate_strength_array(run_id, generation):
        all other child-bin-counts     |
      _________________________________|_____________________________
     """
-    s = session
-    db = RunData
-
-    ############################################################################
     # create list of parent-materials from next generation
     parent_list = []
-    children = s.query(db).filter(db.run_id == run_id, db.generation == generation)
+    children = session.query(Material).filter(Material.run_id == run_id,
+        Material.generation == generation)
     for material in children:
-        p = s.query(db).get(material.parent_id)
+        p = session.query(Material).get(material.parent_id)
         parent_list.append({
             "id"  : material.parent_id,
             "bin" : [p.methane_loading_bin, p.surface_area_bin, p.void_fraction_bin]
@@ -77,15 +74,17 @@ def recalculate_strength_array(run_id, generation):
         child_counts = []
         ########################################################################
         # for each parent in list, find all children from the previous generation
-        children = s.query(db).filter(db.run_id == run_id, db.generation == generation - 1,
-            db.parent_id == parent_id).all()
+        children = session.query(Material).filter(Material.run_id == run_id,
+            Material.generation == generation - 1,
+            Material.parent_id == parent_id).all()
         for child in children:
             ####################################################################
             # record which bins contain these children and how many
             child_bin = [child.methane_loading_bin, child.surface_area_bin, child.void_fraction_bin]
-            bin_count = s.query(db).filter(db.run_id==run_id, db.generation==generation - 1,
-                db.parent_id==parent_id, db.methane_loading_bin==a, db.surface_area_bin==b,
-                db.void_fraction_bin==c).count()
+            bin_count = session.query(Material).filter(Material.run_id==run_id,
+                Material.generation==generation - 1, Material.parent_id==parent_id,
+                Material.methane_loading_bin==a, Material.surface_area_bin==b,
+                Material.void_fraction_bin==c).count()
             if child_bin not in child_bins:
                 child_bins.append(child_bin)
                 child_counts.append(bin_count)
@@ -148,8 +147,8 @@ def write_children_definition_files(run_id, generation):
     wd = os.environ['HTSOHM_DIR']
     strength_array_file = os.path.join(wd, 'config', run_id + '.npy')
     strength_array = np.load(strength_array_file)
-    children = session.query(RunData).filter(RunData.run_id == run_id,
-        RunData.generation == generation).all()
+    children = session.query(Material).filter(Material.run_id == run_id,
+        Material.generation == generation).all()
     materials = []
     for child in children:
         child_id = child.id
@@ -169,7 +168,7 @@ def write_children_definition_files(run_id, generation):
 
         ########################################################################
         # get mutation strength parameter
-        parent = session.query(RunData).get(parent_id)
+        parent = session.query(Material).get(parent_id)
         parent_bin = [parent.methane_loading_bin, parent.surface_area_bin, parent.void_fraction_bin]
         mutation_strength = strength_array[parent_bin[0], parent_bin[1], parent_bin[2]]
 

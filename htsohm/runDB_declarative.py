@@ -8,8 +8,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
-class RunData(Base):
-    __tablename__ = 'data_table'
+class Material(Base):
+    __tablename__ = 'materials'
     # COLUMN                                                 UNITS
     id = Column(Integer, primary_key=True)                 # dimm.
     run_id = Column(String(50))                            # dimm.

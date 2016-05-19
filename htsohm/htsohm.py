@@ -9,7 +9,7 @@ from htsohm import generate as gen
 from htsohm import simulate as sim
 from htsohm import binning as bng
 from htsohm import mutate as mut
-from htsohm.runDB_declarative import RunData, session
+from htsohm.runDB_declarative import Material, session
 
 def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
     number_of_bins, max_generations):
@@ -39,13 +39,13 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
 def init_materials_in_database(run_id, children_per_generation, generation):
     """initialize materials in database with run_id and generation"""
     for material in range(children_per_generation):
-        new_material = RunData(run_id, generation, 'none')
+        new_material = Material(run_id, generation, 'none')
         session.add(new_material)
     session.commit()
 
 def simulate_all_materials(run_id, generation):
     """simulate methane loading, helium void fraction, and surface area for seed population"""
-    materials = session.query(RunData).filter(RunData.run_id == run_id, RunData.generation == generation).all()
+    materials = session.query(Material).filter(Material.run_id == run_id, Material.generation == generation).all()
     for material in materials:
         sim.run_all_simulations(material.id)
     session.commit()
