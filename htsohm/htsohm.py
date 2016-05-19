@@ -78,12 +78,9 @@ def htsohm(children_per_generation,    # number of materials per generation
 
     ############################################################################
     # write run-configuration file
-    run_config = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
-        number_of_bins, max_generations)
-    run_id = run_config["run-id"]
+    run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
+        number_of_bins, max_generations)["run-id"]
 
-    for generation in range(max_generations):
-        if generation == 0:                     # SEED GENERATION
-            seed_generation(run_id, children_per_generation, number_of_atomtypes)
-        elif generation >= 1:                   # FIRST GENERATION, AND ON...
-            next_generation(run_id, children_per_generation, generation)
+    seed_generation(run_id, children_per_generation, number_of_atomtypes)
+    for generation in range(1,max_generations):
+        next_generation(run_id, children_per_generation, generation)
