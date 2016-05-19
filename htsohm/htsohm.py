@@ -12,10 +12,12 @@ from htsohm import mutate as mut
 from htsohm.runDB_declarative import RunData, session
 
 def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
-    """Writes run-specific parameters to /config/<run_id>.yaml.
-    This function writes run-specific parameters to a configuration file that is loaded/written
-    at different stages throughout the overall HTSOHM routine."""
     number_of_bins, max_generations):
+    """Writes run-specific parameters to /config/<run_id>.yaml.
+
+    This function writes run-specific parameters to a configuration file that is loaded/written
+    at different stages throughout the overall HTSOHM routine.
+    """
     run_id = datetime.now().isoformat()
     wd = os.environ['HTSOHM_DIR']      # specify working directory
     config_file = os.path.join(wd, 'config', run_id + '.yaml')
