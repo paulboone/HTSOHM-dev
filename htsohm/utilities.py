@@ -28,6 +28,41 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
 
     return run_config
 
+def update_config_file(run_id):
+    """ Write material-parameters to run-configuration file.
+    
+    The parameters written by this function define the limits for different values written to the
+    structure and forcefield definition files for RASPA. Among the limits defined here are crystal
+    lattice constants, number density, partial atomic charges, and Lennard-Jones parameters (sigma
+    and epsilon).
+    """
+    wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
+    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    with open(config_file) as file:
+        run_config = yaml.load(file)
+
+    run_config.update({
+        "number-density-limits"     : [0.000013907, 0.084086],
+        "lattice-constant-limits"   : [13.098, 52.392],
+        "epsilon-limits"            : [1.258, 513.264],
+        "sigma-limits"              : [1.052, 6.549],
+        "charge-limit"              : 0.,
+        "elemental-charge"          : 0.0001
+    })
+
+    with open(config_file, "w") as file:
+        yaml.dump(run_config, file, default_flow_style=False)
+
+    return run_config
+
+def read_config_file(run_id):
+    wd = os.environ['HTSOHM_DIR']
+    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    with open(config_file) as file:
+        config = yaml.load(file)
+
+    return config
+
 def write_cif_file(cif_file, lattice_constants, atom_sites):
     with open(cif_file, "w") as file:
         file.write( 

@@ -10,9 +10,7 @@ from htsohm import binning as bng
 from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
 from htsohm import surface_area_simulation
-
-def id_to_mat(id):
-    return session.query(Material).get(id).material_id
+from htsohm.utilities import read_config_file
 
 def get_bins(id, methane_loading, surface_area, void_fraction):
     """Returns methane_loading_bin, surface_area_bin, and void_fraction_bin.
@@ -24,13 +22,14 @@ def get_bins(id, methane_loading, surface_area, void_fraction):
 
     ############################################################################
     # assign arbitrary maxima and subdivide the parameter space.
+    config = read_config_file(run_data.run_id)
+    bins = config["number-of-bins"]
     ml_min = 0.
     ml_max = 350.
     sa_min = 0.
     sa_max = 4500.
     vf_min = 0.
     vf_max = 1.
-    bins = bng.check_number_of_bins(run_data.run_id)
     ml_step = ml_max / float(bins)
     sa_step = sa_max / float(bins)
     vf_step = vf_max / float(bins)

@@ -8,7 +8,8 @@ from random import random, choice, uniform
 from htsohm import binning as bng
 from htsohm import simulate as sim
 from htsohm.runDB_declarative import session, Material
-from htsohm import utilities as utl
+from htsohm.utilities import read_config_file, write_force_field, write_cif_file
+from htsohm.utilities import write_mixing_rules
 
 def create_strength_array(run_id):
     """Create 3-dimensional array of strength parameters.
@@ -17,14 +18,13 @@ def create_strength_array(run_id):
     the distribution of children whose parent belong to that bin. This function initializes a
     3-dimensional strength-parameter bin with the initial mutation strength chosen for the run.
     """
-    wd = os.environ['HTSOHM_DIR']
-    config_file = os.path.join(wd, 'config', run_id + '.yaml')
-    with open(config_file) as yaml_file:
-        config = yaml.load(yaml_file)
+    config = read_config_file(run_id)
     bins               = config["number-of-bins"]
     initial_strength   = config["initial-mutation-strength"]
 
     strength_array = initial_strength * np.ones([bins, bins, bins])
+
+    wd = os.environ["HTSOHM_DIR"]
     filename = os.path.join(wd, 'config', run_id)
     np.save(filename, strength_array)
 
@@ -142,6 +142,15 @@ def write_children_definition_files(run_id, generation):
     a new material. The degree to which each value is perturbed is controlled by the mutation-
     strength-parameter."""
     print( "\nCreating generation :\t%s" % (generation) )
+
+    ########################################################################
+    # load boundaries from config-file
+    config = read_config_file(run_id)
+    lattice_limits          = config["lattice-constant-limits"]
+    number_density_limits   = config["number-density-limits"]
+    epsilon_limits          = config["epsilon-limits"]
+    sigma_limits            = config["sigma-limits"]
+
     md = os.environ['MAT_DIR']
     fd = os.environ['FF_DIR']
     wd = os.environ['HTSOHM_DIR']
@@ -149,7 +158,7 @@ def write_children_definition_files(run_id, generation):
     strength_array = np.load(strength_array_file)
     children = session.query(Material).filter(Material.run_id == run_id,
         Material.generation == generation).all()
-    materials = []
+
     for child in children:
         child_id = child.id
         ########################################################################
@@ -157,7 +166,7 @@ def write_children_definition_files(run_id, generation):
         child_forcefield_directory = os.path.join(fd, run_id + '-' + str(child_id))
         os.mkdir(child_forcefield_directory)
         force_field_file = os.path.join(child_forcefield_directory, 'force_field.def')
-        utl.write_force_field(force_field_file)                        # WRITE FORCE_FIELD.DEF
+        write_force_field(force_field_file)                        # WRITE FORCE_FIELD.DEF
 
         ########################################################################
         # copy pseudo_atoms.def
@@ -171,16 +180,6 @@ def write_children_definition_files(run_id, generation):
         parent = session.query(Material).get(parent_id)
         parent_bin = [parent.methane_loading_bin, parent.surface_area_bin, parent.void_fraction_bin]
         mutation_strength = strength_array[parent_bin[0], parent_bin[1], parent_bin[2]]
-
-        ########################################################################
-        # load boundaries from config-file
-        config_file = os.path.join(wd, 'config', run_id + '.yaml')
-        with open(config_file) as yaml_file:
-            config = yaml.load(yaml_file)
-        lattice_limits          = config["lattice-constant-limits"]
-        number_density_limits   = config["number-density-limits"]
-        epsilon_limits          = config["epsilon-limits"]
-        sigma_limits            = config["sigma-limits"]
 
         ########################################################################
         # perturb LJ-parameters, write force_field_mixing_rules.def
@@ -203,7 +202,7 @@ def write_children_definition_files(run_id, generation):
             atom_types.append(atom_type)
 
         mix_file = os.path.join(child_forcefield_directory, 'force_field_mixing_rules.def')
-        utl.write_mixing_rules(mix_file, atom_types)
+        write_mixing_rules(mix_file, atom_types)
 
         ########################################################################
         # load values from parent cif-file
@@ -263,5 +262,5 @@ def write_children_definition_files(run_id, generation):
                 atom_sites.append(atom_site)
 
         cif_file = os.path.join(md, run_id + '-' + str(child_id) + '.cif')
-        utl.write_cif_file(cif_file, lattice_constants, atom_sites)
+        write_cif_file(cif_file, lattice_constants, atom_sites)
     print( "...done!\n" )

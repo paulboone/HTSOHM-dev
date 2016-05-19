@@ -1,6 +1,5 @@
 import sys
 import os
-import yaml
 
 import numpy as np
 

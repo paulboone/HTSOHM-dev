@@ -3,6 +3,7 @@ import yaml
 import numpy as np
 
 from htsohm.runDB_declarative import Base, Material, session
+from htsohm.utilities import read_config_file
 from htsohm import simulate as sim
 
 def count_bin(run_id, ml_bin, sa_bin, vf_bin):
@@ -12,18 +13,10 @@ def count_bin(run_id, ml_bin, sa_bin, vf_bin):
         Material.dummy_test_result.in_(('none', 'pass'))).count()
     return bin_count
 
-def check_number_of_bins(run_id):
-    """Returns the number of bins recorded in config-file."""
-    wd = os.environ['HTSOHM_DIR']
-    config_file = os.path.join(wd, 'config', run_id + '.yaml')
-    with open(config_file) as yaml_file:
-        config = yaml.load(yaml_file)
-    bins = config['number-of-bins']
-    return bins
-
 def count_all(run_id):
     """Returns an array containing the number of materials in every bin."""
-    bins = check_number_of_bins(run_id)
+    config = read_config_file(run_id)
+    bins = config["number-of-bins"]
     all_counts = np.zeros([bins, bins, bins])
     for i in range(bins):
         for j in range(bins):
@@ -43,7 +36,8 @@ def select_parents(run_id, children_per_generation, generation):
     is selected, a parent is randomly-selected from those materials within that bin."""
 
     # Each bin is counted, then assigned a weight
-    bins = check_number_of_bins(run_id)
+    config = read_config_file(run_id)
+    bins = config["number-of-bins"]
     counts = count_all(run_id)
     weights = np.zeros([bins, bins, bins])
     for i in range(bins):

@@ -10,34 +10,8 @@ import yaml
 
 # local application/library specific imports
 from htsohm.runDB_declarative import session, Material
-import htsohm.utilities as utl
-
-def write_material_config(run_id):
-    """ Write material-parameters to run-configuration file.
-    
-    The parameters written by this function define the limits for different values written to the
-    structure and forcefield definition files for RASPA. Among the limits defined here are crystal
-    lattice constants, number density, partial atomic charges, and Lennard-Jones parameters (sigma
-    and epsilon).
-    """
-    wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
-    config_file = os.path.join(wd, 'config', run_id + '.yaml')
-    with open(config_file) as file:
-        run_config = yaml.load(file)
-
-    run_config.update({
-        "number-density-limits"     : [0.000013907, 0.084086],
-        "lattice-constant-limits"   : [13.098, 52.392],
-        "epsilon-limits"            : [1.258, 513.264],
-        "sigma-limits"              : [1.052, 6.549],
-        "charge-limit"              : 0.,
-        "elemental-charge"          : 0.0001
-    })
-
-    with open(config_file, "w") as file:
-        yaml.dump(run_config, file, default_flow_style=False)
-
-    return run_config
+from htsohm.utilities import update_config_file, write_force_field, write_cif_file
+from htsohm.utilities import write_mixing_rules, write_pseudo_atoms
 
 def random_number_density(number_density_limits, lattice_constants):
     """Returns some random number of atoms per unit cell, within the defined density limits.
@@ -75,7 +49,7 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
                                      charge, atomic mass, atomic radii, and more.
     """
 
-    material_config         = write_material_config(run_id)
+    material_config         = update_config_file(run_id)
     lattice_limits          = material_config["lattice-constant-limits"]
     number_density_limits   = material_config["number-density-limits"]
     epsilon_limits          = material_config["epsilon-limits"]
@@ -94,7 +68,7 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
         def_dir = os.path.join(ff_dir, material_name)       # directory for material's force field
         os.mkdir(def_dir)
         force_field_file = os.path.join(def_dir, 'force_field.def')      # for overwriting LJ-params
-        utl.write_force_field(force_field_file)
+        write_force_field(force_field_file)
 
         ########################################################################
         # define pseudo atom types by randomly-generating sigma and epsilon values
@@ -108,9 +82,9 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
             })
 
         mix_file = os.path.join(def_dir, 'force_field_mixing_rules.def') # LJ-parameters
-        utl.write_mixing_rules(mix_file, atom_types)
+        write_mixing_rules(mix_file, atom_types)
         psu_file = os.path.join(def_dir, 'pseudo_atoms.def')             # define atom-types
-        utl.write_pseudo_atoms(psu_file, atom_types)
+        write_pseudo_atoms(psu_file, atom_types)
 
         ########################################################################
         # randomly-assign dimensions (crystal lattice constants) and number of atoms per unit cell
@@ -131,4 +105,4 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
             })
 
         cif_file = os.path.join(mat_dir, material_name + ".cif")           # structure file
-        utl.write_cif_file(cif_file, lattice_constants, atom_sites)
+        write_cif_file(cif_file, lattice_constants, atom_sites)
