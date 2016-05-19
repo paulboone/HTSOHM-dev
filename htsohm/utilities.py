@@ -1,5 +1,33 @@
 import os
 
+from datetime import datetime
+import yaml
+
+def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
+    number_of_bins, max_generations):
+    """Writes run-specific parameters to /config/<run_id>.yaml.
+
+    This function writes run-specific parameters to a configuration file that is loaded/written
+    at different stages throughout the overall HTSOHM routine.
+    """
+    run_id = datetime.now().isoformat()
+    wd = os.environ['HTSOHM_DIR']      # specify working directory
+    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+
+    run_config = {
+        "run-id" : run_id,
+        "children-per-generation" : children_per_generation,
+        "number-of-atom-types" : number_of_atomtypes,
+        "initial-mutation-strength" : strength_0,
+        "number-of-bins" : number_of_bins,
+        "max-number-of-generations" : max_generations
+    }
+
+    with open(config_file, "w") as file:
+        yaml.dump(run_config, file, default_flow_style=False)
+
+    return run_config
+
 def write_cif_file(cif_file, lattice_constants, atom_sites):
     with open(cif_file, "w") as file:
         file.write( 

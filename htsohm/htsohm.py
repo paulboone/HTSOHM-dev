@@ -1,40 +1,15 @@
 import sys
 import os
-from datetime import datetime
 import yaml
 
 import numpy as np
 
+from htsohm.utilities import write_config_file
 from htsohm import generate as gen
 from htsohm import simulate as sim
 from htsohm import binning as bng
 from htsohm import mutate as mut
 from htsohm.runDB_declarative import Material, session
-
-def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
-    number_of_bins, max_generations):
-    """Writes run-specific parameters to /config/<run_id>.yaml.
-
-    This function writes run-specific parameters to a configuration file that is loaded/written
-    at different stages throughout the overall HTSOHM routine.
-    """
-    run_id = datetime.now().isoformat()
-    wd = os.environ['HTSOHM_DIR']      # specify working directory
-    config_file = os.path.join(wd, 'config', run_id + '.yaml')
-
-    run_config = {
-        "run-id" : run_id,
-        "children-per-generation" : children_per_generation,
-        "number-of-atom-types" : number_of_atomtypes,
-        "initial-mutation-strength" : strength_0,
-        "number-of-bins" : number_of_bins,
-        "max-number-of-generations" : max_generations
-    }
-
-    with open(config_file, "w") as file:
-        yaml.dump(run_config, file, default_flow_style=False)
-
-    return run_config["run-id"]
 
 def init_materials_in_database(run_id, children_per_generation, generation):
     """initialize materials in database with run_id and generation"""
@@ -90,8 +65,9 @@ def htsohm(children_per_generation,    # number of materials per generation
 
     ############################################################################
     # write run-configuration file
-    run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
+    run_config = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
         number_of_bins, max_generations)
+    run_id = run_config["run-id"]
 
     for generation in range(max_generations):
         if generation == 0:                     # SEED GENERATION
