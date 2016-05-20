@@ -26,8 +26,12 @@ def simulate_all_materials(run_id, generation):
     session.commit()
 
 def hpc_job_run_all_simulations(material_id):
+    print("======================================================================================")
+    print("== manhpc_job_run_all_simulations %s" % material_id)
+
     sim.run_all_simulations(material_id)
     session.commit()
+    print("======================================================================================")
 
 def queue_all_materials(run_id, generation, queue):
     """same as simulate_all_materials, except queues the jobs in the job server"""
