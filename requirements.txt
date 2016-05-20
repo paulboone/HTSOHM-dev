@@ -1,0 +1,7 @@
+pyyaml
+psycopg2
+redis
+numpy
+SQLAlchemy
+git+https://github.com/WilmerLab/raspa2
+git+https://github.com/paulboone/rq.git@handle_sigterms
