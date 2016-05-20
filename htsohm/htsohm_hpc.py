@@ -7,7 +7,7 @@ from rq.registry import StartedJobRegistry
 from sqlalchemy import func
 
 from htsohm.utilities import write_config_file, read_config_file
-from htsohm.htsohm import seed_generation, next_generation
+from htsohm.htsohm import seed_generation, next_generation, hpc_job_run_all_simulations
 from htsohm.runDB_declarative import Material, session
 
 with open('hpc.yaml', 'r') as yaml_file:
@@ -33,25 +33,52 @@ def start_run(
     job = htsohm_queue.enqueue(manage_run,run_id, timeout=hpc_config['job_timeout'])
 
 def manage_run(run_id):
+    print("======================================================================================")
+    print("== manage_run")
+    print("======================================================================================")
+
     config = read_config_file(run_id)
     last_generation = session.query(func.max(Material.generation)).filter(Material.run_id == run_id).one()[0]
-    if last_generation == None:
+
+    if last_generation is None:
+        ## this is the first time we've run!
         generation = 0
     else:
+        # block until all jobs are complete
+        # the only started job in the queue should be THIS job!
+        registry = StartedJobRegistry(name='htsohm_queue', connection=redis_conn)
+        running_job_ids = registry.get_job_ids()
+        while len(running_job_ids) > 1:
+            print("still %s unfinished jobs in the htsohm queue; sleeping 60s..." % (len(running_job_ids) - 1))
+            sleep(60)
+            running_job_ids = registry.get_job_ids()
+
+        #
+        # if we have any materials for this generation that are still not populated with data
+        # we need to attempt to rerun them.
+        unfinished_materials = session.query(Material).filter(Material.run_id == run_id,
+                                                              Material.generation == last_generation,
+                                                              Material.data_complete == False).all()
+
+        if len(unfinished_materials) > 0:
+            print("Found %s unfinished materials from the last generation!" % len(unfinished_materials))
+            print("Requeueing them all: %s" % unfinished_materials)
+
+            for material in unfinished_materials:
+                htsohm_queue.enqueue(hpc_job_run_all_simulations, material.id,
+                                     timeout=hpc_config['job_timeout'])
+
+            htsohm_queue.enqueue(manage_run, run_id)
+            return
+
+        print ("No unfinished materials from the last_generation! Moving on to the next generation.")
         generation = last_generation + 1
+
 
     print("======================================================================================")
     print("== manage_run, generation = %s" % generation)
     print("======================================================================================")
-    #
-    # block until all jobs are complete
-    # the only started job in the queue should be THIS job!
-    registry = StartedJobRegistry(name='htsohm_queue', connection=redis_conn)
-    running_job_ids = registry.get_job_ids()
-    while len(running_job_ids) > 1:
-        print("still %s unfinished jobs in the htsohm queue; sleeping 60s..." % (len(running_job_ids) - 1))
-        sleep(60)
-        running_job_ids = registry.get_job_ids()
+
 
     #
     # prepare, mutate, and queue up the next generation
