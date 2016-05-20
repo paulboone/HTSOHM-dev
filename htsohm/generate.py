@@ -1,10 +1,10 @@
 # standard library imports
-import os
+from functools import reduce
 from math import floor
+import os
 from random import choice, random, randrange, uniform
 
-# it stat third party imports
-from functools import reduce
+# related third party imports
 import numpy as np
 import yaml
 

@@ -1,6 +1,6 @@
 import os
 
-from datetime import datetime
+# related third party imports
 import yaml
 
 def write_config_file(children_per_generation, number_of_atomtypes, strength_0,

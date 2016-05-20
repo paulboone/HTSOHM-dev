@@ -1,10 +1,13 @@
+# standard library imports
 import os
-import yaml
-import numpy as np
 
+# related third party imports
+import numpy as np
+import yaml
+
+# local application/library specific imports
 from htsohm.runDB_declarative import Base, Material, session
 from htsohm.utilities import read_config_file
-from htsohm import simulate as sim
 
 def count_bin(run_id, ml_bin, sa_bin, vf_bin):
     """Returns number of materials in a particular bin."""

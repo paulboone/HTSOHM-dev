@@ -1,15 +1,17 @@
+# standard library imports
 import os
-import subprocess
 import shlex
 import shutil
+import subprocess
 
+# related third party imports
 import numpy as np
 
-from htsohm.runDB_declarative import Material, session
-from htsohm import binning as bng
+# local application/library specific imports
 from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
 from htsohm import surface_area_simulation
+from htsohm.runDB_declarative import Material, session
 from htsohm.utilities import read_config_file
 
 def get_bins(id, methane_loading, surface_area, void_fraction):
