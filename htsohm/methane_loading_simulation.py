@@ -70,26 +70,25 @@ def parse_output(output_file):
                 results['host_adsorbate_vdw'] = line.split()[5]
                 results['host_adsorbate_cou'] = line.split()[7]
             line_counter += 1
-    
+
     print(
         "\nMETHANE LOADING\tabsolute\texcess\n" +
         "mol/kg\t\t%s\t%s\n" % (results['ML_a_mk'], results['ML_e_mk']) +
         "cc/g\t\t%s\t%s\n"   % (results['ML_a_cg'], results['ML_e_cg']) +
         "cc/cc\t\t%s\t%s\n"  % (results['ML_a_cc'], results['ML_e_cc']))
-    
+
     return results
 
 def run(run_id, material_id, helium_void_fraction):
-    os.makedirs('output', exist_ok=True)
-    filename = os.path.join('output', 'MethaneLoading.input')
+    output_dir = 'output_%s' % material_id
+    os.makedirs(output_dir, exist_ok=True)
+    filename = os.path.join(output_dir, "MethaneLoading.input")
     write_raspa_file(filename, run_id, material_id, helium_void_fraction)
-    subprocess.run(['simulate', './MethaneLoading.input'], check=True,
-        cwd='output')
-    output_dir = os.path.join('output', 'Output','System_0')
-    filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)
-    filepath = os.path.join(output_dir, filename)
-    results = parse_output(filepath)
+    subprocess.run(['simulate', './MethaneLoading.input'], check=True, cwd=output_dir)
 
-    shutil.rmtree("output")
-    
+    filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)
+    output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
+    results = parse_output(output_file)
+    shutil.rmtree(output_dir)
+
     return results

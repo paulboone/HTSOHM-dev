@@ -38,26 +38,25 @@ def parse_output(output_file):
                     count = count + 1
                 elif count == 2:
                     results['SA_mc'] = line.split()[2]
-    
+
     print(
         "\nSURFACE AREA\n" +
         "%s\tA^2\n"      % (results['SA_a2']) +
         "%s\tm^2/g\n"    % (results['SA_mg']) +
         "%s\tm^2/cm^3"   % (results['SA_mc']))
-    
+
     return results
 
 def run(run_id, material_id):
-    os.makedirs('output', exist_ok=True)
-    filename = os.path.join('output', 'SurfaceArea.input')
+    output_dir = 'output_%s' % material_id
+    os.makedirs(output_dir, exist_ok=True)
+    filename = os.path.join(output_dir, "SurfaceArea.input")
     write_raspa_file(filename, run_id, material_id)
-    subprocess.run(
-        ['simulate', './SurfaceArea.input'], check=True, cwd='output')
+    subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd=output_dir)
 
-    output_dir = os.path.join('output', 'Output', 'System_0')
     filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
-    output_file = os.path.join(output_dir, filename)
+    output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
     results = parse_output(output_file)
-    shutil.rmtree("output")
+    shutil.rmtree(output_dir)
 
     return results

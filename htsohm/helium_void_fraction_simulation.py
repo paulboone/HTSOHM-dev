@@ -38,15 +38,15 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id):
-    os.makedirs('output', exist_ok=True)
-    filename = os.path.join("output", "VoidFraction.input")
+    output_dir = 'output_%s' % material_id
+    os.makedirs(output_dir, exist_ok=True)
+    filename = os.path.join(output_dir, "VoidFraction.input")
     write_raspa_file(filename, run_id, material_id)
-    subprocess.run(['simulate', './VoidFraction.input'], check=True, cwd='output')
+    subprocess.run(['simulate', './VoidFraction.input'], check=True, cwd=output_dir)
 
-    output_dir = os.path.join('output', 'Output', 'System_0')
     filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
-    output_file = os.path.join(output_dir, filename)
+    output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
     results = parse_output(output_file)
-    shutil.rmtree("output")
+    shutil.rmtree(output_dir)
 
     return results
