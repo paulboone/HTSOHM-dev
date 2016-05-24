@@ -1,0 +1,5 @@
+# Please copy this file to database.yaml and change the connection string to
+# point to your database, or just use the below sqlite database connection
+# string for testing.
+
+connection_string: "sqlite:///HTSOHM-dev.db"

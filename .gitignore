@@ -1,0 +1,12 @@
+__pycache__
+Movies
+Output
+Restart
+VTK
+HTSOHM-dev.db
+*_*.yaml
+*_*.npy
+database.yaml
+*.input
+output
+config
