@@ -1,7 +1,14 @@
+# stanard imports
 import os
+from math import sqrt
 
 # related third party imports
+from datetime import datetime
 import yaml
+from sqlalchemy import func
+
+# local application/library specific imports
+from htsohm.runDB_declarative import Base, Material, session
 
 def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
     number_of_bins, max_generations):
@@ -60,8 +67,16 @@ def read_config_file(run_id):
     config_file = os.path.join(wd, 'config', run_id + '.yaml')
     with open(config_file) as file:
         config = yaml.load(file)
-
     return config
+
+def evaluate_convergence(run_id):
+    '''Counts number of materials in each bin and returns variance of these counts.'''
+    bin_counts = session.query(func.count(Material.id)).filter(Material.run_id == run_id).group_by(
+        Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
+        ).all()
+    bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
+    variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
+    return variance
 
 def write_cif_file(cif_file, lattice_constants, atom_sites):
     with open(cif_file, "w") as file:

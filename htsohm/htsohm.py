@@ -12,7 +12,7 @@ from htsohm.mutate import create_strength_array, recalculate_strength_array
 from htsohm.mutate import write_children_definition_files
 from htsohm.runDB_declarative import Material, session
 from htsohm.simulate import run_all_simulations, dummy_test
-from htsohm.utilities import write_config_file
+from htsohm.utilities import write_config_file, evaluate_convergence
 
 def init_materials_in_database(run_id, children_per_generation, generation):
     """initialize materials in database with run_id and generation"""
@@ -82,8 +82,8 @@ def htsohm(children_per_generation,    # number of materials per generation
            number_of_atomtypes,        # number of atom-types per material
            strength_0,                 # intial strength parameter
            number_of_bins,             # number of bins for analysis
-           max_generations=20):        # maximum number of generations
-
+           max_generations=20,         # maximum number of generations
+           acceptance_value=0.5):      # desired degree of `convergence`
     ############################################################################
     # write run-configuration file
     run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
