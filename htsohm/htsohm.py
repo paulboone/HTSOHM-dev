@@ -12,7 +12,7 @@ from htsohm.mutate import create_strength_array, recalculate_strength_array
 from htsohm.mutate import write_children_definition_files
 from htsohm.runDB_declarative import Material, session
 from htsohm.simulate import run_all_simulations, dummy_test
-from htsohm.utilities import write_config_file, evaluate_convergence
+from htsohm.utilities import write_config_file, evaluate_convergence, save_convergence
 
 def init_materials_in_database(run_id, children_per_generation, generation):
     """initialize materials in database with run_id and generation"""
@@ -89,6 +89,15 @@ def htsohm(children_per_generation,    # number of materials per generation
     run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
         number_of_bins, max_generations)["run-id"]
 
-    seed_generation(run_id, children_per_generation, number_of_atomtypes)
-    for generation in range(1,max_generations):
-        next_generation(run_id, children_per_generation, generation)
+    convergence = acceptance_value + 1          # initialize convergence with arbitrary value
+    for generation in range(max_generations):
+        while convergence >= acceptance_value:
+            if generation == 0:                     # SEED GENERATION
+                seed_generation(run_id, children_per_generation, number_of_atomtypes)
+                convergence = evaluate_convergence(run_id)
+                save_convergence(run_id, generation, convergence)
+            elif generation >= 1:                   # FIRST GENERATION, AND ON...
+                next_generation(run_id, children_per_generation, generation)
+                convergence = evaluate_convergence(run_id)
+                save_convergence(run_id, generation, convergence)
+            print('conergence:\t%s' % convergence)
