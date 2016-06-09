@@ -1,22 +1,19 @@
 from time import sleep
-import yaml
+import os
 
-from redis import Redis
-from rq import Queue
+import yaml
 from rq.registry import StartedJobRegistry
 from sqlalchemy import func
+import sjs
 
 from htsohm.utilities import write_config_file, read_config_file
 from htsohm.htsohm import seed_generation, next_generation, hpc_job_run_all_simulations
 from htsohm.runDB_declarative import Material, session
 
-with open('hpc.yaml', 'r') as yaml_file:
-    hpc_config = yaml.load(yaml_file)
-
-redis_conn = Redis(**hpc_config['redis'])
-
-### NOTE: CAN CURRENTLY ONLY RUN ONE HTSOHM JOB ON A REDIS SERVER AT A TIME
-htsohm_queue = Queue('htsohm_queue', connection=redis_conn)
+sjs.load(os.path.join("settings","sjs.yaml"))
+htsohm_queue = sjs.get_job_queue()
+redis_conn = sjs.get_redis_conn()
+sjs_config = sjs.get_sjs_config()
 
 
 def start_run(
@@ -30,7 +27,10 @@ def start_run(
         number_of_bins, max_generations)['run-id']
 
     print("starting run with run_id: %s" % run_id)
-    job = htsohm_queue.enqueue(manage_run,run_id, timeout=hpc_config['job_timeout'])
+    job = htsohm_queue.enqueue(manage_run,run_id, timeout=sjs_config['max_seconds_per_job'])
+
+def continue_run(run_id):
+    htsohm_queue.enqueue(manage_run, run_id)
 
 def manage_run(run_id):
     print("======================================================================================")
@@ -66,7 +66,7 @@ def manage_run(run_id):
 
             for material in unfinished_materials:
                 htsohm_queue.enqueue(hpc_job_run_all_simulations, material.id,
-                                     timeout=hpc_config['job_timeout'])
+                                     timeout=sjs_config['max_seconds_per_job'])
 
             htsohm_queue.enqueue(manage_run, run_id)
             return
@@ -96,10 +96,11 @@ def manage_run(run_id):
                         config['children-per-generation'], generation,
                         queue=htsohm_queue)
 
+    # COMMENTING THIS OUT TO MAKE THIS MANUAL FOR NOW, PRIOR TO REFACTOR
     #
     # seed_generation or next_generation will have enqueued all the materials jobs, but now we
     # enqueue another manage_run job to run after they are all completed.
-    htsohm_queue.enqueue(manage_run, run_id)
+    # htsohm_queue.enqueue(manage_run, run_id)
 
     print("======================================================================================")
     print("== END manage_run, generation = %s" % generation)

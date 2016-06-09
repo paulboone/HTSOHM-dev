@@ -12,3 +12,7 @@ database.yaml
 output
 config
 hpc.yaml
+logs
+settings/rq_worker_config.py
+settings/sjs.yaml
+.ipynb_checkpoints/
