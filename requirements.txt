@@ -5,4 +5,4 @@ numpy
 SQLAlchemy
 git+https://github.com/WilmerLab/raspa2
 git+https://github.com/paulboone/rq.git@handle_sigterms
-git+https://github.com/paulboone/sam-subjobserver.git@pip_install
+git+https://github.com/paulboone/sam-subjobserver.git
