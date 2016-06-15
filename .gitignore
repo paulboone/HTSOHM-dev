@@ -1,4 +1,5 @@
 __pycache__
+*.pyc
 Movies
 Output
 Restart
@@ -10,3 +11,9 @@ database.yaml
 *.input
 output
 config
+hpc.yaml
+logs
+settings/rq_worker_config.py
+settings/sjs.yaml
+.ipynb_checkpoints/
+restart.yaml

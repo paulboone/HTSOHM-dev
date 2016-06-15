@@ -12,6 +12,7 @@ from htsohm.runDB_declarative import Material, session
 
 def init_materials_in_database(run_id, children_per_generation, generation):
     """initialize materials in database with run_id and generation"""
+
     for material in range(children_per_generation):
         new_material = Material(run_id, generation, 'none')
         session.add(new_material)
@@ -23,6 +24,20 @@ def simulate_all_materials(run_id, generation):
     for material in materials:
         sim.run_all_simulations(material.id)
     session.commit()
+
+def hpc_job_run_all_simulations(material_id):
+    print("======================================================================================")
+    print("== manhpc_job_run_all_simulations %s" % material_id)
+
+    sim.run_all_simulations(material_id)
+    session.commit()
+    print("======================================================================================")
+
+def queue_all_materials(run_id, generation, queue):
+    """same as simulate_all_materials, except queues the jobs in the job server"""
+    materials = session.query(Material).filter(Material.run_id == run_id, Material.generation == generation).all()
+    for material in materials:
+        queue.enqueue(hpc_job_run_all_simulations, material.id, timeout=60*60)
 
 def screen_parents(run_id, children_per_generation, generation):
     """select potential parent-materials and run them in dummy-test"""
@@ -41,20 +56,23 @@ def create_next_generation(run_id, generation):
         mut.recalculate_strength_array(run_id, generation) # recalculate strength-parameters, as needed
     mut.write_children_definition_files(run_id, generation)      # create child-materials
 
-
-def seed_generation(run_id, children_per_generation, number_of_atomtypes):
+def seed_generation(run_id, children_per_generation, number_of_atomtypes, queue=None):
     generation = 0
-
     init_materials_in_database(run_id, children_per_generation, generation)
     gen.write_seed_definition_files(run_id, children_per_generation, number_of_atomtypes)
-    simulate_all_materials(run_id, generation)
+    if queue is not None:
+        queue_all_materials(run_id, generation, queue)
+    else:
+        simulate_all_materials(run_id, generation)
 
-
-def next_generation(run_id, children_per_generation, generation):
+def next_generation(run_id, children_per_generation, generation, queue=None):
     init_materials_in_database(run_id, children_per_generation, generation)
     screen_parents(run_id, children_per_generation, generation)
     create_next_generation(run_id, generation)
-    simulate_all_materials(run_id, generation)
+    if queue is not None:
+        queue_all_materials(run_id, generation, queue)
+    else:
+        simulate_all_materials(run_id, generation)
 
 def htsohm(children_per_generation,    # number of materials per generation
            number_of_atomtypes,        # number of atom-types per material
@@ -64,12 +82,9 @@ def htsohm(children_per_generation,    # number of materials per generation
 
     ############################################################################
     # write run-configuration file
-    run_config = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
-        number_of_bins, max_generations)
-    run_id = run_config["run-id"]
+    run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
+        number_of_bins, max_generations)["run-id"]
 
-    for generation in range(max_generations):
-        if generation == 0:                     # SEED GENERATION
-            seed_generation(run_id, children_per_generation, number_of_atomtypes)
-        elif generation >= 1:                   # FIRST GENERATION, AND ON...
-            next_generation(run_id, children_per_generation, generation)
+    seed_generation(run_id, children_per_generation, number_of_atomtypes)
+    for generation in range(1,max_generations):
+        next_generation(run_id, children_per_generation, generation)

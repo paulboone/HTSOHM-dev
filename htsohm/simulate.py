@@ -106,6 +106,8 @@ def run_all_simulations(id):
     run_data.surface_area_bin = results['sa_bin']
     run_data.void_fraction_bin = results['vf_bin']
 
+    run_data.data_complete = True
+
 def dummy_test(run_id, next_generation, generation):
     """Recalculate material structure-properties to prevent statistical errors.
 
