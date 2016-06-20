@@ -32,8 +32,9 @@ def select_parents(run_id, children_per_generation, generation):
 
     ############################################################################
     # A parent-material is selected for each material in the next generation.
-    next_generation = session.query(Material).filter(Material.run_id == run_id,
-        Material.generation == generation).all()
+    next_generation = session \
+        .query(Material) \
+        .filter(Material.run_id == run_id, Material.generation == generation).all()
 
     for child in next_generation:
         # First, the bin is selected...
