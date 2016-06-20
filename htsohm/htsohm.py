@@ -100,4 +100,4 @@ def htsohm(children_per_generation,    # number of materials per generation
                 next_generation(run_id, children_per_generation, generation)
                 convergence = evaluate_convergence(run_id)
                 save_convergence(run_id, generation, convergence)
-            print('conergence:\t%s' % convergence)
+            print('convergence:\t%s' % convergence)

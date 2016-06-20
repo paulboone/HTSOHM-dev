@@ -16,10 +16,15 @@ def select_parents(run_id, children_per_generation, generation):
     is selected, a parent is randomly-selected from those materials within that bin.
     """
     # Each bin is counted...
-    bins_and_counts = session.query(func.count(Material.id), Material.methane_loading_bin,
-        Material.surface_area_bin, Material.void_fraction_bin).filter(
-        Material.run_id == run_id).group_by(Material.methane_loading_bin,
-        Material.surface_area_bin, Material.void_fraction_bin).all()[1:]
+    bins_and_counts = session \
+        .query(
+            func.count(Material.id), Material.methane_loading_bin, Material.surface_area_bin,
+            Material.void_fraction_bin
+        ) \
+        .filter(
+            Material.run_id == run_id).group_by(Material.methane_loading_bin,
+            Material.surface_area_bin, Material.void_fraction_bin
+        ).all()[1:]
     bins = [{"ML" : i[1], "SA" : i[2], "VF" : i[3]} for i in bins_and_counts]
     total = sum([i[0] for i in bins_and_counts])
     # ...then assigned a weight.
@@ -33,10 +38,14 @@ def select_parents(run_id, children_per_generation, generation):
     for child in next_generation:
         # First, the bin is selected...
         parent_bin = np.random.choice(bins, p=weights)
-        potential_parents = [i[0] for i in session.query(Material.id).filter(
-            Material.run_id == run_id, Material.methane_loading_bin == parent_bin["ML"],
-            Material.surface_area_bin == parent_bin["SA"],
-            Material.void_fraction_bin == parent_bin["VF"]).all()]
+        parent_query = session \
+            .query(Material.id) \
+            .filter(
+                Material.run_id == run_id, Material.methane_loading_bin == parent_bin["ML"],
+                Material.surface_area_bin == parent_bin["SA"],
+                Material.void_fraction_bin == parent_bin["VF"]
+            ).all()
+        potential_parents = [i[0] for i in parent_query]
         # ...then a parent is select from the materials in that bin.
         parent_id = np.random.choice(potential_parents)
         child.parent_id = str(parent_id)
