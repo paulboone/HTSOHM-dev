@@ -21,9 +21,9 @@ def select_parents(run_id, children_per_generation, generation):
             func.count(Material.id), Material.methane_loading_bin, Material.surface_area_bin,
             Material.void_fraction_bin
         ) \
-        .filter(
-            Material.run_id == run_id).group_by(Material.methane_loading_bin,
-            Material.surface_area_bin, Material.void_fraction_bin
+        .filter(Material.run_id == run_id) \
+        .group_by(
+            Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
         ).all()[1:]
     bins = [{"ML" : i[1], "SA" : i[2], "VF" : i[3]} for i in bins_and_counts]
     total = sum([i[0] for i in bins_and_counts])
@@ -42,7 +42,8 @@ def select_parents(run_id, children_per_generation, generation):
         parent_query = session \
             .query(Material.id) \
             .filter(
-                Material.run_id == run_id, Material.methane_loading_bin == parent_bin["ML"],
+                Material.run_id == run_id,
+                Material.methane_loading_bin == parent_bin["ML"],
                 Material.surface_area_bin == parent_bin["SA"],
                 Material.void_fraction_bin == parent_bin["VF"]
             ).all()
