@@ -1,7 +1,14 @@
+# stanard imports
 import os
+from math import sqrt
 
+# related third party imports
 from datetime import datetime
 import yaml
+from sqlalchemy import func
+
+# local application/library specific imports
+from htsohm.runDB_declarative import Base, Material, session
 
 def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
     number_of_bins, max_generations):
@@ -12,7 +19,7 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
     """
     run_id = datetime.now().isoformat()
     wd = os.environ['HTSOHM_DIR']      # specify working directory
-    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    config_file = os.path.join(wd, 'config', run_id + '_conf.yaml')
 
     run_config = {
         "run-id" : run_id,
@@ -37,7 +44,7 @@ def update_config_file(run_id):
     and epsilon).
     """
     wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
-    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    config_file = os.path.join(wd, 'config', run_id + '_conf.yaml')
     with open(config_file) as file:
         run_config = yaml.load(file)
 
@@ -57,12 +64,36 @@ def update_config_file(run_id):
 
 def read_config_file(run_id):
     wd = os.environ['HTSOHM_DIR']
-    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    config_file = os.path.join(wd, 'config', run_id + '_conf.yaml')
     with open(config_file) as file:
         config = yaml.load(file)
-
     return config
 
+def evaluate_convergence(run_id):
+    '''Counts number of materials in each bin and returns variance of these counts.'''
+    bin_counts = session \
+        .query(func.count(Material.id)) \
+        .filter(Material.run_id == run_id) \
+        .group_by(
+            Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
+        ).all()
+    bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
+    variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
+    return variance
+
+def save_convergence(run_id, generation, variance):
+    wd = os.environ['HTSOHM_DIR']      # specify working directory
+    log_file = os.path.join(wd, 'config', run_id + '_log.yaml')
+    data = {
+        "generation_%s" % generation  : variance
+    }
+    if generation == 0:
+        with open(log_file, "w") as file:
+            yaml.dump(data, file, default_flow_style=False)
+    else:
+        with open(log_file, "a") as file:
+            yaml.dump(data, file, default_flow_style=False)
+   
 def write_cif_file(cif_file, lattice_constants, atom_sites):
     with open(cif_file, "w") as file:
         file.write( 

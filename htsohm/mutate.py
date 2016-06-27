@@ -1,12 +1,13 @@
+# standard library imports
 import os
+from random import random, choice, uniform
 import shutil
+
+# related third party imports
+import numpy as np
 import yaml
 
-import numpy as np
-from random import random, choice, uniform
-
-from htsohm import binning as bng
-from htsohm import simulate as sim
+# local application/library specific imports
 from htsohm.runDB_declarative import session, Material
 from htsohm.utilities import read_config_file, write_force_field, write_cif_file
 from htsohm.utilities import write_mixing_rules

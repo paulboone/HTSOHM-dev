@@ -1,11 +1,12 @@
+# standard library imports
 import os
 import sys
-import yaml
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import yaml
 
 Base = declarative_base()
 class Material(Base):
