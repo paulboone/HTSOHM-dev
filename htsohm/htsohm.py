@@ -33,7 +33,7 @@ def hpc_job_run_all_simulations(material_id):
     print("======================================================================================")
     print("== manhpc_job_run_all_simulations %s" % material_id)
 
-    sim.run_all_simulations(material_id)
+    run_all_simulations(material_id)
     session.commit()
     print("======================================================================================")
 
@@ -63,7 +63,7 @@ def create_next_generation(run_id, generation):
 def seed_generation(run_id, children_per_generation, number_of_atomtypes, queue=None):
     generation = 0
     init_materials_in_database(run_id, children_per_generation, generation)
-    gen.write_seed_definition_files(run_id, children_per_generation, number_of_atomtypes)
+    write_seed_definition_files(run_id, children_per_generation, number_of_atomtypes)
     if queue is not None:
         queue_all_materials(run_id, generation, queue)
     else:
@@ -83,7 +83,7 @@ def htsohm(children_per_generation,    # number of materials per generation
            strength_0,                 # intial strength parameter
            number_of_bins,             # number of bins for analysis
            max_generations=20,         # maximum number of generations
-           acceptance_value=0.5):      # desired degree of `convergence`
+           acceptance_value=-0.5):      # desired degree of `convergence`
     ############################################################################
     # write run-configuration file
     run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
@@ -101,3 +101,4 @@ def htsohm(children_per_generation,    # number of materials per generation
                 convergence = evaluate_convergence(run_id)
                 save_convergence(run_id, generation, convergence)
             print('convergence:\t%s' % convergence)
+            generation += 1
