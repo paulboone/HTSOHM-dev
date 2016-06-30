@@ -5,7 +5,7 @@ from sqlalchemy import func
 # local application/library specific imports
 from htsohm.runDB_declarative import Base, Material, session
 
-def select_parents(run_id, children_per_generation, generation):
+def select_parent(run_id):
     """Use bin-counts to preferentially select a list of rare parents.
 
     Each bin contains some number of materials, and those bins with the fewers materials represent
@@ -30,27 +30,16 @@ def select_parents(run_id, children_per_generation, generation):
     # ...then assigned a weight.
     weights = [i[0] / float(total) for i in bins_and_counts]
 
-    ############################################################################
-    # A parent-material is selected for each material in the next generation.
-    next_generation = session \
-        .query(Material) \
-        .filter(Material.run_id == run_id, Material.generation == generation).all()
+    parent_bin = np.random.choice(bins, p=weights)
+    parent_query = session \
+        .query(Material.id) \
+        .filter(
+            Material.run_id == run_id,
+            Material.methane_loading_bin == parent_bin["ML"],
+            Material.surface_area_bin == parent_bin["SA"],
+            Material.void_fraction_bin == parent_bin["VF"],
+            Material.dummy_test_result != 'fail'
+        ).all()
+    potential_parents = [i[0] for i in parent_query]
 
-    for child in next_generation:
-        # First, the bin is selected...
-        parent_bin = np.random.choice(bins, p=weights)
-        parent_query = session \
-            .query(Material.id) \
-            .filter(
-                Material.run_id == run_id,
-                Material.methane_loading_bin == parent_bin['ML'],
-                Material.surface_area_bin == parent_bin['SA'],
-                Material.void_fraction_bin == parent_bin['VF'],
-                Material.dummy_test_result != 'fail'
-            ).all()
-        potential_parents = [i[0] for i in parent_query]
-        # ...then a parent is select from the materials in that bin.
-        parent_id = np.random.choice(potential_parents)
-        child.parent_id = str(parent_id)
-
-    return next_generation
+    return np.random.choice(potential_parents)
