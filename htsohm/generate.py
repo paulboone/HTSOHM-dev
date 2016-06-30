@@ -57,12 +57,17 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
     max_charge              = material_config["charge-limit"]
     elem_charge             = material_config["elemental-charge"]
 
-    wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
-    ff_dir = os.environ['FF_DIR']      # output force-field files to $FF_DIR
-    mat_dir = os.environ['MAT_DIR']    # output .cif-files to $MAT_DIR
+    wd = os.environ['HTSOHM_DIR']                    # specify $HTSOHM_DIR as working directory
+    ff_dir = os.environ['FF_DIR']                    # output force-field files to $FF_DIR
+    mat_dir = os.environ['MAT_DIR']                  # output .cif-files to $MAT_DIR
 
-    materials = session.query(Material).filter(Material.run_id == run_id, Material.generation == 0).all()
-    for material in materials:           # each iteration creates a new material
+    for i in range(number_of_materials):             # each iteration creates a new material
+        ########################################################################
+        # add row to database
+        material = Material(run_id, 0, 'none')
+        session.add(material)
+        session.flush()
+        session.refresh(material)
         material_name = run_id + '-' + str(material.id)        # this will be replaced with primary_key
 
         def_dir = os.path.join(ff_dir, material_name)       # directory for material's force field
