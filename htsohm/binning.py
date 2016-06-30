@@ -21,7 +21,7 @@ def select_parents(run_id, children_per_generation, generation):
             func.count(Material.id), Material.methane_loading_bin, Material.surface_area_bin,
             Material.void_fraction_bin
         ) \
-        .filter(Material.run_id == run_id) \
+        .filter(Material.run_id == run_id, Material.dummy_test_result != 'fail') \
         .group_by(
             Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
         ).all()[1:]
@@ -43,9 +43,10 @@ def select_parents(run_id, children_per_generation, generation):
             .query(Material.id) \
             .filter(
                 Material.run_id == run_id,
-                Material.methane_loading_bin == parent_bin["ML"],
-                Material.surface_area_bin == parent_bin["SA"],
-                Material.void_fraction_bin == parent_bin["VF"]
+                Material.methane_loading_bin == parent_bin['ML'],
+                Material.surface_area_bin == parent_bin['SA'],
+                Material.void_fraction_bin == parent_bin['VF'],
+                Material.dummy_test_result != 'fail'
             ).all()
         potential_parents = [i[0] for i in parent_query]
         # ...then a parent is select from the materials in that bin.
