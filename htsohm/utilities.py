@@ -11,7 +11,7 @@ from sqlalchemy import func
 from htsohm.runDB_declarative import Base, Material, session
 
 def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
-    number_of_bins, max_generations):
+    number_of_bins, max_generations, dummy_test_trials, acceptance_value):
     """Writes run-specific parameters to /config/<run_id>.yaml.
 
     This function writes run-specific parameters to a configuration file that is loaded/written
@@ -27,7 +27,9 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
         "number-of-atom-types" : number_of_atomtypes,
         "initial-mutation-strength" : strength_0,
         "number-of-bins" : number_of_bins,
-        "max-number-of-generations" : max_generations
+        "max-number-of-generations" : max_generations,
+        "dummy-test-trials" : dummy_test_trials,
+        "acceptance-value" : acceptance_value
     }
 
     with open(config_file, "w") as file:
