@@ -111,3 +111,5 @@ def write_seed_definition_files(run_id, number_of_materials, number_of_atomtypes
 
         cif_file = os.path.join(mat_dir, material_name + ".cif")           # structure file
         write_cif_file(cif_file, lattice_constants, atom_sites)
+
+        material.write_check = 'done'
