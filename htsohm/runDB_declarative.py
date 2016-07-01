@@ -38,6 +38,7 @@ class Material(Base):
     methane_loading_bin = Column(Integer)                  # dimm.
     surface_area_bin = Column(Integer)                     # dimm.
     void_fraction_bin = Column(Integer)                    # dimm.
+    write_check = Column(String(4))                        # 'done' flag means all .def files were written
     dummy_test_result = Column(String(4))                  # "pass" = material passes
                                                            # "fail" = material fails
     data_complete = Column(Boolean, server_default="0")    # set when all columns are populated
@@ -47,7 +48,7 @@ class Material(Base):
         self.generation = generation
         self.dummy_test_result = dummy_test_result
 
-with open('database.yaml', 'r') as yaml_file:
+with open('database.sample.yaml', 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)
 connection_string = dbconfig['connection_string']
 engine = create_engine(connection_string)

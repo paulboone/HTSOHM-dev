@@ -274,4 +274,6 @@ def write_child_definition_files(run_id, generation, parent_id):
 
     cif_file = os.path.join(md, run_id + '-' + str(child_id) + '.cif')
     write_cif_file(cif_file, lattice_constants, atom_sites)
+
+    new_material.write_check = 'done'
     print('  - %s-%s.cif\tWRITTEN.\n...DONE!' % (run_id, child_id))
