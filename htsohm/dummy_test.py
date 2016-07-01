@@ -8,11 +8,20 @@
 import numpy as np
 
 # local application/library specific imports
+from htsohm.binning import select_parent
+from htsohm.utilities import read_config_file
 from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
 from htsohm import surface_area_simulation
 from htsohm.runDB_declarative import Material, session
 #from htsohm.utilities import read_config_file
+
+def screen_parent(run_id):
+    test_complete = False
+    while not test_complete:
+        parent_id = select_parent(run_id)
+        test_complete = dummy_test(run_id, parent_id)
+    return parent_id
 
 def dummy_test(run_id, id):
     """Recalculate material structure-properties to prevent statistical errors.
@@ -25,8 +34,8 @@ def dummy_test(run_id, id):
     initially-calculated value beyond an accpetable tolerance, the material fails the `dummy-test`
     and is flagged, preventing it from being used to generate new materials in the future.
     """
-    tolerance = 0.5
-    number_of_trials = 1
+    tolerance = 0.75
+    number_of_trials = read_config_file(run_id)['dummy-test-trials']
 
     material = session.query(Material).get(str(id))
     if material.dummy_test_result != 'pass':
