@@ -8,7 +8,8 @@ import sjs
 sjs.load(os.path.join("settings","sjs.yaml"))
 job_queue = sjs.get_job_queue()
 
-from htsohm.utilities import write_config_file, read_config_file
+from htsohm.utilities import write_config_file, read_config_file, evaluate_convergence
+from htsohm.utilities import save_convergence
 from htsohm.htsohm import seed_generation, queue_all_materials, queue_create_next_gen
 from htsohm.htsohm import update_strength_array
 from htsohm.runDB_declarative import Material, session
@@ -40,20 +41,23 @@ def generation_write_complete(run_id, generation):
 
 def manage_run(run_id, generation):
     config = read_config_file(run_id)
-    
-    # prepare, mutate, and queue up the next generation
     if generation > config['max-number-of-generations']:
         print("Max generations exceeded; terminating run.")
         return -1 # -1 means we're done
     elif generation == 0:
-        # SEED GENERATION
-        seed_generation(run_id,
-                        config['children-per-generation'], config['number-of-atom-types'])
+        seed_generation(run_id, config['children-per-generation'],
+            config['number-of-atom-types'])
         queue_all_materials(run_id, generation, queue)
     elif generation >= 1:
         if not generation_write_complete(run_id, generation):
+            convergence = evaluate_convergence(run_id)
+            save_convergence(run_id, generation, convergence)
+            if convergence <= config['acceptance-value']:
+                print("Desired convergence attained; terminating run.")
+                return -1
             update_strength_array(run_id, generation)
             queue_create_next_gen(run_id, generation, queue)
         else:
             queue_all_materials(run_id, generation, queue)
-    return generation + 1
+            generation += 1
+    return generation
