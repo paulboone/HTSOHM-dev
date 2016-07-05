@@ -53,8 +53,8 @@ def hpc_job_create_material(run_id, generation):
     session.commit()
     print("======================================================================================")
 
-def queue_create_next_gen(run_id, generation, queue):
-    """same as create_all_materials, except queues the jobs in the job server"""
+def queue_create_next_generation(run_id, generation, queue):
+    """same as create_next_generation, except queues the jobs in the job server"""
     children_per_generation = read_config_file(run_id)['children-per-generation']
     for i in range(children_per_generation):
         trials = read_config_file(run_id)['dummy-test-trials']

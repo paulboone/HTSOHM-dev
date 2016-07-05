@@ -10,7 +10,7 @@ job_queue = sjs.get_job_queue()
 
 from htsohm.utilities import write_config_file, read_config_file, evaluate_convergence
 from htsohm.utilities import save_convergence
-from htsohm.htsohm import seed_generation, queue_all_materials, queue_create_next_gen
+from htsohm.htsohm import seed_generation, queue_all_materials, queue_create_next_generation
 from htsohm.htsohm import update_strength_array
 from htsohm.runDB_declarative import Material, session
 
@@ -58,7 +58,7 @@ def manage_run(run_id, generation):
                 print('Desired convergence attained; terminating run.')
                 return -1
             update_strength_array(run_id, generation)
-            queue_create_next_gen(run_id, generation, queue)
+            queue_create_next_generation(run_id, generation, queue)
         else:
             queue_all_materials(run_id, generation, queue)
             generation += 1
