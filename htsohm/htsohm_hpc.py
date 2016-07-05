@@ -34,7 +34,7 @@ def generation_write_complete(run_id, generation):
         .query(func.count(Material.id)) \
         .filter(
             run_id == run_id, Material.generation == generation,
-            Material.write_check = 'done'
+            Material.write_check == 'done'
         ) \
         .all()[0][0]
     return materials_successfully_written == materials_per_generation
