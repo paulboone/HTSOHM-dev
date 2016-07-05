@@ -29,8 +29,6 @@ def start_run(
 
 def manage_run(run_id, generation):
     config = read_config_file(run_id)
-#    acceptance_value = config['acceptance-value']
-#    convergence = acceptance_value + 1
     
     # prepare, mutate, and queue up the next generation
     if generation > config['max-number-of-generations']:
