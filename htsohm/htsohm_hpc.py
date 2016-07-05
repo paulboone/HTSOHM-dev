@@ -43,6 +43,8 @@ def manage_run(run_id, generation):
     config = read_config_file(run_id)
     if generation > config['max-number-of-generations']:
         print("Max generations exceeded; terminating run.")
+        final_convergence = evaluate_convergence(run_id)
+        save_convergence(run_id, generation, final_convergence)
         return -1 # -1 means we're done
     elif generation == 0:
         seed_generation(run_id, config['children-per-generation'],
@@ -51,9 +53,9 @@ def manage_run(run_id, generation):
     elif generation >= 1:
         if not generation_write_complete(run_id, generation):
             convergence = evaluate_convergence(run_id)
-            save_convergence(run_id, generation, convergence)
+            save_convergence(run_id, generation - 1, convergence)
             if convergence <= config['acceptance-value']:
-                print("Desired convergence attained; terminating run.")
+                print('Desired convergence attained; terminating run.')
                 return -1
             update_strength_array(run_id, generation)
             queue_create_next_gen(run_id, generation, queue)

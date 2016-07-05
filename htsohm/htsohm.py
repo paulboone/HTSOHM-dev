@@ -78,24 +78,22 @@ def htsohm(children_per_generation,    # number of materials per generation
            max_generations=20,         # maximum number of generations
            dummy_test_trials=1,        # number of re-simulations for dummy-test
            acceptance_value=-0.005):      # desired degree of `convergence`
-    ############################################################################
-    # write run-configuration file
     run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
         number_of_bins, max_generations, dummy_test_trials, acceptance_value)["run-id"]
-
-    convergence = acceptance_value + 1          # initialize convergence with arbitrary value
     for generation in range(max_generations):
-        while convergence >= acceptance_value:
             if generation == 0:                     # SEED GENERATION
                 seed_generation(run_id, children_per_generation, number_of_atomtypes)
                 simulate_all_materials(run_id, generation)
-                convergence = evaluate_convergence(run_id)
-                save_convergence(run_id, generation, convergence)
             elif generation >= 1:                   # FIRST GENERATION, AND ON...
+                convergence = evaluate_convergence(run_id)
+                save_convergence(run_id, generation - 1, convergence)
+                print('convergence:\t%s' % convergence)
+                if convergence <= acceptance_value:
+                    print('Desired convergence attained; terminating run.')
+                    break
                 update_strength_array(run_id, generation)
                 create_next_generation(run_id, generation)
                 simulate_all_materials(run_id, generation)
                 convergence = evaluate_convergence(run_id)
                 save_convergence(run_id, generation, convergence)
-            print('convergence:\t%s' % convergence)
             generation += 1
