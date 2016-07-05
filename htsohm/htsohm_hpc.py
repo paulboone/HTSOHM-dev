@@ -27,6 +27,17 @@ def start_run(
 
     return run_id
 
+def generation_write_complete(run_id, generation):
+    materials_per_generation = read_config_file(run_id)['children-per-generation']
+    materials_successfully_written =  session \
+        .query(func.count(Material.id)) \
+        .filter(
+            run_id == run_id, Material.generation == generation,
+            Material.write_check = 'done'
+        ) \
+        .all()[0][0]
+    return materials_successfully_written == materials_per_generation
+
 def manage_run(run_id, generation):
     config = read_config_file(run_id)
     
@@ -40,8 +51,9 @@ def manage_run(run_id, generation):
                         config['children-per-generation'], config['number-of-atom-types'])
         queue_all_materials(run_id, generation, queue)
     elif generation >= 1:
-        # FIRST GENERATION, AND ON...
-        update_strength_array(run_id, generation)
-        queue_create_next_gen(run_id, generation, queue)
-        queue_all_materials(run_id, generation, queue)
+        if not generation_write_complete(run_id, generation):
+            update_strength_array(run_id, generation)
+            queue_create_next_gen(run_id, generation, queue)
+        else:
+            queue_all_materials(run_id, generation, queue)
     return generation + 1
