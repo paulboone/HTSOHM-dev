@@ -18,7 +18,12 @@ from htsohm.utilities import read_config_file
 
 def simulate_all_materials(run_id, generation):
     """simulate methane loading, helium void fraction, and surface area for seed population"""
-    materials = session.query(Material).filter(Material.run_id == run_id, Material.generation == generation).all()
+    materials = session \
+        .query(Material) \
+        .filter(
+            Material.run_id == run_id, Material.generation == generation,
+            Material.write_check == 'done'
+        ).all()
     for material in materials:
         run_all_simulations(material.id)
     session.commit()
@@ -33,7 +38,12 @@ def hpc_job_run_all_simulations(material_id):
 
 def queue_all_materials(run_id, generation, queue):
     """same as simulate_all_materials, except queues the jobs in the job server"""
-    materials = session.query(Material).filter(Material.run_id == run_id, Material.generation == generation).all()
+    materials = session \
+        .query(Material) \
+        .filter(
+            Material.run_id == run_id, Material.generation == generation,
+            Material.write_check == 'done'
+        ).all()
     for material in materials:
         queue.enqueue(hpc_job_run_all_simulations, material.id, timeout=60*60)
 
