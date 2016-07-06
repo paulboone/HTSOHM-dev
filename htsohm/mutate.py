@@ -50,8 +50,12 @@ def recalculate_strength_array(run_id, generation):
     """
     # create list of parent-materials from next generation
     parent_list = []
-    children = session.query(Material).filter(Material.run_id == run_id,
-        Material.generation == generation)
+    children = session \
+        .query(Material) \
+        .filter(
+            Material.run_id == run_id, Material.generation == generation,
+            Material.write_check == 'done'
+        )
     for material in children:
         p = session.query(Material).get(material.parent_id)
         parent_list.append({
@@ -75,17 +79,23 @@ def recalculate_strength_array(run_id, generation):
         child_counts = []
         ########################################################################
         # for each parent in list, find all children from the previous generation
-        children = session.query(Material).filter(Material.run_id == run_id,
-            Material.generation == generation - 1,
-            Material.parent_id == parent_id).all()
+        children = session \
+            .query(Material) \
+            .filter(
+                Material.run_id == run_id, Material.generation == generation - 1,
+                Material.parent_id == parent_id, Material.write_check == 'done'
+            ).all()
         for child in children:
             ####################################################################
             # record which bins contain these children and how many
             child_bin = [child.methane_loading_bin, child.surface_area_bin, child.void_fraction_bin]
-            bin_count = session.query(Material).filter(Material.run_id==run_id,
-                Material.generation==generation - 1, Material.parent_id==parent_id,
-                Material.methane_loading_bin==a, Material.surface_area_bin==b,
-                Material.void_fraction_bin==c).count()
+            bin_count = session \
+                .query(Material) \
+                .filter(
+                    Material.run_id==run_id, Material.generation==generation - 1,
+                    Material.parent_id==parent_id, Material.methane_loading_bin==a,
+                    Material.surface_area_bin==b, Material.void_fraction_bin==c
+                ).count()
             if child_bin not in child_bins:
                 child_bins.append(child_bin)
                 child_counts.append(bin_count)

@@ -51,10 +51,10 @@ def update_config_file(run_id):
         run_config = yaml.load(file)
 
     run_config.update({
-        "number-density-limits"     : [0.000013907, 0.084086],
-        "lattice-constant-limits"   : [13.098, 52.392],
-        "epsilon-limits"            : [1.258, 513.264],
-        "sigma-limits"              : [1.052, 6.549],
+        "number-density-limits"     : [0.000013907, 0.0043],
+        "lattice-constant-limits"   : [14.82, 52.32],
+        "epsilon-limits"            : [2.01, 410.61],
+        "sigma-limits"              : [1.68, 5.24],
         "charge-limit"              : 0.,
         "elemental-charge"          : 0.0001
     })
@@ -75,7 +75,7 @@ def evaluate_convergence(run_id):
     '''Counts number of materials in each bin and returns variance of these counts.'''
     bin_counts = session \
         .query(func.count(Material.id)) \
-        .filter(Material.run_id == run_id) \
+        .filter(Material.run_id == run_id, Material.write_check == 'done') \
         .group_by(
             Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
         ).all()

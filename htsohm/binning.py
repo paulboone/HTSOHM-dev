@@ -21,7 +21,10 @@ def select_parent(run_id):
             func.count(Material.id), Material.methane_loading_bin, Material.surface_area_bin,
             Material.void_fraction_bin
         ) \
-        .filter(Material.run_id == run_id, Material.dummy_test_result != 'fail') \
+        .filter(
+            Material.run_id == run_id, Material.dummy_test_result != 'fail',
+            Material.write_check == 'done'
+        ) \
         .group_by(
             Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
         ).all()[1:]
@@ -38,7 +41,8 @@ def select_parent(run_id):
             Material.methane_loading_bin == parent_bin["ML"],
             Material.surface_area_bin == parent_bin["SA"],
             Material.void_fraction_bin == parent_bin["VF"],
-            Material.dummy_test_result != 'fail'
+            Material.dummy_test_result != 'fail',
+            Material.write_check == 'done'
         ).all()
     potential_parents = [i[0] for i in parent_query]
 
