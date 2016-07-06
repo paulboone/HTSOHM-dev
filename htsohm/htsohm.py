@@ -104,6 +104,4 @@ def htsohm(children_per_generation,    # number of materials per generation
                 update_strength_array(run_id, generation)
                 create_next_generation(run_id, generation)
                 simulate_all_materials(run_id, generation)
-                convergence = evaluate_convergence(run_id)
-                save_convergence(run_id, generation, convergence)
             generation += 1

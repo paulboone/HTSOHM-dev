@@ -17,4 +17,4 @@ settings/rq_worker_config.py
 settings/sjs.yaml
 .ipynb_checkpoints/
 restart.yaml
-lauch_*
+launch_*
