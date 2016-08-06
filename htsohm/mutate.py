@@ -101,7 +101,7 @@ def recalculate_strength_array(run_id, generation):
                 strength_array[a, b, c] = 0.5 * strength_array[a, b, c]
             ####################################################################
             # CASE 3:  parent-bin-count 300% greater than any child-bin-count
-            if parent_bin_count >= 3 * min(child_counts):
+            if parent_bin_count >= 3 * max(child_counts):
                 strength_array[a, b, c] = 1.5 * strength_array[a, b, c]
 
     ############################################################################
