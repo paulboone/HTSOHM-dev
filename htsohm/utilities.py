@@ -37,7 +37,7 @@ def write_config_file(children_per_generation, number_of_atomtypes, strength_0,
 
 def update_config_file(run_id):
     """ Write material-parameters to run-configuration file.
-    
+
     The parameters written by this function define the limits for different values written to the
     structure and forcefield definition files for RASPA. Among the limits defined here are crystal
     lattice constants, number density, partial atomic charges, and Lennard-Jones parameters (sigma
@@ -49,8 +49,8 @@ def update_config_file(run_id):
         run_config = yaml.load(file)
 
     run_config.update({
-        "number-density-limits"     : [0.000013907, 0.084086],
-        "lattice-constant-limits"   : [13.098, 52.392],
+        "number-density-limits"     : [0.0000149, 0.02122],
+        "lattice-constant-limits"   : [25.6, 51.2],
         "epsilon-limits"            : [1.258, 513.264],
         "sigma-limits"              : [1.052, 6.549],
         "charge-limit"              : 0.,
@@ -93,10 +93,10 @@ def save_convergence(run_id, generation, variance):
     else:
         with open(log_file, "a") as file:
             yaml.dump(data, file, default_flow_style=False)
-   
+
 def write_cif_file(cif_file, lattice_constants, atom_sites):
     with open(cif_file, "w") as file:
-        file.write( 
+        file.write(
             "\nloop_\n" +
             "_symmetry_equiv_pos_as_xyz\n" +
             "  x,y,z\n" +
@@ -121,7 +121,7 @@ def write_cif_file(cif_file, lattice_constants, atom_sites):
 
 def write_mixing_rules(mix_file, atom_types):
     with open(mix_file, "w") as file:
-        file.write( 
+        file.write(
             "# general rule for shifted vs truncated\n" +
             "shifted\n" +
             "# general rule tailcorrections\n" +

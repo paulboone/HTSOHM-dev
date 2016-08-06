@@ -17,7 +17,7 @@ def start_run(
         number_of_atomtypes,        # number of atom-types per material
         strength_0,                 # intial strength parameter
         number_of_bins,             # number of bins for analysis
-        max_generations=20):        # maximum number of generations
+        max_generations=100):        # maximum number of generations
 
     run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
         number_of_bins, max_generations)['run-id']

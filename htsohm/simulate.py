@@ -121,7 +121,7 @@ def dummy_test(run_id, next_generation, generation):
     initially-calculated value beyond an accpetable tolerance, the material fails the `dummy-test`
     and is flagged, preventing it from being used to generate new materials in the future.
     """
-    tolerance = 0.5
+    tolerance = 0.1
     number_of_trials = 1
 
     failed = []

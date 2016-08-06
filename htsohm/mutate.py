@@ -37,15 +37,13 @@ def recalculate_strength_array(run_id, generation):
     which bins to adjust, the script refers to the distribution of children in the previous
     generation which share a common parent. The criteria follows:
      ________________________________________________________________
-     - if none of the children share  |  decrease strength parameter
-       the parent's bin               |  by 50 %
-     - if all other child-bin-counts  |
-       are at least 10% greater than  |
-       the parent-bin-count           |
+     - if none of the children share  |  halve strength parameter
+       the parent's bin               |  
+     - if the fraction of children in |
+       the parent bin is < 10%        |
      _________________________________|_____________________________
-     - if the parent-bin-count is at  |  increase strength parameter
-       least 3 times greater than     |  by 50 %
-       all other child-bin-counts     |
+     - if the fraction of children in |  double strength parameter
+       the parent bin is > 50%        |
      _________________________________|_____________________________
     """
     # create list of parent-materials from next generation
@@ -89,20 +87,19 @@ def recalculate_strength_array(run_id, generation):
             if child_bin not in child_bins:
                 child_bins.append(child_bin)
                 child_counts.append(bin_count)
+
         ########################################################################
-        # CASE 1:  no children in parent bin
-        if parent_bin not in child_bins:
-            strength_array[a, b, c] = 0.5 * strength_array[a, b, c]
-        elif parent_bin in child_bins:
+
+        if child_bins.index(parent_bin):
             parent_bin_count = child_counts[child_bins.index(parent_bin)]
-            ####################################################################
-            # CASE 2:  parent-bin-count less than 110% of any child-bin-count
-            if parent_bin_count < 1.1 * min(child_counts):
-                strength_array[a, b, c] = 0.5 * strength_array[a, b, c]
-            ####################################################################
-            # CASE 3:  parent-bin-count 300% greater than any child-bin-count
-            if parent_bin_count >= 3 * min(child_counts):
-                strength_array[a, b, c] = 1.5 * strength_array[a, b, c]
+        else:
+            parent_bin_count = 0
+
+        fraction_in_parent_bin = parent_bin_count / sum(child_counts)
+        if fraction_in_parent_bin < 0.1:
+            strength_array[a, b, c] = 0.5 * strength_array[a, b, c]
+        elif fraction_in_parent_bin > 0.5 and strength_array[a, b, c] <= 0.5:
+            strength_array[a, b, c] = 2 * strength_array[a, b, c]
 
     ############################################################################
     # delete only strength-array file, write new one
