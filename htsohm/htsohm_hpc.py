@@ -6,7 +6,7 @@ from sqlalchemy import func
 import sjs
 
 sjs.load(os.path.join("settings","sjs.yaml"))
-job_queue = sjs.get_job_queue()
+queue = sjs.get_job_queue()
 
 from htsohm.utilities import write_config_file, read_config_file, evaluate_convergence
 from htsohm.utilities import save_convergence
