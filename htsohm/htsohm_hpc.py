@@ -50,6 +50,7 @@ def manage_run(run_id, generation):
         seed_generation(run_id, config['children-per-generation'],
             config['number-of-atom-types'])
         queue_all_materials(run_id, generation, queue)
+        generation += 1
     elif generation >= 1:
         if not generation_write_complete(run_id, generation):
             convergence = evaluate_convergence(run_id)
