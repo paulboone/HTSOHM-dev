@@ -30,7 +30,7 @@ def simulate_all_materials(run_id, generation):
 
 def hpc_job_run_all_simulations(material_id):
     print("======================================================================================")
-    print("== manhpc_job_run_all_simulations %s" % material_id)
+    print("== hpc_job_run_all_simulations %s" % material_id)
 
     run_all_simulations(material_id)
     session.commit()
@@ -56,7 +56,7 @@ def create_next_generation(run_id, generation):
 
 def hpc_job_create_material(run_id, generation):
     print("======================================================================================")
-    print("== manhpc_job_dummy_test %s" % material_id)
+    print("== hpc_job_create_material %s" % run_id)
 
     parent_id = screen_parent(run_id)
     write_child_definition_files(run_id, generation, parent_id)
