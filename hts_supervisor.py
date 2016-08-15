@@ -116,10 +116,6 @@ if __name__ == "__main__":
             print("jobs just requeued...")
             continue
 
-        # final check to make sure the results look like we expect in the DB:
-        if len(unfinished_materials(generation)) > 0:
-            raise SystemException("System looks like it is running normally, but we are missing results in the database!")
-
         # there are no failed jobs to requeue, no jobs in the queue and no jobs running, so we can
         # move on to the next generation
         job_queue = sjs.get_job_queue()
