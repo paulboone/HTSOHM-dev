@@ -166,9 +166,10 @@ def write_child_definition_files(run_id, generation, parent_id):
     ########################################################################
     # add row to database
     new_material = Material(run_id, generation, 'none')
-    session.add(new_material)
-    session.flush()
     new_material.parent_id = parent_id
+    session.add(new_material)
+    session.commit()
+
     session.refresh(new_material)
     child_id = new_material.id
     print('ADDED %s-%s TO DATABASE.\nWriting .def files...' % (run_id, child_id))

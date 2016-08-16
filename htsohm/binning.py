@@ -46,4 +46,4 @@ def select_parent(run_id):
         ).all()
     potential_parents = [i[0] for i in parent_query]
 
-    return np.random.choice(potential_parents)
+    return int(np.random.choice(potential_parents))
