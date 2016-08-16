@@ -100,7 +100,7 @@ def recalculate_strength_array(run_id, generation):
 
         ########################################################################
 
-        if child_bins.index(parent_bin):
+        if parent_bin in child_bins:
             parent_bin_count = child_counts[child_bins.index(parent_bin)]
         else:
             parent_bin_count = 0
