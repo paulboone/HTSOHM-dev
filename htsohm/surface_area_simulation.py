@@ -48,7 +48,7 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id):
-    output_dir = 'output_%s' % material_id
+    output_dir = os.path.join(os.environ['SCRATCH'], 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "SurfaceArea.input")
     write_raspa_file(filename, run_id, material_id)
@@ -57,6 +57,6 @@ def run(run_id, material_id):
     filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
     output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
     results = parse_output(output_file)
-    shutil.rmtree(output_dir)
+    shutil.rmtree(output_dir, ignore_errors=True)
 
     return results

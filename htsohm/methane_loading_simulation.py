@@ -6,8 +6,8 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
     with open(filename, "w") as config:
         config.write(
             "SimulationType\t\t\tMonteCarlo\n" +
-            "NumberOfCycles\t\t\t1000\n" +             # number of MonteCarlo cycles
-            "NumberOfInitializationCycles\t1000\n" +    # number of initialization cycles
+            "NumberOfCycles\t\t\t10\n" +             # number of MonteCarlo cycles
+            "NumberOfInitializationCycles\t10\n" +    # number of initialization cycles
             "PrintEvery\t\t\t10\n" +
             "RestartFile\t\t\tno\n" +
             "\n" +
@@ -79,7 +79,7 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id, helium_void_fraction):
-    output_dir = 'output_%s' % material_id
+    output_dir = os.path.join(os.environ['SCRATCH'], 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "MethaneLoading.input")
     write_raspa_file(filename, run_id, material_id, helium_void_fraction)
@@ -88,6 +88,6 @@ def run(run_id, material_id, helium_void_fraction):
     filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)
     output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
     results = parse_output(output_file)
-    shutil.rmtree(output_dir)
+    shutil.rmtree(output_dir, ignore_errors=True)
 
     return results
