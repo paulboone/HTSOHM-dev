@@ -19,9 +19,9 @@ def start_run(
         number_of_atomtypes,        # number of atom-types per material
         strength_0,                 # intial strength parameter
         number_of_bins,             # number of bins for analysis
-        max_generations=100,        # maximum number of generations
+        max_generations=50,        # maximum number of generations
         dummy_test_trials=3,        # number of re-simulations for dummy-test
-        acceptance_value=-0.001):   # desired degree of `convergence`
+        acceptance_value=-0.05):   # desired degree of `convergence`
 
     run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
         number_of_bins, max_generations, dummy_test_trials, acceptance_value)['run-id']
@@ -37,7 +37,7 @@ def generation_write_complete(run_id, generation):
             Material.write_check == 'done'
         ) \
         .all()[0][0]
-    return materials_successfully_written == materials_per_generation
+    return materials_successfully_written >= materials_per_generation
 
 def manage_run(run_id, generation):
     config = read_config_file(run_id)
