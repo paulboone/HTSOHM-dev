@@ -18,3 +18,4 @@ settings/sjs.yaml
 .ipynb_checkpoints/
 restart.yaml
 launch_*
+*.o*
