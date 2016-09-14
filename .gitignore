@@ -11,7 +11,6 @@ database.yaml
 *.input
 output
 config
-hpc.yaml
 logs
 settings/rq_worker_config.py
 settings/sjs.yaml
