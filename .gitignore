@@ -18,3 +18,4 @@ settings/sjs.yaml
 restart.yaml
 launch_*
 *.o*
+.sjs_running
