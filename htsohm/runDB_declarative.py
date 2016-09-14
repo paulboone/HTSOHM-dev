@@ -48,7 +48,7 @@ class Material(Base):
         self.generation = generation
         self.dummy_test_result = dummy_test_result
 
-with open('database.yaml', 'r') as yaml_file:
+with open(os.path.join('settings', 'database.yaml'), 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)
 connection_string = dbconfig['connection_string']
 engine = create_engine(connection_string)
