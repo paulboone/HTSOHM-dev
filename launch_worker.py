@@ -7,7 +7,7 @@ from htsohm.generate import write_seed_definition_files
 from htsohm.mutate import write_child_definition_files, create_strength_array
 from htsohm.runDB_declarative import Material, session
 from htsohm.simulate import run_all_simulations
-from htsohm.utilities import read_config_file
+from htsohm.utilities import read_config_file, write_config_file
 
 def seeds_in_run(run_id):
     return session.query(Material).filter(
@@ -20,24 +20,23 @@ def hts():
     pass
 
 @hts.command()
-@click.argument('num_atomtypes')
-@click.argument('strength')
-@click.argument('num_bins')
-@click.argument('num_seeds')
-@click.argument('acceptance_value')
+@click.argument('num_atomtypes', type=click.INT)
+@click.argument('strength', type=click.FLOAT)
+@click.argument('num_bins', type=click.INT)
+@click.argument('num_seeds', type=click.INT)
+@click.argument('acceptance_value', type=click.FLOAT)
 def start(num_atomtypes, strength, num_bins, num_seeds, acceptance_value):
     config = write_config_file(num_atomtypes, strength, num_bins, num_seeds, acceptance_value)
-    run_id = config["run_id"]
+    run_id = config["run-id"]
     create_strength_array(run_id)
     print("Run created with id: %s" % run_id)
 
 @hts.command()
 @click.argument("run_id")
 def launch_worker(run_id):
-    create_strength_array(run_id)
     config = read_config_file(run_id)
 
-    while seeds_in_run(run_id) < config['num_seeds']:
+    while seeds_in_run(run_id) < config['num-seeds']:
         print("writing new seed...")
         material = write_seed_definition_files(run_id, config['number-of-atom-types'])
         run_all_simulations(material)
@@ -55,4 +54,5 @@ def launch_worker(run_id):
 
         # no convergance test at present!
 
-launch_worker()
+if __name == '__main__':
+    hts()
