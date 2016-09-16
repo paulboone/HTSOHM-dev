@@ -10,7 +10,7 @@ from sqlalchemy import func
 # local application/library specific imports
 from htsohm.runDB_declarative import Base, Material, session
 
-def write_config_file(num_atomtypes, strength, num_bins, num_seeds, acceptance_value):
+def write_config_file(num_atomtypes, strength, num_bins, children_in_generation, num_seeds, acceptance_value):
     """Writes run-specific parameters to /config/<run_id>.yaml.
 
     This function writes run-specific parameters to a configuration file that is loaded/written
@@ -25,6 +25,7 @@ def write_config_file(num_atomtypes, strength, num_bins, num_seeds, acceptance_v
         "number-of-atom-types" : num_atomtypes,
         "initial-mutation-strength" : strength,
         "number-of-bins" : num_bins,
+        "children-in-generation": children_in_generation,
         "num-seeds": num_seeds,
         "acceptance-value" : acceptance_value
     }

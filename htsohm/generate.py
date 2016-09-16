@@ -66,6 +66,7 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
     material = Material(run_id, 'none')
     material.seed = True
     material_name = run_id + '-' + material.uuid
+    material.generation = 0
 
     def_dir = os.path.join(ff_dir, material_name)       # directory for material's force field
     os.mkdir(def_dir)

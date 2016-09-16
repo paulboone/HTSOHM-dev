@@ -142,7 +142,7 @@ def random_position(x_o, x_r, strength):
         xfrac = round(x_o + strength * dx, 4)
     return xfrac
 
-def write_child_definition_files(run_id, parent_id):
+def write_child_definition_files(run_id, parent_id, generation):
     """Mutate a parent-material's definition files to create new, child-material.
     At this point, a generation of materials has been initialized with parent-material IDs (primary
     keys). This function loads the necessary parameters from the selected parent's definition
@@ -170,6 +170,7 @@ def write_child_definition_files(run_id, parent_id):
     # add row to database
     new_material = Material(run_id, 'none')
     new_material.parent_id = parent_id
+    new_material.generation = generation
 
     ########################################################################
     # write force_field.def
