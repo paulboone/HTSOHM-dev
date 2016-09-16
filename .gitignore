@@ -5,8 +5,5 @@ database.yaml
 output_*
 config
 logs
-settings/sjs.yaml
 .ipynb_checkpoints/
-restart.yaml
 *.o*
-.sjs_running
