@@ -38,7 +38,7 @@ def recalculate_strength_array(run_id, generation):
     generation which share a common parent. The criteria follows:
      ________________________________________________________________
      - if none of the children share  |  halve strength parameter
-       the parent's bin               |  
+       the parent's bin               |
      - if the fraction of children in |
        the parent bin is < 10%        |
      _________________________________|_____________________________
@@ -142,13 +142,16 @@ def random_position(x_o, x_r, strength):
         xfrac = round(x_o + strength * dx, 4)
     return xfrac
 
-def write_child_definition_files(run_id, generation, parent_id):
+def write_child_definition_files(run_id, parent_id):
     """Mutate a parent-material's definition files to create new, child-material.
     At this point, a generation of materials has been initialized with parent-material IDs (primary
     keys). This function loads the necessary parameters from the selected parent's definition
     files, perturbs all of these values, and then writes them to new definition-files, creating
     a new material. The degree to which each value is perturbed is controlled by the mutation-
     strength-parameter."""
+
+    parent = session.query(Material).get(str(parent_id))
+
     ########################################################################
     # load boundaries from config-file
     config = read_config_file(run_id)
@@ -165,18 +168,12 @@ def write_child_definition_files(run_id, generation, parent_id):
 
     ########################################################################
     # add row to database
-    new_material = Material(run_id, generation, 'none')
+    new_material = Material(run_id, 'none')
     new_material.parent_id = parent_id
-    session.add(new_material)
-    session.commit()
-
-    session.refresh(new_material)
-    child_id = new_material.id
-    print('ADDED %s-%s TO DATABASE.\nWriting .def files...' % (run_id, child_id))
 
     ########################################################################
     # write force_field.def
-    child_forcefield_directory = os.path.join(fd, run_id + '-' + str(child_id))
+    child_forcefield_directory = os.path.join(fd, run_id + '-' + str(new_material.uuid))
     os.mkdir(child_forcefield_directory)
     force_field_file = os.path.join(child_forcefield_directory, 'force_field.def')
     write_force_field(force_field_file)                        # WRITE FORCE_FIELD.DEF
@@ -184,20 +181,19 @@ def write_child_definition_files(run_id, generation, parent_id):
 
     ########################################################################
     # copy pseudo_atoms.def
-    parent_forcefield_directory = os.path.join(fd, run_id + '-' + str(parent_id))
+    parent_forcefield_directory = os.path.join(fd, run_id + '-' + str(parent.uuid))
     parent_pseudo_file = os.path.join(parent_forcefield_directory, 'pseudo_atoms.def')
     shutil.copy(parent_pseudo_file, child_forcefield_directory)    # COPY PSEUDO_ATOMS.DEF
     print('  - pseudo_atoms.def\tWRITTEN.')
 
     ########################################################################
     # get mutation strength parameter
-    parent = session.query(Material).get(str(parent_id))
     parent_bin = [parent.methane_loading_bin, parent.surface_area_bin, parent.void_fraction_bin]
     mutation_strength = strength_array[parent_bin[0], parent_bin[1], parent_bin[2]]
 
     ########################################################################
     # perturb LJ-parameters, write force_field_mixing_rules.def
-    p_mix = os.path.join(fd, run_id + '-' + str(parent_id), 'force_field_mixing_rules.def')
+    p_mix = os.path.join(parent_forcefield_directory, 'force_field_mixing_rules.def')
     n1, n2, old_epsilons, old_sigmas = np.genfromtxt(
         p_mix, unpack=True, skip_header=7, skip_footer=9
     )
@@ -224,7 +220,7 @@ def write_child_definition_files(run_id, generation, parent_id):
 
     ########################################################################
     # load values from parent cif-file
-    p_cif = os.path.join(md, run_id + '-' + str(parent_id) + '.cif')
+    p_cif = os.path.join(md, run_id + '-' + str(parent.uuid) + '.cif')
     n1, n2, old_x, old_y, old_z = np.genfromtxt(p_cif, unpack=True, skip_header=16)
     old_atom_types = np.genfromtxt(p_cif, usecols=0, dtype=str, skip_header=16)
     old_abc = np.genfromtxt(
@@ -280,8 +276,8 @@ def write_child_definition_files(run_id, generation, parent_id):
                 "z-frac"      : round(random(), 4)}
             atom_sites.append(atom_site)
 
-    cif_file = os.path.join(md, run_id + '-' + str(child_id) + '.cif')
+    cif_file = os.path.join(md, run_id + '-' + str(new_material.uuid) + '.cif')
     write_cif_file(cif_file, lattice_constants, atom_sites)
 
     new_material.write_check = 'done'
-    print('  - %s-%s.cif\tWRITTEN.\n...DONE!' % (run_id, child_id))
+    return new_material

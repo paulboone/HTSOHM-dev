@@ -1,6 +1,7 @@
 # standard library imports
 import os
 import sys
+import uuid
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean
 from sqlalchemy import create_engine
@@ -14,6 +15,8 @@ class Material(Base):
     # COLUMN                                                 UNITS
     id = Column(Integer, primary_key=True)                 # dimm.
     run_id = Column(String(50))                            # dimm.
+    uuid = Column(String(40))
+    seed = Column(Boolean, default=False)
     generation = Column(Integer)                           # generation#
     absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
     absolute_gravimetric_loading = Column(Float)           # cm^3 / g
@@ -43,10 +46,10 @@ class Material(Base):
                                                            # "fail" = material fails
     data_complete = Column(Boolean, server_default="0")    # set when all columns are populated
 
-    def __init__(self, run_id, generation, dummy_test_result):
+    def __init__(self, run_id, dummy_test_result):
         self.run_id = run_id
-        self.generation = generation
         self.dummy_test_result = dummy_test_result
+        self.uuid = str(uuid.uuid4())
 
 with open(os.path.join('settings', 'database.yaml'), 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)

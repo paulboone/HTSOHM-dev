@@ -56,25 +56,24 @@ def get_bins(id, methane_loading, surface_area, void_fraction):
     results['vf_bin'] = vf_bin
     return results
 
-def run_all_simulations(id):
+def run_all_simulations(run_data):
     """Simulate helium void fraction, methane loading, and surface area.
 
     For a given material (id) three simulations are run using RASPA. First a helium void fraction
     is calculated, and then it is used to run a methane loading simulation (void fraction needed to
     calculate excess v. absolute loading). Finally, a surface area is calculated and the material is
     assigned to its appropriate bin."""
-    run_data = session.query(Material).get(id)
 
     ############################################################################
     # run helium void fraction simulation
-    results = helium_void_fraction_simulation.run(run_data.run_id, run_data.id)
+    results = helium_void_fraction_simulation.run(run_data.run_id, run_data.uuid)
     run_data.helium_void_fraction = results['VF_val']
     void_fraction = float(results['VF_val'])
 
     ############################################################################
     # run methane loading simulation
     results = methane_loading_simulation.run(run_data.run_id,
-                                             run_data.id,
+                                             run_data.uuid,
                                              run_data.helium_void_fraction)
     run_data.absolute_volumetric_loading   = results['ML_a_cc']
     run_data.absolute_gravimetric_loading  = results['ML_a_cg']
@@ -95,7 +94,7 @@ def run_all_simulations(id):
 
     ############################################################################
     # run surface area simulation
-    results = surface_area_simulation.run(run_data.run_id, run_data.id)
+    results = surface_area_simulation.run(run_data.run_id, run_data.uuid)
     run_data.unit_cell_surface_area     = results['SA_a2']
     run_data.volumetric_surface_area    = results['SA_mc']
     run_data.gravimetric_surface_area   = results['SA_mg']
