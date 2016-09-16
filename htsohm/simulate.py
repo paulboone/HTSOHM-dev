@@ -14,14 +14,16 @@ from htsohm import surface_area_simulation
 from htsohm.runDB_declarative import Material, session
 from htsohm.utilities import read_config_file
 
-def get_bins(id, methane_loading, surface_area, void_fraction):
+def get_bins(run_data):
     """Returns methane_loading_bin, surface_area_bin, and void_fraction_bin.
     Each material is sorted into a bin corresponding to its combination of structure-properties.
     First, the structure property space is subdivided into arbitrary quadrants, or bins, then
     the simulated properties for a particular material are used to assigned it to a particular
     bin."""
-    run_data = session.query(Material).get(id)
 
+    methane_loading = run_data.absolute_volumetric_loading
+    surface_area = run_data.volumetric_surface_area
+    void_fraction = run_data.helium_void_fraction
     ############################################################################
     # assign arbitrary maxima and subdivide the parameter space.
     config = read_config_file(run_data.run_id)
