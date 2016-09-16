@@ -54,5 +54,5 @@ def launch_worker(run_id):
 
         # no convergance test at present!
 
-if __name == '__main__':
+if __name__ == '__main__':
     hts()
