@@ -5,7 +5,7 @@ from sqlalchemy import func
 # local application/library specific imports
 from htsohm.runDB_declarative import Base, Material, session
 
-def select_parent(run_id, max_generation):
+def select_parent(run_id, max_generation, generation_limit):
     """Use bin-counts to preferentially select a list of rare parents.
 
     Each bin contains some number of materials, and those bins with the fewers materials represent
@@ -15,6 +15,7 @@ def select_parent(run_id, max_generation):
     materials. These weights affect the probability of selecting a parent from that bin. Once a bin
     is selected, a parent is randomly-selected from those materials within that bin.
     """
+
     # Each bin is counted...
     bins_and_counts = session \
         .query(
@@ -25,7 +26,8 @@ def select_parent(run_id, max_generation):
             Material.run_id == run_id,
             Material.dummy_test_result != 'fail',
             Material.write_check == 'done',
-            Material.generation <= max_generation
+            Material.generation <= max_generation,
+            Material.generation_index < generation_limit,
         ) \
         .group_by(
             Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
@@ -45,7 +47,8 @@ def select_parent(run_id, max_generation):
             Material.void_fraction_bin == parent_bin["VF"],
             Material.dummy_test_result != 'fail',
             Material.write_check == 'done',
-            Material.generation <= max_generation
+            Material.generation <= max_generation,
+            Material.generation_index < generation_limit,
         ).all()
     potential_parents = [i[0] for i in parent_query]
 

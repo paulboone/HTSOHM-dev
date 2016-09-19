@@ -53,16 +53,25 @@ def launch_worker(run_id):
             run_all_simulations(material)
             session.add(material)
             session.commit()
+
+            material.generation_index = material.calculate_generation_index()
+            session.add(material)
+            session.commit()
         gen += 1
 
     converged = False
     while not converged:
         while materials_in_generation(run_id, gen) < config['children-in-generation']:
             print("creating / simulating new material")
-            parent_id = select_parent(run_id, max_generation=(gen - 1))
+            parent_id = select_parent(run_id, max_generation=(gen - 1),
+                                              generation_limit=config['children-in-generation'])
             material = write_child_definition_files(run_id, parent_id, gen)
 
             run_all_simulations(material)
+            session.add(material)
+            session.commit()
+
+            material.generation_index = material.calculate_generation_index()
             session.add(material)
             session.commit()
         gen += 1

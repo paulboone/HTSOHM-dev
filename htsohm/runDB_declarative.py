@@ -18,6 +18,7 @@ class Material(Base):
     uuid = Column(String(40))
     seed = Column(Boolean, default=False)
     generation = Column(Integer)                           # generation#
+    generation_index = Column(Integer)                     # index order of row in generation
     absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
     absolute_gravimetric_loading = Column(Float)           # cm^3 / g
     absolute_molar_loading = Column(Float)                 # mol / kg
@@ -50,6 +51,13 @@ class Material(Base):
         self.run_id = run_id
         self.dummy_test_result = dummy_test_result
         self.uuid = str(uuid.uuid4())
+
+    def calculate_generation_index(self):
+        return session.query(Material).filter(
+                Material.run_id==self.run_id,
+                Material.generation==self.generation,
+                Material.id < self.id,
+            ).count()
 
 with open(os.path.join('settings', 'database.yaml'), 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)
