@@ -42,11 +42,10 @@ def start(num_atomtypes, strength, num_bins, children_in_generation, num_seeds, 
 @click.argument("run_id")
 def launch_worker(run_id):
     config = read_config_file(run_id)
-    children_in_generation = config['children-in-generation']
 
     gen = last_generation(run_id) or 0
     if gen == 0:
-        num_seeds = config['num-seeds'] or children_in_generation
+        num_seeds = config['num-seeds'] or config['children-in-generation']
         while materials_in_generation(run_id, gen) < num_seeds:
             print("writing new seed...")
             material = write_seed_definition_files(run_id, config['number-of-atom-types'])
@@ -58,7 +57,7 @@ def launch_worker(run_id):
 
     converged = False
     while not converged:
-        while materials_in_generation(run_id, gen) < children_in_generation:
+        while materials_in_generation(run_id, gen) < config['children-in-generation']:
             print("creating / simulating new material")
             parent_id = select_parent(run_id, max_generation=(gen - 1))
             material = write_child_definition_files(run_id, parent_id, gen)
