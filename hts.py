@@ -44,28 +44,22 @@ def launch_worker(run_id):
     config = read_config_file(run_id)
 
     gen = last_generation(run_id) or 0
-    if gen == 0:
-        num_seeds = config['num-seeds'] or config['children-in-generation']
-        while materials_in_generation(run_id, gen) < num_seeds:
-            print("writing new seed...")
-            material = write_seed_definition_files(run_id, config['number-of-atom-types'])
-
-            run_all_simulations(material)
-            session.add(material)
-            session.commit()
-
-            material.generation_index = material.calculate_generation_index()
-            session.add(material)
-            session.commit()
-        gen += 1
 
     converged = False
     while not converged:
-        while materials_in_generation(run_id, gen) < config['children-in-generation']:
-            print("creating / simulating new material")
-            parent_id = select_parent(run_id, max_generation=(gen - 1),
-                                              generation_limit=config['children-in-generation'])
-            material = write_child_definition_files(run_id, parent_id, gen)
+        size_of_generation = config['children-in-generation']
+        if gen == 0 and config['num-seeds']:
+            size_of_generation = config['num-seeds']
+
+        while materials_in_generation(run_id, gen) < size_of_generation:
+            if gen == 0:
+                print("writing new seed...")
+                material = write_seed_definition_files(run_id, config['number-of-atom-types'])
+            else:
+                print("creating / simulating new material")
+                parent_id = select_parent(run_id, max_generation=(gen - 1),
+                                                  generation_limit=config['children-in-generation'])
+                material = write_child_definition_files(run_id, parent_id, gen)
 
             run_all_simulations(material)
             session.add(material)
