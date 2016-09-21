@@ -15,47 +15,31 @@ def write_config_file(num_atomtypes, strength, num_bins, children_in_generation,
 
     This function writes run-specific parameters to a configuration file that is loaded/written
     at different stages throughout the overall HTSOHM routine.
-    """
-    run_id = datetime.now().isoformat()
-    wd = os.environ['HTSOHM_DIR']      # specify working directory
-    config_file = os.path.join(wd, 'config', run_id + '_conf.yaml')
-
-    run_config = {
-        "run-id" : run_id,
-        "number-of-atom-types" : num_atomtypes,
-        "initial-mutation-strength" : strength,
-        "number-of-bins" : num_bins,
-        "children-in-generation": children_in_generation,
-        "num-seeds": num_seeds,
-        "acceptance-value" : acceptance_value
-    }
-
-    with open(config_file, "w") as file:
-        yaml.dump(run_config, file, default_flow_style=False)
-
-    return run_config
-
-def update_config_file(run_id):
-    """ Write material-parameters to run-configuration file.
 
     The parameters written by this function define the limits for different values written to the
     structure and forcefield definition files for RASPA. Among the limits defined here are crystal
     lattice constants, number density, partial atomic charges, and Lennard-Jones parameters (sigma
     and epsilon).
     """
-    wd = os.environ['HTSOHM_DIR']      # specify $HTSOHM_DIR as working directory
+    run_id = datetime.now().isoformat()
+    wd = os.environ['HTSOHM_DIR']      # specify working directory
     config_file = os.path.join(wd, 'config', run_id + '_conf.yaml')
-    with open(config_file) as file:
-        run_config = yaml.load(file)
 
-    run_config.update({
+    run_config = {
+        "run-id"                    : run_id,
+        "number-of-atom-types"      : num_atomtypes,
+        "initial-mutation-strength" : strength,
+        "number-of-bins"            : num_bins,
+        "children-in-generation"    : children_in_generation,
+        "num-seeds"                 : num_seeds,
+        "acceptance-value"          : acceptance_value,
         "number-density-limits"     : [0.0000149, 0.02122],
         "lattice-constant-limits"   : [25.6, 51.2],
         "epsilon-limits"            : [1.258, 513.264],
         "sigma-limits"              : [1.052, 6.549],
         "charge-limit"              : 0.,
-        "elemental-charge"          : 0.0001
-    })
+        "elemental-charge"          : 0.0001,
+    }
 
     with open(config_file, "w") as file:
         yaml.dump(run_config, file, default_flow_style=False)
