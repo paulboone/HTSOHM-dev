@@ -66,7 +66,11 @@ def launch_worker(run_id):
             session.commit()
 
             material.generation_index = material.calculate_generation_index()
-            session.add(material)
+            if material.generation_index < config['children-in-generation']:
+                session.add(material)
+            else:
+                # delete excess rows
+                session.delete(material)
             session.commit()
         gen += 1
 
