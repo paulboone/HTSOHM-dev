@@ -57,7 +57,7 @@ def evaluate_convergence(run_id):
     '''Counts number of materials in each bin and returns variance of these counts.'''
     bin_counts = session \
         .query(func.count(Material.id)) \
-        .filter(Material.run_id == run_id, Material.write_check == 'done') \
+        .filter(Material.run_id == run_id) \
         .group_by(
             Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
         ).all()

@@ -14,7 +14,6 @@ from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
 from htsohm import surface_area_simulation
 from htsohm.db import Material, session
-#from htsohm.utilities import read_config_file
 
 def screen_parent(run_id):
     test_complete = False

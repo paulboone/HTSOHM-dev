@@ -25,7 +25,6 @@ def select_parent(run_id, max_generation, generation_limit):
         .filter(
             Material.run_id == run_id,
             Material.dummy_test_result != 'fail',
-            Material.write_check == 'done',
             Material.generation <= max_generation,
             Material.generation_index < generation_limit,
         ) \
@@ -46,7 +45,6 @@ def select_parent(run_id, max_generation, generation_limit):
             Material.surface_area_bin == parent_bin["SA"],
             Material.void_fraction_bin == parent_bin["VF"],
             Material.dummy_test_result != 'fail',
-            Material.write_check == 'done',
             Material.generation <= max_generation,
             Material.generation_index < generation_limit,
         ).all()

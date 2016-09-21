@@ -169,5 +169,4 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     cif_file = os.path.join(md, run_id + '-' + str(new_material.uuid) + '.cif')
     write_cif_file(cif_file, lattice_constants, atom_sites)
 
-    new_material.write_check = 'done'
     return new_material

@@ -39,7 +39,6 @@ class Material(Base):
     methane_loading_bin = Column(Integer)                  # dimm.
     surface_area_bin = Column(Integer)                     # dimm.
     void_fraction_bin = Column(Integer)                    # dimm.
-    write_check = Column(String(4))                        # 'done' flag means all .def files were written
     dummy_test_result = Column(String(4))                  # "pass" = material passes
                                                            # "fail" = material fails
     data_complete = Column(Boolean, server_default="0")    # set when all columns are populated
