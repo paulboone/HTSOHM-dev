@@ -108,5 +108,3 @@ def run_all_simulations(run_data):
     run_data.methane_loading_bin    = float(results['ml_bin'])
     run_data.surface_area_bin       = float(results['sa_bin'])
     run_data.void_fraction_bin      = float(results['vf_bin'])
-
-    run_data.data_complete = True

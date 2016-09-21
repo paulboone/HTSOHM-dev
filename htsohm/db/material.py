@@ -40,7 +40,6 @@ class Material(Base):
     void_fraction_bin = Column(Integer)                    # dimm.
     dummy_test_result = Column(String(4))                  # "pass" = material passes
                                                            # "fail" = material fails
-    data_complete = Column(Boolean, server_default="0")    # set when all columns are populated
 
     def __init__(self, run_id, dummy_test_result):
         self.run_id = run_id
