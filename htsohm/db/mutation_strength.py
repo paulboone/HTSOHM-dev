@@ -27,13 +27,6 @@ class MutationStrength(Base):
         self.void_fraction_bin = void_fraction_bin
         self.strength = strength
 
-    def clone(self):
-        copy = self.__class__()
-        for col in self.__table__.columns:
-            val = getattr(self, col.name)
-            setattr(copy, col.name, val)
-        return copy
-
     @classmethod
     def get_prior(cls, run_id, generation, methane_loading_bin, surface_area_bin, void_fraction_bin):
         """
@@ -55,4 +48,4 @@ class MutationStrength(Base):
             return ms
         else:
             return MutationStrength(run_id, generation, methane_loading_bin, surface_area_bin,
-                                    void_fraction_bin, self.__default_strength__)
+                                    void_fraction_bin, cls.__default_strength__)

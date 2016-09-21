@@ -14,8 +14,8 @@ connection_string = dbconfig['connection_string']
 engine = create_engine(connection_string)
 session = sessionmaker(bind=engine)()
 
-# Import  all models
-Base = declarative_base()
+# Import all models
+from htsohm.db.base import Base
 from htsohm.db.material import Material
 from htsohm.db.mutation_strength import MutationStrength
 
