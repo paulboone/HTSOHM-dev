@@ -1,6 +1,6 @@
 # related third party imports
 import numpy as np
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 # local application/library specific imports
 from htsohm.db import Base, Material, session
@@ -19,11 +19,14 @@ def select_parent(run_id, max_generation, generation_limit):
     # Each bin is counted...
     bins_and_counts = session \
         .query(
-            func.count(Material.id), Material.methane_loading_bin, Material.surface_area_bin,
+            func.count(Material.id),
+            Material.methane_loading_bin,
+            Material.surface_area_bin,
             Material.void_fraction_bin
         ) \
         .filter(
             Material.run_id == run_id,
+            or_(Material.retest_passed == True, Material.retest_passed == None),
             Material.generation <= max_generation,
             Material.generation_index < generation_limit,
         ) \
@@ -40,6 +43,7 @@ def select_parent(run_id, max_generation, generation_limit):
         .query(Material.id) \
         .filter(
             Material.run_id == run_id,
+            or_(Material.retest_passed == True, Material.retest_passed == None),
             Material.methane_loading_bin == parent_bin["ML"],
             Material.surface_area_bin == parent_bin["SA"],
             Material.void_fraction_bin == parent_bin["VF"],
