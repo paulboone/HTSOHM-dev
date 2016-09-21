@@ -1,16 +1,12 @@
-# standard library imports
-import os
+
 import sys
 import uuid
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
-import yaml
 
-Base = declarative_base()
+from htsohm.db import Base, session
+
 class Material(Base):
     __tablename__ = 'materials'
     # COLUMN                                                 UNITS
@@ -88,16 +84,3 @@ class Material(Base):
         ).fetchall()
 
         return len([ r for r in rows if r.in_bin ]) / len(rows)
-
-
-
-
-with open(os.path.join('settings', 'database.yaml'), 'r') as yaml_file:
-    dbconfig = yaml.load(yaml_file)
-connection_string = dbconfig['connection_string']
-engine = create_engine(connection_string)
-
-# Create tables in the engine, if they don't exist already.
-Base.metadata.create_all(engine)
-Base.metadata.bind = engine
-session = sessionmaker(bind=engine)()
