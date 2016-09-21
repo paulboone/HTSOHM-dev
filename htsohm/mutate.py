@@ -62,7 +62,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     ########################################################################
     # add row to database
-    new_material = Material(run_id, 'none')
+    new_material = Material(run_id)
     new_material.parent_id = parent_id
     new_material.generation = generation
 

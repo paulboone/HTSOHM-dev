@@ -8,6 +8,7 @@ from htsohm.binning import select_parent
 from htsohm.generate import write_seed_definition_files
 from htsohm.mutate import write_child_definition_files
 from htsohm.db import session, Material, MutationStrength
+from htsohm.dummy_test import retest
 from htsohm.simulate import run_all_simulations
 from htsohm.utilities import read_config_file, write_config_file
 
@@ -22,7 +23,7 @@ def last_generation(run_id):
         Material.run_id == run_id,
     )[0][0]
 
-def mutate(run_id, generation, parent_id):
+def mutate(run_id, generation, parent):
     """Retrieve the latest mutation_strength for the parent, or calculate it if missing.
 
     In the event that a particular bin contains parents whose children exhibit radically
@@ -40,7 +41,6 @@ def mutate(run_id, generation, parent_id):
      _________________________________|_____________________________
     """
 
-    parent = session.query(Material).get(parent_id)
     mutation_strength_key = [run_id, generation] + parent.bin
     mutation_strength = session.query(MutationStrength).get(mutation_strength_key)
 
@@ -79,9 +79,11 @@ def hts():
 @click.argument('num_bins', type=click.INT)
 @click.argument('children_in_generation', type=click.INT)
 @click.argument('num_seeds', type=click.INT)
+@click.argument('retests', type=click.INT)
 @click.argument('acceptance_value', type=click.FLOAT)
-def start(num_atomtypes, strength, num_bins, children_in_generation, num_seeds, acceptance_value):
-    config = write_config_file(num_atomtypes, strength, num_bins, children_in_generation, num_seeds, acceptance_value)
+def start(num_atomtypes, strength, num_bins, children_in_generation, num_seeds, retests, acceptance_value):
+    config = write_config_file(num_atomtypes, strength, num_bins, children_in_generation, num_seeds,
+                               retests, acceptance_value)
     run_id = config["run-id"]
     print("Run created with id: %s" % run_id)
 
@@ -103,11 +105,23 @@ def launch_worker(run_id):
                 print("writing new seed...")
                 material = write_seed_definition_files(run_id, config['number-of-atom-types'])
             else:
-                print("creating / simulating new material")
+                print("selecting a parent / running retests on parent / mutating / simulating")
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
                                                   generation_limit=config['children-in-generation'])
 
-                mutation_strength = mutate(run_id, gen, parent_id)
+                parent = session.query(Material).get(parent_id)
+
+                # run retests until we've run enough
+                while parent.retest_passed is None:
+                    print("running retest...")
+                    retest(parent, config['retests'], config['acceptance-value'])
+                    session.refresh(parent)
+
+                if not parent.retest_passed:
+                    print("parent failed retest. restarting with parent selection.")
+                    continue
+
+                mutation_strength = mutate(run_id, gen, parent)
                 material = write_child_definition_files(run_id, parent_id, gen, mutation_strength)
 
             run_all_simulations(material)

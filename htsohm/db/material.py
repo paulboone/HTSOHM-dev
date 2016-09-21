@@ -16,9 +16,15 @@ class Material(Base):
     parent_id = Column(Integer)                            # dimm.
     generation = Column(Integer)                           # generation#
     generation_index = Column(Integer)                     # index order of row in generation
-    dummy_test_result = Column(String(4))                  # "pass" = material passes
-                                                           # "fail" = material fails
-    # Data collected
+
+    # retest columns
+    retest_num = Column(Integer, default=0)
+    retest_methane_loading_sum = Column(Float, default=0)
+    retest_surface_area_sum = Column(Float, default=0)
+    retest_void_fraction_sum = Column(Float, default=0)
+    retest_passed = Column(Boolean)                        # will be NULL if retest hasn't been run
+
+    # data collected
     absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
     absolute_gravimetric_loading = Column(Float)           # cm^3 / g
     absolute_molar_loading = Column(Float)                 # mol / kg
@@ -45,10 +51,9 @@ class Material(Base):
     void_fraction_bin = Column(Integer)                    # dimm.
 
 
-    def __init__(self, run_id=None, dummy_test_result=None):
+    def __init__(self, run_id=None, ):
         self.uuid = str(uuid.uuid4())
         self.run_id = run_id
-        self.dummy_test_result = dummy_test_result
 
     @property
     def bin(self):
@@ -89,3 +94,18 @@ class Material(Base):
         ).fetchall()
 
         return len([ r for r in rows if r.in_bin ]) / len(rows)
+
+    def calculate_retest_result(self, tolerance):
+        ml_o = self.absolute_volumetric_loading    # initally-calculated values
+        sa_o = self.volumetric_surface_area
+        vf_o = self.helium_void_fraction
+
+        ml_mean = self.retest_methane_loading_sum / self.retest_num
+        sa_mean = self.retest_surface_area_sum / self.retest_num
+        vf_mean = self.retest_void_fraction_sum / self.retest_num
+
+        retest_failed = (abs(ml_mean - ml_o) >= tolerance * ml_o or
+                         abs(sa_mean - sa_o) >= tolerance * sa_o or
+                         abs(vf_mean - vf_o) >= tolerance * vf_o)
+
+        return not retest_failed

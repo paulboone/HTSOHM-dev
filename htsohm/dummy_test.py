@@ -9,6 +9,7 @@ import numpy as np
 
 # local application/library specific imports
 from htsohm.binning import select_parent
+from htsohm.simulate import run_all_simulations
 from htsohm.utilities import read_config_file
 from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
@@ -22,7 +23,7 @@ def screen_parent(run_id):
         test_complete = dummy_test(run_id, parent_id)
     return parent_id
 
-def dummy_test(run_id, id):
+def retest(m_orig, retests, tolerance):
     """Recalculate material structure-properties to prevent statistical errors.
 
     Because methane loading, surface area, and helium void fractions are calculated using
@@ -33,52 +34,23 @@ def dummy_test(run_id, id):
     initially-calculated value beyond an accpetable tolerance, the material fails the `dummy-test`
     and is flagged, preventing it from being used to generate new materials in the future.
     """
-    tolerance = 0.75
-    number_of_trials = read_config_file(run_id)['dummy-test-trials']
 
-    material = session.query(Material).get(str(id))
-    if material.dummy_test_result != 'pass':
-        print( "\nRe-Simulating %s-%s...\n" % (run_id, id) )
+    m = m_orig.clone()
+    run_all_simulations(m)
 
-        ####################################################################
-        # resimulate helium void fraction(s)
-        void_fractions = []
-        for j in range(number_of_trials):
-            vf_result = helium_void_fraction_simulation.run(run_id, id)
-            void_fractions.append(float(vf_result["VF_val"]))
+    # requery row from database, in case someone else has changed it, and lock it
+    # if the row is presently locked, this method blocks until the row lock is released
+    session.refresh(m_orig, lockmode='update')
+    if m_orig.retest_num < retests:
+        m_orig.retest_methane_loading_sum += m.absolute_volumetric_loading
+        m_orig.retest_surface_area_sum += m.volumetric_surface_area
+        m_orig.retest_void_fraction_sum += m.helium_void_fraction
+        m_orig.retest_num += 1
 
-        ####################################################################
-        # resimulate methane loading(s)
-        methane_loadings = []
-        for j in range(number_of_trials):
-            ml_result = methane_loading_simulation.run(run_id, id, np.mean(void_fractions))
-            methane_loadings.append(float(ml_result["ML_a_cc"]))
-
-        ####################################################################
-        # resimulate surface area(s)
-        surface_areas = []
-        for j in range(number_of_trials):
-            sa_result = surface_area_simulation.run(run_id, id)
-            surface_areas.append( float(sa_result["SA_mc"]) )
-
-        ####################################################################
-        # compare average of resimulated values to originals
-        material = session.query(Material).get(id)
-        ml_o = material.absolute_volumetric_loading    # initally-calculated values
-        sa_o = material.volumetric_surface_area
-        vf_o = material.helium_void_fraction
-        if (
-            abs(np.mean(methane_loadings) - ml_o) >= tolerance * ml_o or
-            abs(np.mean(surface_areas) - sa_o) >= tolerance * sa_o or
-            abs(np.mean(void_fractions) - vf_o) >= tolerance * vf_o
-        ):
-            material.dummy_test_result = 'fail'        # flag failed material
-            print('%s-%s HAS FAILED PARENT-SCREENING.' % (run_id, id))
-            return False
-        else:
-            material.dummy_test_result = 'pass'        # prevents from future re-testing
-            print('%s-%s HAS PASSED PARENT-SCREENING.' % (run_id, id))
-            return True
+        if m_orig.retest_num == retests:
+            m_orig.retest_passed = m.calculate_retest_result(tolerance)
     else:
-        print('%s-%s HAD ALREADY PASSED PARENT-SCREENING.' % (run_id, id))
-        return True
+        pass
+        # otherwise our test is extra / redundant and we don't save it
+
+    session.commit()

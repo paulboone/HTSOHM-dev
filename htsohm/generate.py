@@ -63,7 +63,7 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
     mat_dir = os.environ['MAT_DIR']                  # output .cif-files to $MAT_DIR
 
     ########################################################################
-    material = Material(run_id, 'none')
+    material = Material(run_id)
     material_name = run_id + '-' + material.uuid
     material.generation = 0
 
