@@ -13,7 +13,6 @@ class Material(Base):
     id = Column(Integer, primary_key=True)                 # dimm.
     run_id = Column(String(50))                            # dimm.
     uuid = Column(String(40))
-    seed = Column(Boolean, default=False)
     generation = Column(Integer)                           # generation#
     generation_index = Column(Integer)                     # index order of row in generation
     absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
