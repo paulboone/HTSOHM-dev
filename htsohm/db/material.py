@@ -13,8 +13,12 @@ class Material(Base):
     id = Column(Integer, primary_key=True)                 # dimm.
     run_id = Column(String(50))                            # dimm.
     uuid = Column(String(40))
+    parent_id = Column(Integer)                            # dimm.
     generation = Column(Integer)                           # generation#
     generation_index = Column(Integer)                     # index order of row in generation
+    dummy_test_result = Column(String(4))                  # "pass" = material passes
+                                                           # "fail" = material fails
+    # Data collected
     absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
     absolute_gravimetric_loading = Column(Float)           # cm^3 / g
     absolute_molar_loading = Column(Float)                 # mol / kg
@@ -34,18 +38,17 @@ class Material(Base):
     volumetric_surface_area = Column(Float)                # m^2 / cm^3
     gravimetric_surface_area = Column(Float)               # m^2 / g
     helium_void_fraction = Column(Float)                   # dimm.
-    parent_id = Column(Integer)                            # dimm.
+
+    # bins
     methane_loading_bin = Column(Integer)                  # dimm.
     surface_area_bin = Column(Integer)                     # dimm.
     void_fraction_bin = Column(Integer)                    # dimm.
-    dummy_test_result = Column(String(4))                  # "pass" = material passes
-                                                           # "fail" = material fails
 
-    def __init__(self, run_id, dummy_test_result):
+
+    def __init__(self, run_id=None, dummy_test_result=None):
+        self.uuid = str(uuid.uuid4())
         self.run_id = run_id
         self.dummy_test_result = dummy_test_result
-        self.uuid = str(uuid.uuid4())
-
 
     @property
     def bin(self):
