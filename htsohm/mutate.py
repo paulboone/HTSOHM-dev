@@ -12,110 +12,6 @@ from htsohm.db import session, Material
 from htsohm.utilities import read_config_file, write_force_field, write_cif_file
 from htsohm.utilities import write_mixing_rules
 
-def create_strength_array(run_id):
-    """Create 3-dimensional array of strength parameters.
-    The method divides the 3-dimensional materials parameter space into congruent bins. Each bin
-    has its own mutation strength, which is automatically increased or decreased depending upon
-    the distribution of children whose parent belong to that bin. This function initializes a
-    3-dimensional strength-parameter bin with the initial mutation strength chosen for the run.
-    """
-    config = read_config_file(run_id)
-    bins               = config["number-of-bins"]
-    initial_strength   = config["initial-mutation-strength"]
-
-    strength_array = initial_strength * np.ones([bins, bins, bins])
-
-    wd = os.environ["HTSOHM_DIR"]
-    filename = os.path.join(wd, 'config', run_id)
-    np.save(filename, strength_array)
-
-def recalculate_strength_array(run_id, generation):
-    """Rewrite 3-dimensional array of stregnth parameters.
-
-    In the event that a particular bin contains parents whose children exhibit radically
-    divergent properties, the strength parameter for the bin is modified. In order to determine
-    which bins to adjust, the script refers to the distribution of children in the previous
-    generation which share a common parent. The criteria follows:
-     ________________________________________________________________
-     - if none of the children share  |  halve strength parameter
-       the parent's bin               |
-     - if the fraction of children in |
-       the parent bin is < 10%        |
-     _________________________________|_____________________________
-     - if the fraction of children in |  double strength parameter
-       the parent bin is > 50%        |
-     _________________________________|_____________________________
-    """
-    # create list of parent-materials from next generation
-    parent_list = []
-    children = session \
-        .query(Material) \
-        .filter(
-            Material.run_id == run_id, Material.generation == generation,
-            Material.write_check == 'done'
-        )
-    for material in children:
-        p = session.query(Material).get(material.parent_id)
-        parent_list.append({
-            "id"  : material.parent_id,
-            "bin" : [p.methane_loading_bin, p.surface_area_bin, p.void_fraction_bin]
-        })
-
-    ############################################################################
-    # load strength-parameter array
-    wd = os.environ['HTSOHM_DIR']
-    strength_array_file = os.path.join(wd, 'config', run_id + '.npy')
-    strength_array = np.load(strength_array_file)
-
-    for parent in parent_list:
-        parent_id    = parent["id"]
-        parent_bin   = parent["bin"]
-        a = parent_bin[0]
-        b = parent_bin[1]
-        c = parent_bin[2]
-        child_bins   = []
-        child_counts = []
-        ########################################################################
-        # for each parent in list, find all children from the previous generation
-        children = session \
-            .query(Material) \
-            .filter(
-                Material.run_id == run_id, Material.generation == generation - 1,
-                Material.parent_id == parent_id, Material.write_check == 'done'
-            ).all()
-        for child in children:
-            ####################################################################
-            # record which bins contain these children and how many
-            child_bin = [child.methane_loading_bin, child.surface_area_bin, child.void_fraction_bin]
-            bin_count = session \
-                .query(Material) \
-                .filter(
-                    Material.run_id==run_id, Material.generation==generation - 1,
-                    Material.parent_id==parent_id, Material.methane_loading_bin==a,
-                    Material.surface_area_bin==b, Material.void_fraction_bin==c
-                ).count()
-            if child_bin not in child_bins:
-                child_bins.append(child_bin)
-                child_counts.append(bin_count)
-
-        ########################################################################
-
-        if parent_bin in child_bins:
-            parent_bin_count = child_counts[child_bins.index(parent_bin)]
-        else:
-            parent_bin_count = 0
-
-        fraction_in_parent_bin = parent_bin_count / sum(child_counts)
-        if fraction_in_parent_bin < 0.1:
-            strength_array[a, b, c] = 0.5 * strength_array[a, b, c]
-        elif fraction_in_parent_bin > 0.5 and strength_array[a, b, c] <= 0.5:
-            strength_array[a, b, c] = 2 * strength_array[a, b, c]
-
-    ############################################################################
-    # delete only strength-array file, write new one
-    os.remove(strength_array_file)
-    np.save(strength_array_file, strength_array)
-
 def closest_distance(x, y):
     """Find the `closest` distance over a periodic boundary.
     """
@@ -142,7 +38,7 @@ def random_position(x_o, x_r, strength):
         xfrac = round(x_o + strength * dx, 4)
     return xfrac
 
-def write_child_definition_files(run_id, parent_id, generation):
+def write_child_definition_files(run_id, parent_id, generation, mutation_strength):
     """Mutate a parent-material's definition files to create new, child-material.
     At this point, a generation of materials has been initialized with parent-material IDs (primary
     keys). This function loads the necessary parameters from the selected parent's definition
@@ -163,8 +59,6 @@ def write_child_definition_files(run_id, parent_id, generation):
     md = os.environ['MAT_DIR']
     fd = os.environ['FF_DIR']
     wd = os.environ['HTSOHM_DIR']
-    strength_array_file = os.path.join(wd, 'config', run_id + '.npy')
-    strength_array = np.load(strength_array_file)
 
     ########################################################################
     # add row to database
@@ -186,11 +80,6 @@ def write_child_definition_files(run_id, parent_id, generation):
     parent_pseudo_file = os.path.join(parent_forcefield_directory, 'pseudo_atoms.def')
     shutil.copy(parent_pseudo_file, child_forcefield_directory)    # COPY PSEUDO_ATOMS.DEF
     print('  - pseudo_atoms.def\tWRITTEN.')
-
-    ########################################################################
-    # get mutation strength parameter
-    parent_bin = [parent.methane_loading_bin, parent.surface_area_bin, parent.void_fraction_bin]
-    mutation_strength = strength_array[parent_bin[0], parent_bin[1], parent_bin[2]]
 
     ########################################################################
     # perturb LJ-parameters, write force_field_mixing_rules.def

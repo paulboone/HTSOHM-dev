@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean
 from sqlalchemy.sql import text
 
-from htsohm.db import Base, session
+from htsohm.db import Base, session, engine
 
 class Material(Base):
     __tablename__ = 'materials'
@@ -49,6 +49,11 @@ class Material(Base):
         self.dummy_test_result = dummy_test_result
         self.uuid = str(uuid.uuid4())
 
+
+    @property
+    def bin(self):
+        return [self.methane_loading_bin, self.surface_area_bin, self.void_fraction_bin]
+
     def calculate_generation_index(self):
         return session.query(Material).filter(
                 Material.run_id==self.run_id,
@@ -75,7 +80,7 @@ class Material(Base):
               and p.void_fraction_bin = :vf_bin
         """)
 
-        rows = session.connection.execute(
+        rows = engine.connect().execute(
             sql,
             gen=self.generation,
             ml_bin=self.methane_loading_bin,

@@ -2,11 +2,12 @@
 
 import click
 from sqlalchemy.sql import func
+from sqlalchemy.orm.exc import FlushError
 
 from htsohm.binning import select_parent
 from htsohm.generate import write_seed_definition_files
-from htsohm.mutate import write_child_definition_files, create_strength_array
-from htsohm.db import Material, session
+from htsohm.mutate import write_child_definition_files
+from htsohm.db import session, Material, MutationStrength
 from htsohm.simulate import run_all_simulations
 from htsohm.utilities import read_config_file, write_config_file
 
@@ -20,6 +21,53 @@ def last_generation(run_id):
     return session.query(func.max(Material.generation)).filter(
         Material.run_id == run_id,
     )[0][0]
+
+def mutate(run_id, generation, parent_id):
+    """Retrieve the latest mutation_strength for the parent, or calculate it if missing.
+
+    In the event that a particular bin contains parents whose children exhibit radically
+    divergent properties, the strength parameter for the bin is modified. In order to determine
+    which bins to adjust, the script refers to the distribution of children in the previous
+    generation which share a common parent. The criteria follows:
+     ________________________________________________________________
+     - if none of the children share  |  halve strength parameter
+       the parent's bin               |
+     - if the fraction of children in |
+       the parent bin is < 10%        |
+     _________________________________|_____________________________
+     - if the fraction of children in |  double strength parameter
+       the parent bin is > 50%        |
+     _________________________________|_____________________________
+    """
+
+    parent = session.query(Material).get(parent_id)
+    mutation_strength_key = [run_id, generation] + parent.bin
+    mutation_strength = session.query(MutationStrength).get(mutation_strength_key)
+
+    if mutation_strength:
+        print("Mutation strength already calculated for this bin and generation.")
+    else:
+        print("Calculating mutation strength...")
+        mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone()
+        mutation_strength.generation = generation
+
+        try:
+            fraction_in_parent_bin = parent.calculate_percent_children_in_bin()
+            if fraction_in_parent_bin < 0.1:
+                mutation_strength.strength *= 0.5
+            elif fraction_in_parent_bin > 0.5 and mutation_strength.strength <= 0.5:
+                mutation_strength.strength *= 2
+        except ZeroDivisionError:
+            print("No prior generation materials in this bin with children.")
+
+        try:
+            session.add(mutation_strength)
+            session.commit()
+        except FlushError as e:
+            print("Somebody beat us to saving a row with this generation. That's ok!")
+            # it's ok b/c this calculation should always yield the exact same result!
+
+    return mutation_strength.strength
 
 @click.group()
 def hts():
@@ -35,7 +83,6 @@ def hts():
 def start(num_atomtypes, strength, num_bins, children_in_generation, num_seeds, acceptance_value):
     config = write_config_file(num_atomtypes, strength, num_bins, children_in_generation, num_seeds, acceptance_value)
     run_id = config["run-id"]
-    create_strength_array(run_id)
     print("Run created with id: %s" % run_id)
 
 @hts.command()
@@ -59,7 +106,9 @@ def launch_worker(run_id):
                 print("creating / simulating new material")
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
                                                   generation_limit=config['children-in-generation'])
-                material = write_child_definition_files(run_id, parent_id, gen)
+
+                mutation_strength = mutate(run_id, gen, parent_id)
+                material = write_child_definition_files(run_id, parent_id, gen, mutation_strength)
 
             run_all_simulations(material)
             session.add(material)
