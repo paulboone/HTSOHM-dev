@@ -7,6 +7,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import text
 import yaml
 
 Base = declarative_base()
@@ -58,6 +59,38 @@ class Material(Base):
                 Material.generation==self.generation,
                 Material.id < self.id,
             ).count()
+
+    def calculate_percent_children_in_bin(self):
+        sql = text("""
+            select
+                m.methane_loading_bin,
+                m.surface_area_bin,
+                m.void_fraction_bin,
+                (
+                    m.methane_loading_bin = p.methane_loading_bin and
+                    m.surface_area_bin = p.surface_area_bin and
+                    m.void_fraction_bin = p.void_fraction_bin
+                ) as in_bin
+            from materials m
+            join materials p on (m.parent_id = p.id)
+            where m.generation = :gen
+              and p.methane_loading_bin = :ml_bin
+              and p.surface_area_bin = :sa_bin
+              and p.void_fraction_bin = :vf_bin
+        """)
+
+        rows = session.connection.execute(
+            sql,
+            gen=self.generation,
+            ml_bin=self.methane_loading_bin,
+            sa_bin=self.surface_area_bin,
+            vf_bin=self.void_fraction_bin
+        ).fetchall()
+
+        return len([ r for r in rows if r.in_bin ]) / len(rows)
+
+
+
 
 with open(os.path.join('settings', 'database.yaml'), 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)
