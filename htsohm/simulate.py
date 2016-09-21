@@ -11,7 +11,7 @@ import numpy as np
 from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
 from htsohm import surface_area_simulation
-from htsohm.runDB_declarative import Material, session
+from htsohm.db import Material, session
 from htsohm.utilities import read_config_file
 
 def get_bins(run_data):

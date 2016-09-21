@@ -3,7 +3,7 @@ import numpy as np
 from sqlalchemy import func
 
 # local application/library specific imports
-from htsohm.runDB_declarative import Base, Material, session
+from htsohm.db import Base, Material, session
 
 def select_parent(run_id, max_generation, generation_limit):
     """Use bin-counts to preferentially select a list of rare parents.

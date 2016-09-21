@@ -10,7 +10,7 @@ import numpy as np
 import yaml
 
 # local application/library specific imports
-from htsohm.runDB_declarative import session, Material
+from htsohm.db import session, Material
 from htsohm.utilities import update_config_file, write_force_field, write_cif_file
 from htsohm.utilities import write_mixing_rules, write_pseudo_atoms
 

@@ -6,7 +6,7 @@ from sqlalchemy.sql import func
 from htsohm.binning import select_parent
 from htsohm.generate import write_seed_definition_files
 from htsohm.mutate import write_child_definition_files, create_strength_array
-from htsohm.runDB_declarative import Material, session
+from htsohm.db import Material, session
 from htsohm.simulate import run_all_simulations
 from htsohm.utilities import read_config_file, write_config_file
 

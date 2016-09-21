@@ -8,7 +8,7 @@ import yaml
 from sqlalchemy import func
 
 # local application/library specific imports
-from htsohm.runDB_declarative import Base, Material, session
+from htsohm.db import Base, Material, session
 
 def write_config_file(num_atomtypes, strength, num_bins, children_in_generation, num_seeds, acceptance_value):
     """Writes run-specific parameters to /config/<run_id>.yaml.

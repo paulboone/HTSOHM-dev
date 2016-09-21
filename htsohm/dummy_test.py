@@ -13,7 +13,7 @@ from htsohm.utilities import read_config_file
 from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
 from htsohm import surface_area_simulation
-from htsohm.runDB_declarative import Material, session
+from htsohm.db import Material, session
 #from htsohm.utilities import read_config_file
 
 def screen_parent(run_id):
@@ -75,7 +75,7 @@ def dummy_test(run_id, id):
         ):
             material.dummy_test_result = 'fail'        # flag failed material
             print('%s-%s HAS FAILED PARENT-SCREENING.' % (run_id, id))
-            return False        
+            return False
         else:
             material.dummy_test_result = 'pass'        # prevents from future re-testing
             print('%s-%s HAS PASSED PARENT-SCREENING.' % (run_id, id))
