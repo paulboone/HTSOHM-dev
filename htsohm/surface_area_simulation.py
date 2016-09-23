@@ -5,7 +5,7 @@ import shutil
 from htsohm.utilities import read_run_parameters_file
 
 def write_raspa_file(filename, run_id, material_id):
-    simulation_cycles = read_run_parameters_file(run_id)['surface-area-simulation-cycles']
+    simulation_cycles = read_run_parameters_file(run_id)['surface-area']['simulation-cycles']
     with open(filename, "w") as config:
         config.write(
             "SimulationType\t\t\tMonteCarlo\n" +

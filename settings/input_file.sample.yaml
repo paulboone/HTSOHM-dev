@@ -1,0 +1,27 @@
+
+simulations-directory: 'HTSOHM_DIR'
+children-per-generation: 5
+maximum-number-of-generations: 50
+number-of-atom-types: 4
+initial-mutation-strength: 1
+number-of-convergence-bins: 10
+convergence-cutoff-criteria: 0.05
+
+charge-limit: 0.0
+elemental-charge: 0.0001
+epsilon-limits: [1.258, 513.264]
+lattice-constant-limits: [25.6, 51.2]
+number-density-limits: [1.49e-05, 0.02122]
+sigma-limits: [1.052, 6.549]
+
+retests:
+  number: 3
+  tolerance: 3
+
+methane-loading:
+  simulation-cycles: 1000
+  initialization-cycles: 1000
+helium-void-fraction:
+  simulation-cycles: 100
+surface-area:
+  simulation-cycles: 10

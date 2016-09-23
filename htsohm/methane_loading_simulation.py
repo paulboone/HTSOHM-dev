@@ -6,8 +6,8 @@ from htsohm.utilities import read_run_parameters_file
 
 def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
     run_parameters         = read_run_parameters_file(run_id)
-    simulation_cycles      = run_parameters['methane-loading-simulation-cycles']
-    initialization_cycles  = run_parameters['methane-loading-initialization-cycles']
+    simulation_cycles      = run_parameters['methane-loading']['simulation-cycles']
+    initialization_cycles  = run_parameters['methane-loading']['initialization-cycles']
     with open(filename, "w") as config:
         config.write(
             "SimulationType\t\t\tMonteCarlo\n" +

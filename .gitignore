@@ -7,3 +7,4 @@ config
 logs
 .ipynb_checkpoints/
 *.o*
+input_file.yaml
