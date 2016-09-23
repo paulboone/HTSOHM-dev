@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import FlushError
 from htsohm import config
 from htsohm.db import session, Material, MutationStrength
 from htsohm.material_files import write_seed_definition_files, write_child_definition_files
+from htsohm import simulation
 
 def materials_in_generation(run_id, generation):
     return session.query(Material).filter(
@@ -17,6 +18,13 @@ def last_generation(run_id):
     return session.query(func.max(Material.generation)).filter(
         Material.run_id == run_id,
     )[0][0]
+
+def calc_bin(value, bound_min, bound_max, bins):
+    step = (bound_max - bound_min) / bins
+    assigned_bin = (value - bound_min) // step
+    assigned_bin = min(assigned_bin, bins-1)
+    assigned_bin = max(assigned_bin, 0)
+    return int(assigned_bin)
 
 def evaluate_convergence(run_id):
     '''Counts number of materials in each bin and returns variance of these counts.'''
@@ -154,10 +162,16 @@ def run_all_simulations(material):
 
     ############################################################################
     # assign material to bin
-    results = get_bins(material)
-    material.methane_loading_bin    = float(results['ml_bin'])
-    material.surface_area_bin       = float(results['sa_bin'])
-    material.void_fraction_bin      = float(results['vf_bin'])
+    material.methane_loading_bin = calc_bin(material.ml_absolute_volumetric_loading,
+                                        *config['methane-loading-limits'],
+                                        config['number-of-convergence-bins'])
+    material.surface_area_bin = calc_bin(material.sa_volumetric_surface_area,
+                                    *config['surface-area-limits'],
+                                    config['number-of-convergence-bins'])
+    material.void_fraction_bin = calc_bin(material.vf_helium_void_fraction,
+                                    *config['void-fraction-limits'],
+                                    config['number-of-convergence-bins'])
+
 
 
 def retest(m_orig, retests, tolerance):

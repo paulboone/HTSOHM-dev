@@ -35,6 +35,10 @@ lattice-constant-limits: [25.6, 51.2]
 number-density-limits: [1.49e-05, 0.02122]
 sigma-limits: [1.052, 6.549]
 
+methane-loading-limits: [0, 350]
+surface-area-limits: [0, 4500]
+void-fraction-limits: [0, 1]
+
 retests:
   number: 3
   tolerance: 3
