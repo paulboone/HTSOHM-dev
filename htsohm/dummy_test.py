@@ -10,7 +10,7 @@ import numpy as np
 # local application/library specific imports
 from htsohm.binning import select_parent
 from htsohm.simulate import run_all_simulations
-from htsohm.utilities import read_config_file
+from htsohm.utilities import read_run_parameters_file
 from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
 from htsohm import surface_area_simulation

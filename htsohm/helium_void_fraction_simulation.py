@@ -2,11 +2,14 @@ import os
 import subprocess
 import shutil
 
+from htsohm.utilities import read_run_parameters_file
+
 def write_raspa_file(filename, run_id, material_id):
+    simulation_cycles = read_run_parameters_file(run_id)['helium-void-fraction-simulation-cycles']
     with open(filename, "w") as config:
         config.write(
             "SimulationType\t\t\tMonteCarlo\n" +
-            "NumberOfCycles\t\t\t100\n" +     # number of MonteCarlo cycles
+            "NumberOfCycles\t\t\t%s\n" % simulation_cycles +     # number of MonteCarlo cycles
             "PrintEvery\t\t\t10\n" +
             "PrintPropertiesEvery\t\t10\n" +
             "\n" +
@@ -38,7 +41,8 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id):
-    output_dir = os.path.join(os.environ['SCRATCH'], 'output_%s' % material_id)
+    simulation_directory  = read_run_parameters_file(run_id)['simulations-directory']
+    output_dir = os.path.join(os.environ[simulation_directory], 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "VoidFraction.input")
     write_raspa_file(filename, run_id, material_id)

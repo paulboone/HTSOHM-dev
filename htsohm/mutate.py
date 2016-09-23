@@ -9,7 +9,7 @@ import yaml
 
 # local application/library specific imports
 from htsohm.db import session, Material
-from htsohm.utilities import read_config_file, write_force_field, write_cif_file
+from htsohm.utilities import read_run_parameters_file, write_force_field, write_cif_file
 from htsohm.utilities import write_mixing_rules
 
 def closest_distance(x, y):
@@ -50,7 +50,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     ########################################################################
     # load boundaries from config-file
-    config = read_config_file(run_id)
+    config = read_run_parameters_file(run_id)
     lattice_limits          = config["lattice-constant-limits"]
     number_density_limits   = config["number-density-limits"]
     epsilon_limits          = config["epsilon-limits"]
@@ -104,9 +104,9 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
             "sigma"       : sigma}
         atom_types.append(atom_type)
 
-    mix_file = os.path.join(child_forcefield_directory, 'force_field_mixing_rules.def')
-    write_mixing_rules(mix_file, atom_types)
-    print('  - force_field_mixing_rules.def\tWRITTEN.')
+        mix_file = os.path.join(child_forcefield_directory, 'force_field_mixing_rules.def')
+        write_mixing_rules(mix_file, atom_types)
+        print('  - force_field_mixing_rules.def\tWRITTEN.')
 
     ########################################################################
     # load values from parent cif-file
@@ -160,11 +160,21 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     if number_of_atoms > len(atom_sites):
         for new_sites in range(number_of_atoms - len(atom_sites)):
             atom_site = {
-                "chemical-id" : choice(chemical_ids),
-                "x-frac"      : round(random(), 4),
-                "y-frac"      : round(random(), 4),
-                "z-frac"      : round(random(), 4)}
+                "chemical-id" : chemical_id,
+                "x-frac"      : x,
+                "y-frac"      : y,
+                "z-frac"      : z}
             atom_sites.append(atom_site)
+        ########################################################################
+        # add atom-sites, if needed
+        if number_of_atoms > len(atom_sites):
+            for new_sites in range(number_of_atoms - len(atom_sites)):
+                atom_site = {
+                    "chemical-id" : choice(chemical_ids),
+                    "x-frac"      : round(random(), 4),
+                    "y-frac"      : round(random(), 4),
+                    "z-frac"      : round(random(), 4)}
+                atom_sites.append(atom_site)
 
     cif_file = os.path.join(md, run_id + '-' + str(new_material.uuid) + '.cif')
     write_cif_file(cif_file, lattice_constants, atom_sites)
