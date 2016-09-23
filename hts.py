@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+from datetime import datetime
+import os
 
 import click
 from sqlalchemy.sql import func
 from sqlalchemy.orm.exc import FlushError
+import yaml
 
 from htsohm.binning import select_parent
 from htsohm.generate import write_seed_definition_files
@@ -10,7 +13,7 @@ from htsohm.mutate import write_child_definition_files
 from htsohm.db import session, Material, MutationStrength
 from htsohm.dummy_test import retest
 from htsohm.simulate import run_all_simulations
-from htsohm.utilities import load_input, write_run_parameters_file, read_run_parameters_file
+from htsohm.utilities import read_config_file, read_run_parameters_file
 
 def materials_in_generation(run_id, generation):
     return session.query(Material).filter(
@@ -74,10 +77,18 @@ def hts():
     pass
 
 @hts.command()
-@click.argument("config",type=click.Path())
-def start(config):
-    parameters = load_input(config)
-    run_id = write_run_parameters_file(parameters)["run-id"]
+@click.argument("config_path",type=click.Path())
+def start(config_path):
+    config = read_config_file(config_path)
+
+    run_id = datetime.now().isoformat()
+    config['run-id'] = run_id
+
+    wd = os.environ['HTSOHM_DIR']
+    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    with open(config_file, "w") as file:
+        yaml.dump(config, file, default_flow_style=False)
+
     print("Run created with id: %s" % run_id)
 
 @hts.command()

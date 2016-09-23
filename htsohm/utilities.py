@@ -10,7 +10,7 @@ from sqlalchemy import func
 # local application/library specific imports
 from htsohm.db import Base, Material, session
 
-def load_input(file_name):
+def read_config_file(file_name):
     """Reads input file.
 
     Input files must be in .yaml format, see input_file.sample.yaml. The
@@ -37,22 +37,8 @@ def load_input(file_name):
         'surface-area-simulation-cycles'        int             0 - inf
     """
     with open(file_name) as file:
-        run_parameters = yaml.load(file)
-    return run_parameters
-
-def write_run_parameters_file(run_parameters):
-    """Writes run-specific parameters to /config/<run_id>.yaml.
-
-    This function writes run-specific parameters to a configuration file that is loaded/written
-    at different stages throughout the overall HTSOHM routine.
-    """
-    run_id = datetime.now().isoformat()
-    run_parameters.update({'run-id' : run_id})
-    wd = os.environ['HTSOHM_DIR']      # specify working directory
-    run_parameters_file = os.path.join(wd, 'config', run_id + '_parameters.yaml')
-    with open(run_parameters_file, "w") as file:
-        yaml.dump(run_parameters, file, default_flow_style=False)
-    return run_parameters
+         config = yaml.load(file)
+    return config
 
 def read_run_parameters_file(run_id):
     wd = os.environ['HTSOHM_DIR']
