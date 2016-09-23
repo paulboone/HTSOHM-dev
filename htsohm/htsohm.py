@@ -5,7 +5,6 @@ from sqlalchemy.orm.exc import FlushError
 
 from htsohm import config
 from htsohm.db import session, Material, MutationStrength
-from htsohm.simulate import run_all_simulations
 from htsohm.material_files import write_seed_definition_files, write_child_definition_files
 
 def materials_in_generation(run_id, generation):
@@ -127,6 +126,39 @@ def mutate(run_id, generation, parent):
             # it's ok b/c this calculation should always yield the exact same result!
 
     return mutation_strength.strength
+
+def run_all_simulations(material):
+    """Simulate helium void fraction, methane loading, and surface area.
+
+    For a given material (id) three simulations are run using RASPA. First a helium void fraction
+    is calculated, and then it is used to run a methane loading simulation (void fraction needed to
+    calculate excess v. absolute loading). Finally, a surface area is calculated and the material is
+    assigned to its appropriate bin."""
+
+    ############################################################################
+    # run helium void fraction simulation
+    results = simulation.helium_void_fraction.run(material.run_id, material.uuid)
+    material.update_from_dict(results)
+
+    ############################################################################
+    # run methane loading simulation
+    results = simulation.methane_loading.run(material.run_id,
+                                             material.uuid,
+                                             material.vf_helium_void_fraction)
+    material.update_from_dict(results)
+
+    ############################################################################
+    # run surface area simulation
+    results = simulation.surface_area.run(material.run_id, material.uuid)
+    material.update_from_dict(results)
+
+    ############################################################################
+    # assign material to bin
+    results = get_bins(material)
+    material.methane_loading_bin    = float(results['ml_bin'])
+    material.surface_area_bin       = float(results['sa_bin'])
+    material.void_fraction_bin      = float(results['vf_bin'])
+
 
 def retest(m_orig, retests, tolerance):
     """Recalculate material structure-properties to prevent statistical errors.
