@@ -6,7 +6,7 @@ import click
 import yaml
 
 import htsohm
-from htsohm.utilities import load_config_file
+from htsohm.files import load_config_file
 from htsohm.htsohm import worker_run_loop
 
 @click.group()

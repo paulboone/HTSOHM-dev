@@ -1,6 +1,6 @@
 import os
 
-from htsohm.utilities import load_config_file
+from htsohm.files import load_config_file
 
 config = {}
 
