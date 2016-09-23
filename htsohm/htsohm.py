@@ -7,7 +7,6 @@ from htsohm.binning import select_parent
 from htsohm.generate import write_seed_definition_files
 from htsohm.mutate import write_child_definition_files
 from htsohm.db import session, Material, MutationStrength
-from htsohm.dummy_test import retest
 from htsohm.simulate import run_all_simulations
 
 def materials_in_generation(run_id, generation):
@@ -66,6 +65,39 @@ def mutate(run_id, generation, parent):
             # it's ok b/c this calculation should always yield the exact same result!
 
     return mutation_strength.strength
+
+def retest(m_orig, retests, tolerance):
+    """Recalculate material structure-properties to prevent statistical errors.
+
+    Because methane loading, surface area, and helium void fractions are calculated using
+    statistical methods (namely grand canonic Monte Carlo simulations) they are susceptible
+    to statistical errors. To mitigate this, after a material has been selected as a potential
+    parent, it's combination of structure-properties is resimulated some number of times and
+    compared to the initally-calculated material. If the resimulated values differ from the
+    initially-calculated value beyond an accpetable tolerance, the material fails the `dummy-test`
+    and is flagged, preventing it from being used to generate new materials in the future.
+    """
+
+    m = m_orig.clone()
+    run_all_simulations(m)
+
+    # requery row from database, in case someone else has changed it, and lock it
+    # if the row is presently locked, this method blocks until the row lock is released
+    session.refresh(m_orig, lockmode='update')
+    if m_orig.retest_num < retests:
+        m_orig.retest_methane_loading_sum += m.absolute_volumetric_loading
+        m_orig.retest_surface_area_sum += m.volumetric_surface_area
+        m_orig.retest_void_fraction_sum += m.helium_void_fraction
+        m_orig.retest_num += 1
+
+        if m_orig.retest_num == retests:
+            m_orig.retest_passed = m.calculate_retest_result(tolerance)
+    else:
+        pass
+        # otherwise our test is extra / redundant and we don't save it
+
+    session.commit()
+
 
 def worker_run_loop(run_id):
     gen = last_generation(run_id) or 0
