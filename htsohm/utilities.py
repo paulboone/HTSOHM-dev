@@ -42,10 +42,8 @@ def read_config_file(file_name):
 
 def read_run_parameters_file(run_id):
     wd = os.environ['HTSOHM_DIR']
-    parameters_file = os.path.join(wd, 'config', run_id + '_parameters.yaml')
-    with open(parameters_file) as file:
-        run_parameters = yaml.load(file)
-    return run_parameters
+    parameters_file = os.path.join(wd, 'config', run_id + '.yaml')
+    return read_config_file(parameters_file)
 
 def evaluate_convergence(run_id):
     '''Counts number of materials in each bin and returns variance of these counts.'''
