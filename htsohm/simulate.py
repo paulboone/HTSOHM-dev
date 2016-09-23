@@ -9,9 +9,7 @@ import numpy as np
 
 # local application/library specific imports
 from htsohm import config
-from htsohm import helium_void_fraction_simulation
-from htsohm import methane_loading_simulation
-from htsohm import surface_area_simulation
+from htsohm import simulation
 from htsohm.db import Material, session
 
 def get_bins(run_data):
@@ -67,13 +65,13 @@ def run_all_simulations(run_data):
 
     ############################################################################
     # run helium void fraction simulation
-    results = helium_void_fraction_simulation.run(run_data.run_id, run_data.uuid)
+    results = simulation.helium_void_fraction.run(run_data.run_id, run_data.uuid)
     run_data.helium_void_fraction = results['VF_val']
     void_fraction = float(results['VF_val'])
 
     ############################################################################
     # run methane loading simulation
-    results = methane_loading_simulation.run(run_data.run_id,
+    results = simulation.methane_loading.run(run_data.run_id,
                                              run_data.uuid,
                                              run_data.helium_void_fraction)
     run_data.absolute_volumetric_loading   = float(results['ML_a_cc'])
@@ -95,7 +93,7 @@ def run_all_simulations(run_data):
 
     ############################################################################
     # run surface area simulation
-    results = surface_area_simulation.run(run_data.run_id, run_data.uuid)
+    results = simulation.surface_area.run(run_data.run_id, run_data.uuid)
     run_data.unit_cell_surface_area     = float(results['SA_a2'])
     run_data.volumetric_surface_area    = float(results['SA_mc'])
     run_data.gravimetric_surface_area   = float(results['SA_mg'])
