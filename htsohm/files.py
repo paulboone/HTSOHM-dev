@@ -9,7 +9,7 @@ import yaml
 def load_config_file(file_name):
     """Reads input file.
 
-    Input files must be in .yaml format, see input_file.sample.yaml
+    Input files must be in .yaml format, see htsohm.sample.yaml
     """
 
     with open(file_name) as file:
