@@ -34,19 +34,19 @@ def parse_output(output_file):
         for line in origin:
             if "Surface area" in line:
                 if count == 0:
-                    results['SA_a2'] = line.split()[2]
+                    results['sa_unit_cell_surface_area'] = float(line.split()[2])
                     count = count + 1
                 elif count == 1:
-                    results['SA_mg'] = line.split()[2]
+                    results['sa_gravimetric_surface_area'] = float(line.split()[2])
                     count = count + 1
                 elif count == 2:
-                    results['SA_mc'] = line.split()[2]
+                    results['sa_volumetric_surface_area'] = float(line.split()[2])
 
     print(
         "\nSURFACE AREA\n" +
-        "%s\tA^2\n"      % (results['SA_a2']) +
-        "%s\tm^2/g\n"    % (results['SA_mg']) +
-        "%s\tm^2/cm^3"   % (results['SA_mc']))
+        "%s\tA^2\n"      % (results['sa_unit_cell_surface_area']) +
+        "%s\tm^2/g\n"    % (results['sa_gravimetric_surface_area']) +
+        "%s\tm^2/cm^3"   % (results['sa_volumetric_surface_area']))
 
     return results
 

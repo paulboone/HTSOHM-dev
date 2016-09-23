@@ -33,10 +33,10 @@ def parse_output(output_file):
             if not "Average Widom Rosenbluth-weight:" in line:
                 continue
             try:
-                results['VF_val'] = float(line.split()[4])
+                results['vf_helium_void_fraction'] = float(line.split()[4])
             except IndexError:
                 print()
-    print("\nVOID FRACTION :   %s\n" % (results['VF_val']))
+    print("\nVOID FRACTION :   %s\n" % (results['vf_helium_void_fraction']))
 
     return results
 

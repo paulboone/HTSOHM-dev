@@ -8,5 +8,9 @@ class Base(object):
             setattr(copy, col.name, val)
         return copy
 
+    def update_from_dict(self, d):
+        for k, v in d.items():
+            setattr(self, k, v)
+
 from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base(cls=Base)

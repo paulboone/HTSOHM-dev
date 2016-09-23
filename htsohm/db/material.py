@@ -25,25 +25,25 @@ class Material(Base):
     retest_passed = Column(Boolean)                        # will be NULL if retest hasn't been run
 
     # data collected
-    absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
-    absolute_gravimetric_loading = Column(Float)           # cm^3 / g
-    absolute_molar_loading = Column(Float)                 # mol / kg
-    excess_volumetric_loading = Column(Float)              # cm^3 / cm^3
-    excess_gravimetric_loading = Column(Float)             # cm^3 / g
-    excess_molar_loading = Column(Float)                   # mol /kg
-    host_host_avg = Column(Float)                          # K
-    host_host_vdw = Column(Float)                          # K
-    host_host_cou = Column(Float)                          # K
-    adsorbate_adsorbate_avg = Column(Float)                # K
-    adsorbate_adsorbate_vdw = Column(Float)                # K
-    adsorbate_adsorbate_cou = Column(Float)                # K
-    host_adsorbate_avg = Column(Float)                     # K
-    host_adsorbate_vdw = Column(Float)                     # K
-    host_adsorbate_cou = Column(Float)                     # K
-    unit_cell_surface_area = Column(Float)                 # angstroms ^ 2
-    volumetric_surface_area = Column(Float)                # m^2 / cm^3
-    gravimetric_surface_area = Column(Float)               # m^2 / g
-    helium_void_fraction = Column(Float)                   # dimm.
+    ml_absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
+    ml_absolute_gravimetric_loading = Column(Float)           # cm^3 / g
+    ml_absolute_molar_loading = Column(Float)                 # mol / kg
+    ml_excess_volumetric_loading = Column(Float)              # cm^3 / cm^3
+    ml_excess_gravimetric_loading = Column(Float)             # cm^3 / g
+    ml_excess_molar_loading = Column(Float)                   # mol /kg
+    ml_host_host_avg = Column(Float)                          # K
+    ml_host_host_vdw = Column(Float)                          # K
+    ml_host_host_cou = Column(Float)                          # K
+    ml_adsorbate_adsorbate_avg = Column(Float)                # K
+    ml_adsorbate_adsorbate_vdw = Column(Float)                # K
+    ml_adsorbate_adsorbate_cou = Column(Float)                # K
+    ml_host_adsorbate_avg = Column(Float)                     # K
+    ml_host_adsorbate_vdw = Column(Float)                     # K
+    ml_host_adsorbate_cou = Column(Float)                     # K
+    sa_unit_cell_surface_area = Column(Float)                 # angstroms ^ 2
+    sa_volumetric_surface_area = Column(Float)                # m^2 / cm^3
+    sa_gravimetric_surface_area = Column(Float)               # m^2 / g
+    vf_helium_void_fraction = Column(Float)                   # dimm.
 
     # bins
     methane_loading_bin = Column(Integer)                  # dimm.
@@ -96,9 +96,9 @@ class Material(Base):
         return len([ r for r in rows if r.in_bin ]) / len(rows)
 
     def calculate_retest_result(self, tolerance):
-        ml_o = self.absolute_volumetric_loading    # initally-calculated values
-        sa_o = self.volumetric_surface_area
-        vf_o = self.helium_void_fraction
+        ml_o = self.ml_absolute_volumetric_loading    # initally-calculated values
+        sa_o = self.sa_volumetric_surface_area
+        vf_o = self.vf_helium_void_fraction
 
         ml_mean = self.retest_methane_loading_sum / self.retest_num
         sa_mean = self.retest_surface_area_sum / self.retest_num

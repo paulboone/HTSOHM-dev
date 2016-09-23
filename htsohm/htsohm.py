@@ -147,9 +147,9 @@ def retest(m_orig, retests, tolerance):
     # if the row is presently locked, this method blocks until the row lock is released
     session.refresh(m_orig, lockmode='update')
     if m_orig.retest_num < retests:
-        m_orig.retest_methane_loading_sum += m.absolute_volumetric_loading
-        m_orig.retest_surface_area_sum += m.volumetric_surface_area
-        m_orig.retest_void_fraction_sum += m.helium_void_fraction
+        m_orig.retest_methane_loading_sum += m.ml_absolute_volumetric_loading
+        m_orig.retest_surface_area_sum += m.sa_volumetric_surface_area
+        m_orig.retest_void_fraction_sum += m.vf_helium_void_fraction
         m_orig.retest_num += 1
 
         if m_orig.retest_num == retests:

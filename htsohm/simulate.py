@@ -12,16 +12,16 @@ from htsohm import config
 from htsohm import simulation
 from htsohm.db import Material, session
 
-def get_bins(run_data):
+def get_bins(material):
     """Returns methane_loading_bin, surface_area_bin, and void_fraction_bin.
     Each material is sorted into a bin corresponding to its combination of structure-properties.
     First, the structure property space is subdivided into arbitrary quadrants, or bins, then
     the simulated properties for a particular material are used to assigned it to a particular
     bin."""
 
-    methane_loading = run_data.absolute_volumetric_loading
-    surface_area = run_data.volumetric_surface_area
-    void_fraction = run_data.helium_void_fraction
+    methane_loading = material.ml_absolute_volumetric_loading
+    surface_area = material.sa_volumetric_surface_area
+    void_fraction = material.vf_helium_void_fraction
     ############################################################################
     # assign arbitrary maxima and subdivide the parameter space.
     bins = config['number-of-convergence-bins']
@@ -55,7 +55,7 @@ def get_bins(run_data):
     results['vf_bin'] = vf_bin
     return results
 
-def run_all_simulations(run_data):
+def run_all_simulations(material):
     """Simulate helium void fraction, methane loading, and surface area.
 
     For a given material (id) three simulations are run using RASPA. First a helium void fraction
@@ -65,43 +65,24 @@ def run_all_simulations(run_data):
 
     ############################################################################
     # run helium void fraction simulation
-    results = simulation.helium_void_fraction.run(run_data.run_id, run_data.uuid)
-    run_data.helium_void_fraction = results['VF_val']
-    void_fraction = float(results['VF_val'])
+    results = simulation.helium_void_fraction.run(material.run_id, material.uuid)
+    material.update_from_dict(results)
 
     ############################################################################
     # run methane loading simulation
-    results = simulation.methane_loading.run(run_data.run_id,
-                                             run_data.uuid,
-                                             run_data.helium_void_fraction)
-    run_data.absolute_volumetric_loading   = float(results['ML_a_cc'])
-    run_data.absolute_gravimetric_loading  = float(results['ML_a_cg'])
-    run_data.absolute_molar_loading        = float(results['ML_a_mk'])
-    run_data.excess_volumetric_loading     = float(results['ML_e_cc'])
-    run_data.excess_gravimetric_loading    = float(results['ML_e_cg'])
-    run_data.excess_molar_loading          = float(results['ML_e_mk'])
-    run_data.host_host_avg                 = float(results['host_host_avg'])
-    run_data.host_host_vdw                 = float(results['host_host_vdw'])
-    run_data.host_host_cou                 = float(results['host_host_cou'])
-    run_data.adsorbate_adsorbate_avg       = float(results['adsorbate_adsorbate_avg'])
-    run_data.adsorbate_adsorbate_vdw       = float(results['adsorbate_adsorbate_vdw'])
-    run_data.adsorbate_adsorbate_cou       = float(results['adsorbate_adsorbate_cou'])
-    run_data.host_adsorbate_avg            = float(results['host_adsorbate_avg'])
-    run_data.host_adsorbate_vdw            = float(results['host_adsorbate_vdw'])
-    run_data.host_adsorbate_cou            = float(results['host_adsorbate_cou'])
-    methane_loading = float(results['ML_a_cc'])
+    results = simulation.methane_loading.run(material.run_id,
+                                             material.uuid,
+                                             material.vf_helium_void_fraction)
+    material.update_from_dict(results)
 
     ############################################################################
     # run surface area simulation
-    results = simulation.surface_area.run(run_data.run_id, run_data.uuid)
-    run_data.unit_cell_surface_area     = float(results['SA_a2'])
-    run_data.volumetric_surface_area    = float(results['SA_mc'])
-    run_data.gravimetric_surface_area   = float(results['SA_mg'])
-    surface_area = float(results['SA_mc'])
+    results = simulation.surface_area.run(material.run_id, material.uuid)
+    material.update_from_dict(results)
 
     ############################################################################
     # assign material to bin
-    results = get_bins(run_data)
-    run_data.methane_loading_bin    = float(results['ml_bin'])
-    run_data.surface_area_bin       = float(results['sa_bin'])
-    run_data.void_fraction_bin      = float(results['vf_bin'])
+    results = get_bins(material)
+    material.methane_loading_bin    = float(results['ml_bin'])
+    material.surface_area_bin       = float(results['sa_bin'])
+    material.void_fraction_bin      = float(results['vf_bin'])
