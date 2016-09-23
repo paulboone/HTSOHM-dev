@@ -4,10 +4,9 @@ from sqlalchemy.orm.exc import FlushError
 
 from htsohm import config
 from htsohm.binning import select_parent
-from htsohm.generate import write_seed_definition_files
-from htsohm.mutate import write_child_definition_files
 from htsohm.db import session, Material, MutationStrength
 from htsohm.simulate import run_all_simulations
+from htsohm.material_files import write_seed_definition_files, write_child_definition_files
 
 def materials_in_generation(run_id, generation):
     return session.query(Material).filter(
