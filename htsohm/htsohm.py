@@ -26,19 +26,6 @@ def calc_bin(value, bound_min, bound_max, bins):
     assigned_bin = max(assigned_bin, 0)
     return int(assigned_bin)
 
-def evaluate_convergence(run_id):
-    '''Counts number of materials in each bin and returns variance of these counts.'''
-    bin_counts = session \
-        .query(func.count(Material.id)) \
-        .filter(Material.run_id == run_id) \
-        .group_by(
-            Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
-        ).all()
-    bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
-    variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
-    return variance
-
-
 def select_parent(run_id, max_generation, generation_limit):
     """Use bin-counts to preferentially select a list of rare parents.
 
@@ -87,53 +74,6 @@ def select_parent(run_id, max_generation, generation_limit):
     potential_parents = [i[0] for i in parent_query]
 
     return int(np.random.choice(potential_parents))
-
-
-def mutate(run_id, generation, parent):
-    """Retrieve the latest mutation_strength for the parent, or calculate it if missing.
-
-    In the event that a particular bin contains parents whose children exhibit radically
-    divergent properties, the strength parameter for the bin is modified. In order to determine
-    which bins to adjust, the script refers to the distribution of children in the previous
-    generation which share a common parent. The criteria follows:
-     ________________________________________________________________
-     - if none of the children share  |  halve strength parameter
-       the parent's bin               |
-     - if the fraction of children in |
-       the parent bin is < 10%        |
-     _________________________________|_____________________________
-     - if the fraction of children in |  double strength parameter
-       the parent bin is > 50%        |
-     _________________________________|_____________________________
-    """
-
-    mutation_strength_key = [run_id, generation] + parent.bin
-    mutation_strength = session.query(MutationStrength).get(mutation_strength_key)
-
-    if mutation_strength:
-        print("Mutation strength already calculated for this bin and generation.")
-    else:
-        print("Calculating mutation strength...")
-        mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone()
-        mutation_strength.generation = generation
-
-        try:
-            fraction_in_parent_bin = parent.calculate_percent_children_in_bin()
-            if fraction_in_parent_bin < 0.1:
-                mutation_strength.strength *= 0.5
-            elif fraction_in_parent_bin > 0.5 and mutation_strength.strength <= 0.5:
-                mutation_strength.strength *= 2
-        except ZeroDivisionError:
-            print("No prior generation materials in this bin with children.")
-
-        try:
-            session.add(mutation_strength)
-            session.commit()
-        except FlushError as e:
-            print("Somebody beat us to saving a row with this generation. That's ok!")
-            # it's ok b/c this calculation should always yield the exact same result!
-
-    return mutation_strength.strength
 
 def run_all_simulations(material):
     """Simulate helium void fraction, methane loading, and surface area.
@@ -206,6 +146,63 @@ def retest(m_orig, retests, tolerance):
 
     session.commit()
 
+def mutate(run_id, generation, parent):
+    """Retrieve the latest mutation_strength for the parent, or calculate it if missing.
+
+    In the event that a particular bin contains parents whose children exhibit radically
+    divergent properties, the strength parameter for the bin is modified. In order to determine
+    which bins to adjust, the script refers to the distribution of children in the previous
+    generation which share a common parent. The criteria follows:
+     ________________________________________________________________
+     - if none of the children share  |  halve strength parameter
+       the parent's bin               |
+     - if the fraction of children in |
+       the parent bin is < 10%        |
+     _________________________________|_____________________________
+     - if the fraction of children in |  double strength parameter
+       the parent bin is > 50%        |
+     _________________________________|_____________________________
+    """
+
+    mutation_strength_key = [run_id, generation] + parent.bin
+    mutation_strength = session.query(MutationStrength).get(mutation_strength_key)
+
+    if mutation_strength:
+        print("Mutation strength already calculated for this bin and generation.")
+    else:
+        print("Calculating mutation strength...")
+        mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone()
+        mutation_strength.generation = generation
+
+        try:
+            fraction_in_parent_bin = parent.calculate_percent_children_in_bin()
+            if fraction_in_parent_bin < 0.1:
+                mutation_strength.strength *= 0.5
+            elif fraction_in_parent_bin > 0.5 and mutation_strength.strength <= 0.5:
+                mutation_strength.strength *= 2
+        except ZeroDivisionError:
+            print("No prior generation materials in this bin with children.")
+
+        try:
+            session.add(mutation_strength)
+            session.commit()
+        except FlushError as e:
+            print("Somebody beat us to saving a row with this generation. That's ok!")
+            # it's ok b/c this calculation should always yield the exact same result!
+
+    return mutation_strength.strength
+
+def evaluate_convergence(run_id):
+    '''Counts number of materials in each bin and returns variance of these counts.'''
+    bin_counts = session \
+        .query(func.count(Material.id)) \
+        .filter(Material.run_id == run_id) \
+        .group_by(
+            Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
+        ).all()
+    bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
+    variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
+    return variance
 
 def worker_run_loop(run_id):
     gen = last_generation(run_id) or 0
