@@ -1,3 +1,4 @@
+from math import sqrt
 
 from sqlalchemy.sql import func
 from sqlalchemy.orm.exc import FlushError
@@ -18,6 +19,18 @@ def last_generation(run_id):
     return session.query(func.max(Material.generation)).filter(
         Material.run_id == run_id,
     )[0][0]
+
+def evaluate_convergence(run_id):
+    '''Counts number of materials in each bin and returns variance of these counts.'''
+    bin_counts = session \
+        .query(func.count(Material.id)) \
+        .filter(Material.run_id == run_id) \
+        .group_by(
+            Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
+        ).all()
+    bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
+    variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
+    return variance
 
 def mutate(run_id, generation, parent):
     """Retrieve the latest mutation_strength for the parent, or calculate it if missing.
