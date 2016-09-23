@@ -1,8 +1,10 @@
-# stanard imports
+# standard imports
 import os
 
 # related third party imports
 import yaml
+
+# local application/library specific imports
 
 def load_config_file(file_name):
     """Reads input file.
