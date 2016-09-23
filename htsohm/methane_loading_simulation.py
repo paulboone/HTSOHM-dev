@@ -2,14 +2,13 @@ import os
 import subprocess
 import shutil
 
-from htsohm.utilities import read_run_parameters_file
+from htsohm import config
 
 def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
-    run_parameters         = read_run_parameters_file(run_id)
-    simulation_cycles      = run_parameters['methane-loading']['simulation-cycles']
-    initialization_cycles  = run_parameters['methane-loading']['initialization-cycles']
-    with open(filename, "w") as config:
-        config.write(
+    simulation_cycles      = config['methane-loading']['simulation-cycles']
+    initialization_cycles  = config['methane-loading']['initialization-cycles']
+    with open(filename, "w") as raspa_input_file:
+        raspa_input_file.write(
             "SimulationType\t\t\tMonteCarlo\n" +
             "NumberOfCycles\t\t\t%s\n" % (simulation_cycles) +             # number of MonteCarlo cycles
             "NumberOfInitializationCycles\t%s\n" % (initialization_cycles) +    # number of initialization cycles
@@ -84,7 +83,7 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id, helium_void_fraction):
-    simulation_directory  = read_run_parameters_file(run_id)['simulations-directory']
+    simulation_directory  = config['simulations-directory']
     output_dir = os.path.join(os.environ[simulation_directory], 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "MethaneLoading.input")

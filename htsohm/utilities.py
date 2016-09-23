@@ -10,7 +10,7 @@ from sqlalchemy import func
 # local application/library specific imports
 from htsohm.db import Base, Material, session
 
-def read_config_file(file_name):
+def load_config_file(file_name):
     """Reads input file.
 
     Input files must be in .yaml format, see input_file.sample.yaml
@@ -20,10 +20,6 @@ def read_config_file(file_name):
          config = yaml.load(file)
     return config
 
-def read_run_parameters_file(run_id):
-    wd = os.environ['HTSOHM_DIR']
-    parameters_file = os.path.join(wd, 'config', run_id + '.yaml')
-    return read_config_file(parameters_file)
 
 def evaluate_convergence(run_id):
     '''Counts number of materials in each bin and returns variance of these counts.'''

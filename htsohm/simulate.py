@@ -8,11 +8,11 @@ import subprocess
 import numpy as np
 
 # local application/library specific imports
+from htsohm import config
 from htsohm import helium_void_fraction_simulation
 from htsohm import methane_loading_simulation
 from htsohm import surface_area_simulation
 from htsohm.db import Material, session
-from htsohm.utilities import read_run_parameters_file
 
 def get_bins(run_data):
     """Returns methane_loading_bin, surface_area_bin, and void_fraction_bin.
@@ -26,7 +26,6 @@ def get_bins(run_data):
     void_fraction = run_data.helium_void_fraction
     ############################################################################
     # assign arbitrary maxima and subdivide the parameter space.
-    config = read_run_parameters_file(run_data.run_id)
     bins = config['number-of-convergence-bins']
     ml_min = 0.
     ml_max = 350.

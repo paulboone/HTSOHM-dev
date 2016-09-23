@@ -2,12 +2,12 @@ import os
 import subprocess
 import shutil
 
-from htsohm.utilities import read_run_parameters_file
+from htsohm import config
 
 def write_raspa_file(filename, run_id, material_id):
-    simulation_cycles = read_run_parameters_file(run_id)['surface-area']['simulation-cycles']
-    with open(filename, "w") as config:
-        config.write(
+    simulation_cycles = config['surface-area']['simulation-cycles']
+    with open(filename, "w") as raspa_input_file:
+        raspa_input_file.write(
             "SimulationType\t\t\tMonteCarlo\n" +
             "NumberOfCycles\t\t\t%s\n" % (simulation_cycles) +             # number of MonteCarlo cycles
             "PrintEvery\t\t\t1\n" +
@@ -51,7 +51,7 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id):
-    simulation_directory  = read_run_parameters_file(run_id)['simulations-directory']
+    simulation_directory  = config['simulations-directory']
     output_dir = os.path.join(os.environ[simulation_directory], 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "SurfaceArea.input")

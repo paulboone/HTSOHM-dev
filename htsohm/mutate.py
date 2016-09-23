@@ -8,8 +8,9 @@ import numpy as np
 import yaml
 
 # local application/library specific imports
+from htsohm import config
 from htsohm.db import session, Material
-from htsohm.utilities import read_run_parameters_file, write_force_field, write_cif_file
+from htsohm.utilities import write_force_field, write_cif_file
 from htsohm.utilities import write_mixing_rules
 
 def closest_distance(x, y):
@@ -50,7 +51,6 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     ########################################################################
     # load boundaries from config-file
-    config = read_run_parameters_file(run_id)
     lattice_limits          = config["lattice-constant-limits"]
     number_density_limits   = config["number-density-limits"]
     epsilon_limits          = config["epsilon-limits"]

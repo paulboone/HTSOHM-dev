@@ -10,8 +10,9 @@ import numpy as np
 import yaml
 
 # local application/library specific imports
+from htsohm import config
 from htsohm.db import session, Material
-from htsohm.utilities import read_run_parameters_file, write_force_field, write_cif_file, \
+from htsohm.utilities import write_force_field, write_cif_file, \
                              write_mixing_rules, write_pseudo_atoms
 
 def random_number_density(number_density_limits, lattice_constants):
@@ -50,13 +51,12 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
                                      charge, atomic mass, atomic radii, and more.
     """
 
-    material_config         = read_run_parameters_file(run_id)
-    lattice_limits          = material_config["lattice-constant-limits"]
-    number_density_limits   = material_config["number-density-limits"]
-    epsilon_limits          = material_config["epsilon-limits"]
-    sigma_limits            = material_config["sigma-limits"]
-    max_charge              = material_config["charge-limit"]
-    elem_charge             = material_config["elemental-charge"]
+    lattice_limits          = config["lattice-constant-limits"]
+    number_density_limits   = config["number-density-limits"]
+    epsilon_limits          = config["epsilon-limits"]
+    sigma_limits            = config["sigma-limits"]
+    max_charge              = config["charge-limit"]
+    elem_charge             = config["elemental-charge"]
 
     wd = os.environ['HTSOHM_DIR']                    # specify $HTSOHM_DIR as working directory
     ff_dir = os.environ['FF_DIR']                    # output force-field files to $FF_DIR
