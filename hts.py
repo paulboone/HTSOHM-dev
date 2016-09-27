@@ -19,7 +19,7 @@ def start(config_path):
     config = load_config_file(config_path)
 
     run_id = datetime.now().isoformat()
-    config['run-id'] = run_id
+    config['run_id'] = run_id
 
     wd = os.environ['HTSOHM_DIR']
     config_file = os.path.join(wd, 'config', run_id + '.yaml')

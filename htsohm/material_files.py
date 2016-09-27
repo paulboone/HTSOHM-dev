@@ -48,12 +48,12 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
                                      charge, atomic mass, atomic radii, and more.
     """
 
-    lattice_limits          = config["lattice-constant-limits"]
-    number_density_limits   = config["number-density-limits"]
-    epsilon_limits          = config["epsilon-limits"]
-    sigma_limits            = config["sigma-limits"]
-    max_charge              = config["charge-limit"]
-    elem_charge             = config["elemental-charge"]
+    lattice_limits          = config["lattice_constant_limits"]
+    number_density_limits   = config["number_density_limits"]
+    epsilon_limits          = config["epsilon_limits"]
+    sigma_limits            = config["sigma_limits"]
+    max_charge              = config["charge_limit"]
+    elem_charge             = config["elemental_charge"]
 
     wd = os.environ['HTSOHM_DIR']                    # specify $HTSOHM_DIR as working directory
     ff_dir = os.environ['FF_DIR']                    # output force-field files to $FF_DIR
@@ -146,10 +146,10 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     ########################################################################
     # load boundaries from config-file
-    lattice_limits          = config["lattice-constant-limits"]
-    number_density_limits   = config["number-density-limits"]
-    epsilon_limits          = config["epsilon-limits"]
-    sigma_limits            = config["sigma-limits"]
+    lattice_limits          = config["lattice_constant_limits"]
+    number_density_limits   = config["number_density_limits"]
+    epsilon_limits          = config["epsilon_limits"]
+    sigma_limits            = config["sigma_limits"]
 
     md = os.environ['MAT_DIR']
     fd = os.environ['FF_DIR']

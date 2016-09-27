@@ -5,8 +5,8 @@ import shutil
 from htsohm import config
 
 def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
-    simulation_cycles      = config['methane-loading']['simulation-cycles']
-    initialization_cycles  = config['methane-loading']['initialization-cycles']
+    simulation_cycles      = config['methane_loading']['simulation_cycles']
+    initialization_cycles  = config['methane_loading']['initialization_cycles']
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(
             "SimulationType\t\t\tMonteCarlo\n" +
@@ -84,7 +84,7 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id, helium_void_fraction):
-    simulation_directory  = config['simulations-directory']
+    simulation_directory  = config['simulations_directory']
     output_dir = os.path.join(os.environ[simulation_directory], 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "MethaneLoading.input")

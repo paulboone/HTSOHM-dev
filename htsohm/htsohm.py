@@ -104,14 +104,14 @@ def run_all_simulations(material):
     ############################################################################
     # assign material to bin
     material.methane_loading_bin = calc_bin(material.ml_absolute_volumetric_loading,
-                                        *config['methane-loading-limits'],
-                                        config['number-of-convergence-bins'])
+                                        *config['methane_loading_limits'],
+                                        config['number_of_convergence_bins'])
     material.surface_area_bin = calc_bin(material.sa_volumetric_surface_area,
-                                    *config['surface-area-limits'],
-                                    config['number-of-convergence-bins'])
+                                    *config['surface_area_limits'],
+                                    config['number_of_convergence_bins'])
     material.void_fraction_bin = calc_bin(material.vf_helium_void_fraction,
-                                    *config['void-fraction-limits'],
-                                    config['number-of-convergence-bins'])
+                                    *config['void_fraction_limits'],
+                                    config['number_of_convergence_bins'])
 
 
 
@@ -210,16 +210,16 @@ def worker_run_loop(run_id):
 
     converged = False
     while not converged:
-        size_of_generation = config['children-per-generation']
+        size_of_generation = config['children_per_generation']
 
         while materials_in_generation(run_id, gen) < size_of_generation:
             if gen == 0:
                 print("writing new seed...")
-                material = write_seed_definition_files(run_id, config['number-of-atom-types'])
+                material = write_seed_definition_files(run_id, config['number_of_atom_types'])
             else:
                 print("selecting a parent / running retests on parent / mutating / simulating")
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
-                                                  generation_limit=config['children-per-generation'])
+                                                  generation_limit=config['children_per_generation'])
 
                 parent = session.query(Material).get(parent_id)
 
@@ -241,7 +241,7 @@ def worker_run_loop(run_id):
             session.commit()
 
             material.generation_index = material.calculate_generation_index()
-            if material.generation_index < config['children-per-generation']:
+            if material.generation_index < config['children_per_generation']:
                 session.add(material)
             else:
                 # delete excess rows
