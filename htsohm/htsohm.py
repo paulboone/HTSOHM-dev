@@ -1,5 +1,6 @@
 from math import sqrt
 
+import numpy as np
 from sqlalchemy.sql import func, or_
 from sqlalchemy.orm.exc import FlushError
 
