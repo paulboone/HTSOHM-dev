@@ -6,8 +6,6 @@ from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean, Prim
 from htsohm.db import Base, session
 
 class MutationStrength(Base):
-    __default_strength__ = 1.0
-
     __tablename__ = 'mutation_strengths'
     # COLUMN                                                 UNITS
     run_id = Column(String(50))                            # dimm.
@@ -50,5 +48,9 @@ class MutationStrength(Base):
         if ms:
             return ms
         else:
+            file_path = os.path.join(run_id, 'run_parameters.yaml')
+            with open(file_path) as file:
+                run_parameters = yaml.load(file)
+            default_strength = run_parameters['initial_mutation_strength']
             return MutationStrength(run_id, generation, methane_loading_bin, surface_area_bin,
-                                    void_fraction_bin, cls.__default_strength__)
+                                    void_fraction_bin, default_strength)
