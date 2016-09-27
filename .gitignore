@@ -8,3 +8,5 @@ logs
 .ipynb_checkpoints/
 *.o*
 htsohm.yaml
+settings/htsohm.yaml
+settings/database.yaml
