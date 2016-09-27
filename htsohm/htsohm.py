@@ -193,17 +193,21 @@ def mutate(run_id, generation, parent):
 
     return mutation_strength.strength
 
-def evaluate_convergence(run_id):
+def evaluate_convergence(run_id, generation):
     '''Counts number of materials in each bin and returns variance of these counts.'''
     bin_counts = session \
         .query(func.count(Material.id)) \
-        .filter(Material.run_id == run_id) \
+        .filter(
+            Material.run_id == run_id, Material.generation < generation,
+            Material.generation_index < config['children_per_generation']
+        ) \
         .group_by(
             Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
         ).all()
     bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
     variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
-    return variance
+    print('\nCONVERGENCE:\t%s\n' % variance)
+    return variance <= config['convergence_cutoff_criteria']
 
 def worker_run_loop(run_id):
     gen = last_generation(run_id) or 0
@@ -248,5 +252,4 @@ def worker_run_loop(run_id):
                 session.delete(material)
             session.commit()
         gen += 1
-
-        # no convergance test at present!
+        converged = evaluate_convergence(run_id, gen)
