@@ -11,6 +11,11 @@ import yaml
 with open(os.path.join('settings', 'database.yaml'), 'r') as yaml_file:
     dbconfig = yaml.load(yaml_file)
 connection_string = dbconfig['connection_string']
+if 'sqlite' in connection_string:
+    print(
+        'WARNING: attempting to use SQLite database! Okay for local debugging\n' +
+        'but will not work with multiple workers, due to lack of locking features.'
+    )
 engine = create_engine(connection_string)
 session = sessionmaker(bind=engine)()
 
