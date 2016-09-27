@@ -4,6 +4,7 @@ import os
 
 import click
 import yaml
+import RASPA2
 
 import htsohm
 from htsohm.files import load_config_file
@@ -18,14 +19,14 @@ def hts():
 def start(config_path):
     config = load_config_file(config_path)
 
+    htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
     run_id = datetime.now().isoformat()
     config['run_id'] = run_id
-
-    wd = os.environ['HTSOHM_DIR']
-    config_file = os.path.join(wd, 'config', run_id + '.yaml')
+    config['raspa2_dir'] = os.path.dirname(RASPA2.__file__)
+    config['htsohm_dir'] = htsohm_dir
+    config_file = os.path.join(htsohm_dir, 'config', run_id + '.yaml')
     with open(config_file, "w") as file:
         yaml.dump(config, file, default_flow_style=False)
-
     print("Run created with id: %s" % run_id)
 
 @hts.command()

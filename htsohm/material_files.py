@@ -54,10 +54,9 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
     sigma_limits            = config["sigma_limits"]
     max_charge              = config["charge_limit"]
     elem_charge             = config["elemental_charge"]
-
-    wd = os.environ['HTSOHM_DIR']                    # specify $HTSOHM_DIR as working directory
-    ff_dir = os.environ['FF_DIR']                    # output force-field files to $FF_DIR
-    mat_dir = os.environ['MAT_DIR']                  # output .cif-files to $MAT_DIR
+    raspa2_dir              = config["raspa2_dir"]
+    ff_dir   = os.path.join(raspa2_dir, 'share', 'raspa', 'forcefield')         # forcefield-files
+    mat_dir  = os.path.join(raspa2_dir, 'share', 'raspa', 'structures', 'cif')  # .cif-files
 
     ########################################################################
     material = Material(run_id)
@@ -150,10 +149,9 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     number_density_limits   = config["number_density_limits"]
     epsilon_limits          = config["epsilon_limits"]
     sigma_limits            = config["sigma_limits"]
-
-    md = os.environ['MAT_DIR']
-    fd = os.environ['FF_DIR']
-    wd = os.environ['HTSOHM_DIR']
+    raspa2_dir              = config["raspa2_dir"]
+    ff_dir   = os.path.join(raspa2_dir, 'share', 'raspa', 'forcefield')         # forcefield-files
+    mat_dir  = os.path.join(raspa2_dir, 'share', 'raspa', 'structures', 'cif')  # .cif-files
 
     ########################################################################
     # add row to database
@@ -163,7 +161,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     ########################################################################
     # write force_field.def
-    child_forcefield_directory = os.path.join(fd, run_id + '-' + str(new_material.uuid))
+    child_forcefield_directory = os.path.join(ff_dir, run_id + '-' + str(new_material.uuid))
     os.mkdir(child_forcefield_directory)
     force_field_file = os.path.join(child_forcefield_directory, 'force_field.def')
     write_force_field(force_field_file)                        # WRITE FORCE_FIELD.DEF
@@ -171,7 +169,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     ########################################################################
     # copy pseudo_atoms.def
-    parent_forcefield_directory = os.path.join(fd, run_id + '-' + str(parent.uuid))
+    parent_forcefield_directory = os.path.join(ff_dir, run_id + '-' + str(parent.uuid))
     parent_pseudo_file = os.path.join(parent_forcefield_directory, 'pseudo_atoms.def')
     shutil.copy(parent_pseudo_file, child_forcefield_directory)    # COPY PSEUDO_ATOMS.DEF
     print('  - pseudo_atoms.def\tWRITTEN.')
@@ -205,7 +203,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     ########################################################################
     # load values from parent cif-file
-    p_cif = os.path.join(md, run_id + '-' + str(parent.uuid) + '.cif')
+    p_cif = os.path.join(mat_dir, run_id + '-' + str(parent.uuid) + '.cif')
     n1, n2, old_x, old_y, old_z = np.genfromtxt(p_cif, unpack=True, skip_header=16)
     old_atom_types = np.genfromtxt(p_cif, usecols=0, dtype=str, skip_header=16)
     old_abc = np.genfromtxt(
@@ -271,7 +269,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
                     "z-frac"      : round(random(), 4)}
                 atom_sites.append(atom_site)
 
-    cif_file = os.path.join(md, run_id + '-' + str(new_material.uuid) + '.cif')
+    cif_file = os.path.join(mat_dir, run_id + '-' + str(new_material.uuid) + '.cif')
     write_cif_file(cif_file, lattice_constants, atom_sites)
 
     return new_material
