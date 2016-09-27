@@ -2,6 +2,7 @@ import os
 import subprocess
 import shutil
 
+import htsohm
 from htsohm import config
 
 def write_raspa_file(filename, run_id, material_id):
@@ -42,7 +43,13 @@ def parse_output(output_file):
 
 def run(run_id, material_id):
     simulation_directory  = config['simulations_directory']
-    output_dir = os.path.join(os.environ[simulation_directory], 'output_%s' % material_id)
+    if simulation_directory == 'HTSOHM':
+        path = os.path.dirname(os.path.dirname(htsohm.__file__))
+    if simulation_directory == 'SCRATCH':
+        path = os.environ['SCRATCH']
+    else:
+        path = simulation_directory
+    output_dir = os.path.join(path, 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "VoidFraction.input")
     write_raspa_file(filename, run_id, material_id)

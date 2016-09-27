@@ -5,6 +5,7 @@ import os
 import yaml
 
 # local application/library specific imports
+import htsohm
 
 def load_config_file(file_name):
     """Reads input file.
@@ -17,8 +18,8 @@ def load_config_file(file_name):
     return config
 
 def save_convergence_file(run_id, generation, variance):
-    wd = os.environ['HTSOHM_DIR']      # specify working directory
-    log_file = os.path.join(wd, 'config', run_id + '_log.yaml')
+    htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
+    log_file = os.path.join(htsohm_dir, 'config', run_id + '_log.yaml')
     data = {
         "generation_%s" % generation  : variance
     }
