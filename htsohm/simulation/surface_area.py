@@ -48,6 +48,7 @@ def parse_output(output_file):
         "%s\tA^2\n"      % (results['sa_unit_cell_surface_area']) +
         "%s\tm^2/g\n"    % (results['sa_gravimetric_surface_area']) +
         "%s\tm^2/cm^3"   % (results['sa_volumetric_surface_area']))
+    return results
 
 def run(run_id, material_id):
     simulation_directory  = config['simulations_directory']
