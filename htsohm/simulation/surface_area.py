@@ -49,16 +49,15 @@ def parse_output(output_file):
         "%s\tm^2/g\n"    % (results['sa_gravimetric_surface_area']) +
         "%s\tm^2/cm^3"   % (results['sa_volumetric_surface_area']))
 
-    return results
-
 def run(run_id, material_id):
     simulation_directory  = config['simulations_directory']
     if simulation_directory == 'HTSOHM':
-        path = os.path.dirname(os.path.dirname(htsohm.__file__))
-    if simulation_directory == 'SCRATCH':
+        htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
+        path = os.path.join(htsohm_dir, run_id)
+    elif simulation_directory == 'SCRATCH':
         path = os.environ['SCRATCH']
     else:
-        path = simulation_directory
+        print('OUTPUT DIRECTORY NOT FOUND.')
     output_dir = os.path.join(path, 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "SurfaceArea.input")
