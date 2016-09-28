@@ -6,16 +6,18 @@
 # $Author: paulboone $
 
 #PBS -j oe
-#PBS -N htsohm
-#PBS -q test
-#PBS -l nodes=1:ppn=1
-#PBS -l walltime=00:15:00
-#PBS -l mem=1GB
+#PBS -N htsohm-testing
+#PBS -q westmere
+#PBS -l nodes=1:ppn=5
+#PBS -l walltime=00:30:00
+#PBS -l mem=2GB
 #PBS -S /bin/bash
 
 # accepts a parameter stay_alive if you don't want the worker to exit immediately after all jobs
 # are complete
 # use like `qsub -v stay_alive=1`
+
+run_id = ${input}
 
 echo JOB_ID: $PBS_JOBID JOB_NAME: $PBS_JOBNAME HOSTNAME: $PBS_O_HOST
 echo start_time: `date`
@@ -27,10 +29,9 @@ module load postgresql/9.5.2
 source ~/venv/htsohm/bin/activate
 
 cd $PBS_O_WORKDIR
-sjs_launch_workers.sh $PBS_NUM_PPN $stay_alive
+for ((i = 0; i < $PBS_NUM_PPN; i++))
+do
+    python hts.py launch_worker ${run_id} &
+done
 
-# workaround for .out / .err files not always being copied back to $PBS_O_WORKDIR
-cp /var/spool/torque/spool/$PBS_JOBID.OU $PBS_O_WORKDIR/$PBS_JOBID$(hostname)_$$.out
-cp /var/spool/torque/spool/$PBS_JOBID.ER $PBS_O_WORKDIR/$PBS_JOBID$(hostname)_$$.err
-
-exit
+wait
