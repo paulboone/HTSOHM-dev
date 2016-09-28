@@ -25,8 +25,7 @@ def start(config_path):
     config['htsohm_dir'] = htsohm_dir
     
     run_dir = os.path.join(htsohm_dir, run_id)
-    if not os.path.isdir(run_dir):
-        os.mkdir(run_dir)
+    os.makedirs(run_dir, exist_ok=True)
     config_file = os.path.join(run_dir, 'run_parameters.yaml')
     with open(config_file, 'w') as file:
         yaml.dump(config, file, default_flow_style=False)
