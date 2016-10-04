@@ -31,7 +31,7 @@ source ~/venv/htsohm/bin/activate
 cd $PBS_O_WORKDIR
 for ((i = 0; i < $PBS_NUM_PPN; i++))
 do
-    python hts.py launch_worker ${run_id} &
+    python hts.py launch_worker ${run_id} 2> $(run_id)/outputPID_$!.log &
 done
 
 wait
