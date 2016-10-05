@@ -240,19 +240,16 @@ def worker_run_loop(run_id):
                 mutation_strength = mutate(run_id, gen, parent)
                 material = write_child_definition_files(run_id, parent_id, gen, mutation_strength)
 
-            try:
-                run_all_simulations(material)
+            run_all_simulations(material)
+            session.add(material)
+            session.commit()
+
+            material.generation_index = material.calculate_generation_index()
+            if material.generation_index < config['children_per_generation']:
                 session.add(material)
-                session.commit()
-    
-                material.generation_index = material.calculate_generation_index()
-                if material.generation_index < config['children_per_generation']:
-                    session.add(material)
-                else:
-                    # delete excess rows
-                    session.delete(material)
-                session.commit()
-            except FileNotFoundError:
-                pass
+            else:
+                # delete excess rows
+                session.delete(material)
+            session.commit()
         gen += 1
         converged = evaluate_convergence(run_id, gen)
