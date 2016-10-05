@@ -75,7 +75,7 @@ def parse_output(output_file):
                 results['ml_host_adsorbate_vdw'] = float(line.split()[5])
                 results['ml_host_adsorbate_cou'] = float(line.split()[7])
             line_counter += 1
-
+    
     print(
         "\nMETHANE LOADING\tabsolute\texcess\n" +
         "mol/kg\t\t%s\t%s\n" % (results['ml_absolute_molar_loading'], results['ml_excess_molar_loading']) +
