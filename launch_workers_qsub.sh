@@ -8,8 +8,8 @@
 #PBS -j oe
 #PBS -N htsohm-testing
 #PBS -q westmere
-#PBS -l nodes=1:ppn=5
-#PBS -l walltime=00:30:00
+#PBS -l nodes=1:ppn=10
+#PBS -l walltime=04:00:00
 #PBS -l mem=2GB
 #PBS -S /bin/bash
 
@@ -31,7 +31,7 @@ source ~/venv/htsohm/bin/activate
 cd $PBS_O_WORKDIR
 for ((i = 0; i < $PBS_NUM_PPN; i++))
 do
-    python hts.py launch_worker ${run_id} > $(run_id)/outputPID_$!.log 2>&1 &
+    python hts.py launch_worker ${run_id} > ${run_id}/output_${PBS_O_HOST}_$!.log 2>&1 &
 done
 
 wait
