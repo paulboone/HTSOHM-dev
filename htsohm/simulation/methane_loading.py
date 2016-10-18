@@ -33,6 +33,22 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
             "            SwapProbability\t\t1.0\n" +
             "            CreateNumberOfMolecules\t0\n")
 
+def parse_energy(output_file, line_number, interaction, results):
+    with open(output_file) as origin:
+        line = origin[line_number]
+        if interaction == 'host_host':
+            results['ml_host_host_avg'] = float(line.split()[1])
+            results['ml_host_host_vdw'] = float(line.split()[5])
+            results['ml_host_host_cou'] = float(line.split()[7])
+        elif interaction == 'adsorbate_adsorbate':
+            results['ml_adsorbate_adsorbate_avg'] = float(line.split()[1])
+            results['ml_adsorbate_adsorbate_vdw'] = float(line.split()[5])
+            results['ml_adsorbate_adsorbate_cou'] = float(line.split()[7])
+        elif interaction == 'host_adsorbate':
+            results['ml_host_adsorbate_avg'] = float(line.split()[1])
+            results['ml_host_adsorbate_vdw'] = float(line.split()[5])
+            results['ml_host_adsorbate_cou'] = float(line.split()[7])
+    return results
 
 def parse_output(output_file):
     results = {}
@@ -53,29 +69,21 @@ def parse_output(output_file):
                 results['ml_excess_volumetric_loading'] = float(line.split()[6])
             elif "Average Host-Host energy:" in line:
                 host_host_line = line_counter + 8
+                results = parse_energy(
+                    output_file, host_host_line, 'host_host', results
+                )
             elif "Average Adsorbate-Adsorbate energy:" in line:
                 adsorbate_adsorbate_line = line_counter + 8
+                results = parse_energy(
+                    output_file, adsorbate_adsorbate_line, 'adsorbate_adsorbate', results
+                )
             elif "Average Host-Adsorbate energy:" in line:
                 host_adsorbate_line = line_counter + 8
+                results = parse_energy(
+                        output_file, host_adsorbate_line, 'host_adsorbate', results
+                )
             line_counter += 1
 
-    with open(output_file) as origin:
-        line_counter = 1
-        for line in origin:
-            if line_counter == host_host_line:
-                results['ml_host_host_avg'] = float(line.split()[1])
-                results['ml_host_host_vdw'] = float(line.split()[5])
-                results['ml_host_host_cou'] = float(line.split()[7])
-            if line_counter == adsorbate_adsorbate_line:
-                results['ml_adsorbate_adsorbate_avg'] = float(line.split()[1])
-                results['ml_adsorbate_adsorbate_vdw'] = float(line.split()[5])
-                results['ml_adsorbate_adsorbate_cou'] = float(line.split()[7])
-            if line_counter == host_adsorbate_line:
-                results['ml_host_adsorbate_avg'] = float(line.split()[1])
-                results['ml_host_adsorbate_vdw'] = float(line.split()[5])
-                results['ml_host_adsorbate_cou'] = float(line.split()[7])
-            line_counter += 1
-    
     print(
         "\nMETHANE LOADING\tabsolute\texcess\n" +
         "mol/kg\t\t%s\t%s\n" % (results['ml_absolute_molar_loading'], results['ml_excess_molar_loading']) +
