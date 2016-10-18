@@ -253,28 +253,16 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     if number_of_atoms > len(atom_sites):
         for new_sites in range(number_of_atoms - len(atom_sites)):
             atom_site = {
-                "chemical-id" : chemical_id,
-                "x-frac"      : x,
-                "y-frac"      : y,
-                "z-frac"      : z}
+                "chemical-id" : choice(chemical_ids),
+                "x-frac"      : round(random(), 4),
+                "y-frac"      : round(random(), 4),
+                "z-frac"      : round(random(), 4)}
             atom_sites.append(atom_site)
-        ########################################################################
-        # add atom-sites, if needed
-        if number_of_atoms > len(atom_sites):
-            for new_sites in range(number_of_atoms - len(atom_sites)):
-                atom_site = {
-                    "chemical-id" : choice(chemical_ids),
-                    "x-frac"      : round(random(), 4),
-                    "y-frac"      : round(random(), 4),
-                    "z-frac"      : round(random(), 4)}
-                atom_sites.append(atom_site)
 
     cif_file = os.path.join(mat_dir, run_id + '-' + str(new_material.uuid) + '.cif')
     write_cif_file(cif_file, lattice_constants, atom_sites)
 
     return new_material
-
-
 
 def write_cif_file(cif_file, lattice_constants, atom_sites):
     with open(cif_file, "w") as file:
