@@ -37,8 +37,10 @@ def parse_output(output_file):
                 results['vf_helium_void_fraction'] = float(line.split()[4])
             except IndexError:
                 print()
-    print("\nVOID FRACTION :   %s\n" % (results['vf_helium_void_fraction']))
-
+    try:
+        print("\nVOID FRACTION :   %s\n" % (results['vf_helium_void_fraction']))
+    except KeyError:
+        print("\nERROR PARSING VOID FRACTION DATA.")
     return results
 
 def run(run_id, material_id):
