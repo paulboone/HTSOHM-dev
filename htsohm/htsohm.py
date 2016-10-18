@@ -1,104 +1,255 @@
-# standard library imports
-import os
-import sys
+from math import sqrt
 
-# related third party imports
 import numpy as np
+from sqlalchemy.sql import func, or_
+from sqlalchemy.orm.exc import FlushError
 
-# local application/library specific imports
-from htsohm.binning import select_parents
-from htsohm.generate import write_seed_definition_files
-from htsohm.mutate import create_strength_array, recalculate_strength_array
-from htsohm.mutate import write_children_definition_files
-from htsohm.runDB_declarative import Material, session
-from htsohm.simulate import run_all_simulations, dummy_test
-from htsohm.utilities import write_config_file, evaluate_convergence, save_convergence
+from htsohm import config
+from htsohm.db import session, Material, MutationStrength
+from htsohm.material_files import write_seed_definition_files, write_child_definition_files
+from htsohm import simulation
 
-def init_materials_in_database(run_id, children_per_generation, generation):
-    """initialize materials in database with run_id and generation"""
+def materials_in_generation(run_id, generation):
+    return session.query(Material).filter(
+        Material.run_id == run_id,
+        Material.generation == generation
+    ).count()
 
-    for material in range(children_per_generation):
-        new_material = Material(run_id, generation, 'none')
-        session.add(new_material)
-    session.commit()
+def last_generation(run_id):
+    return session.query(func.max(Material.generation)).filter(
+        Material.run_id == run_id,
+    )[0][0]
 
-def simulate_all_materials(run_id, generation):
-    """simulate methane loading, helium void fraction, and surface area for seed population"""
-    materials = session.query(Material).filter(Material.run_id == run_id, Material.generation == generation).all()
-    for material in materials:
-        run_all_simulations(material.id)
-    session.commit()
+def calc_bin(value, bound_min, bound_max, bins):
+    step = (bound_max - bound_min) / bins
+    assigned_bin = (value - bound_min) // step
+    assigned_bin = min(assigned_bin, bins-1)
+    assigned_bin = max(assigned_bin, 0)
+    return int(assigned_bin)
 
-def hpc_job_run_all_simulations(material_id):
-    print("======================================================================================")
-    print("== manhpc_job_run_all_simulations %s" % material_id)
+def select_parent(run_id, max_generation, generation_limit):
+    """Use bin-counts to preferentially select a list of rare parents.
 
-    run_all_simulations(material_id)
-    session.commit()
-    print("======================================================================================")
+    Each bin contains some number of materials, and those bins with the fewers materials represent
+    the most rare structure-property combinations. These rare materials are preferred as parents
+    for new materials, because their children are most likely to display unique properties. This
+    function first calculates a `weight` for each bin, based on the number of constituent
+    materials. These weights affect the probability of selecting a parent from that bin. Once a bin
+    is selected, a parent is randomly-selected from those materials within that bin.
+    """
 
-def queue_all_materials(run_id, generation, queue):
-    """same as simulate_all_materials, except queues the jobs in the job server"""
-    materials = session.query(Material).filter(Material.run_id == run_id, Material.generation == generation).all()
-    for material in materials:
-        queue.enqueue(hpc_job_run_all_simulations, material.id, timeout=60*60)
+    # Each bin is counted...
+    bins_and_counts = session \
+        .query(
+            func.count(Material.id),
+            Material.methane_loading_bin,
+            Material.surface_area_bin,
+            Material.void_fraction_bin
+        ) \
+        .filter(
+            Material.run_id == run_id,
+            or_(Material.retest_passed == True, Material.retest_passed == None),
+            Material.generation <= max_generation,
+            Material.generation_index < generation_limit,
+        ) \
+        .group_by(
+            Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
+        ).all()[1:]
+    bins = [{"ML" : i[1], "SA" : i[2], "VF" : i[3]} for i in bins_and_counts]
+    total = sum([i[0] for i in bins_and_counts])
+    # ...then assigned a weight.
+    weights = [i[0] / float(total) for i in bins_and_counts]
 
-def screen_parents(run_id, children_per_generation, generation):
-    """select potential parent-materials and run them in dummy-test"""
-    test_complete = False
-    while not test_complete:
-        next_generation_list = select_parents(run_id, children_per_generation, generation)
-        session.commit()             # parent_ids added to database
-        test_complete = dummy_test(run_id, next_generation_list, generation)
-        session.commit()             # dummy_test_results added to database
+    parent_bin = np.random.choice(bins, p=weights)
+    parent_query = session \
+        .query(Material.id) \
+        .filter(
+            Material.run_id == run_id,
+            or_(Material.retest_passed == True, Material.retest_passed == None),
+            Material.methane_loading_bin == parent_bin["ML"],
+            Material.surface_area_bin == parent_bin["SA"],
+            Material.void_fraction_bin == parent_bin["VF"],
+            Material.generation <= max_generation,
+            Material.generation_index < generation_limit,
+        ).all()
+    potential_parents = [i[0] for i in parent_query]
 
-def create_next_generation(run_id, generation):
-    """once screened, parent-materials are mutated to create next generation"""
-    if generation == 1:
-        create_strength_array(run_id)                  # create strength-parameter array `run_id`.npy
-    elif generation >= 2:
-        recalculate_strength_array(run_id, generation) # recalculate strength-parameters, as needed
-    write_children_definition_files(run_id, generation)      # create child-materials
+    return int(np.random.choice(potential_parents))
 
-def seed_generation(run_id, children_per_generation, number_of_atomtypes, queue=None):
-    generation = 0
-    init_materials_in_database(run_id, children_per_generation, generation)
-    write_seed_definition_files(run_id, children_per_generation, number_of_atomtypes)
-    if queue is not None:
-        queue_all_materials(run_id, generation, queue)
-    else:
-        simulate_all_materials(run_id, generation)
+def run_all_simulations(material):
+    """Simulate helium void fraction, methane loading, and surface area.
 
-def next_generation(run_id, children_per_generation, generation, queue=None):
-    init_materials_in_database(run_id, children_per_generation, generation)
-    screen_parents(run_id, children_per_generation, generation)
-    create_next_generation(run_id, generation)
-    if queue is not None:
-        queue_all_materials(run_id, generation, queue)
-    else:
-        simulate_all_materials(run_id, generation)
+    For a given material (id) three simulations are run using RASPA. First a helium void fraction
+    is calculated, and then it is used to run a methane loading simulation (void fraction needed to
+    calculate excess v. absolute loading). Finally, a surface area is calculated and the material is
+    assigned to its appropriate bin."""
 
-def htsohm(children_per_generation,    # number of materials per generation
-           number_of_atomtypes,        # number of atom-types per material
-           strength_0,                 # intial strength parameter
-           number_of_bins,             # number of bins for analysis
-           max_generations=20,         # maximum number of generations
-           acceptance_value=-0.5):      # desired degree of `convergence`
     ############################################################################
-    # write run-configuration file
-    run_id = write_config_file(children_per_generation, number_of_atomtypes, strength_0,
-        number_of_bins, max_generations)["run-id"]
+    # run helium void fraction simulation
+    results = simulation.helium_void_fraction.run(material.run_id, material.uuid)
+    material.update_from_dict(results)
 
-    convergence = acceptance_value + 1          # initialize convergence with arbitrary value
-    for generation in range(max_generations):
-        while convergence >= acceptance_value:
-            if generation == 0:                     # SEED GENERATION
-                seed_generation(run_id, children_per_generation, number_of_atomtypes)
-                convergence = evaluate_convergence(run_id)
-                save_convergence(run_id, generation, convergence)
-            elif generation >= 1:                   # FIRST GENERATION, AND ON...
-                next_generation(run_id, children_per_generation, generation)
-                convergence = evaluate_convergence(run_id)
-                save_convergence(run_id, generation, convergence)
-            print('convergence:\t%s' % convergence)
-            generation += 1
+    ############################################################################
+    # run methane loading simulation
+    results = simulation.methane_loading.run(material.run_id,
+                                             material.uuid,
+                                             material.vf_helium_void_fraction)
+    material.update_from_dict(results)
+
+    ############################################################################
+    # run surface area simulation
+    results = simulation.surface_area.run(material.run_id, material.uuid)
+    material.update_from_dict(results)
+
+    ############################################################################
+    # assign material to bin
+    material.methane_loading_bin = calc_bin(material.ml_absolute_volumetric_loading,
+                                        *config['methane_loading_limits'],
+                                        config['number_of_convergence_bins'])
+    material.surface_area_bin = calc_bin(material.sa_volumetric_surface_area,
+                                    *config['surface_area_limits'],
+                                    config['number_of_convergence_bins'])
+    material.void_fraction_bin = calc_bin(material.vf_helium_void_fraction,
+                                    *config['void_fraction_limits'],
+                                    config['number_of_convergence_bins'])
+
+
+
+def retest(m_orig, retests, tolerance):
+    """Recalculate material structure-properties to prevent statistical errors.
+
+    Because methane loading, surface area, and helium void fractions are calculated using
+    statistical methods (namely grand canonic Monte Carlo simulations) they are susceptible
+    to statistical errors. To mitigate this, after a material has been selected as a potential
+    parent, it's combination of structure-properties is resimulated some number of times and
+    compared to the initally-calculated material. If the resimulated values differ from the
+    initially-calculated value beyond an accpetable tolerance, the material fails the `dummy-test`
+    and is flagged, preventing it from being used to generate new materials in the future.
+    """
+
+    m = m_orig.clone()
+    run_all_simulations(m)
+
+    # requery row from database, in case someone else has changed it, and lock it
+    # if the row is presently locked, this method blocks until the row lock is released
+    session.refresh(m_orig, lockmode='update')
+    if m_orig.retest_num < retests:
+        m_orig.retest_methane_loading_sum += m.ml_absolute_volumetric_loading
+        m_orig.retest_surface_area_sum += m.sa_volumetric_surface_area
+        m_orig.retest_void_fraction_sum += m.vf_helium_void_fraction
+        m_orig.retest_num += 1
+
+        if m_orig.retest_num == retests:
+            m_orig.retest_passed = m.calculate_retest_result(tolerance)
+    else:
+        pass
+        # otherwise our test is extra / redundant and we don't save it
+
+    session.commit()
+
+def mutate(run_id, generation, parent):
+    """Retrieve the latest mutation_strength for the parent, or calculate it if missing.
+
+    In the event that a particular bin contains parents whose children exhibit radically
+    divergent properties, the strength parameter for the bin is modified. In order to determine
+    which bins to adjust, the script refers to the distribution of children in the previous
+    generation which share a common parent. The criteria follows:
+     ________________________________________________________________
+     - if none of the children share  |  halve strength parameter
+       the parent's bin               |
+     - if the fraction of children in |
+       the parent bin is < 10%        |
+     _________________________________|_____________________________
+     - if the fraction of children in |  double strength parameter
+       the parent bin is > 50%        |
+     _________________________________|_____________________________
+    """
+
+    mutation_strength_key = [run_id, generation] + parent.bin
+    mutation_strength = session.query(MutationStrength).get(mutation_strength_key)
+
+    if mutation_strength:
+        print("Mutation strength already calculated for this bin and generation.")
+    else:
+        print("Calculating mutation strength...")
+        mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone()
+        mutation_strength.generation = generation
+
+        try:
+            fraction_in_parent_bin = parent.calculate_percent_children_in_bin()
+            if fraction_in_parent_bin < 0.1:
+                mutation_strength.strength *= 0.5
+            elif fraction_in_parent_bin > 0.5 and mutation_strength.strength <= 0.5:
+                mutation_strength.strength *= 2
+        except ZeroDivisionError:
+            print("No prior generation materials in this bin with children.")
+
+        try:
+            session.add(mutation_strength)
+            session.commit()
+        except FlushError as e:
+            print("Somebody beat us to saving a row with this generation. That's ok!")
+            # it's ok b/c this calculation should always yield the exact same result!
+
+    return mutation_strength.strength
+
+def evaluate_convergence(run_id, generation):
+    '''Counts number of materials in each bin and returns variance of these counts.'''
+    bin_counts = session \
+        .query(func.count(Material.id)) \
+        .filter(
+            Material.run_id == run_id, Material.generation < generation,
+            Material.generation_index < config['children_per_generation']
+        ) \
+        .group_by(
+            Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
+        ).all()
+    bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
+    variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
+    print('\nCONVERGENCE:\t%s\n' % variance)
+    return variance <= config['convergence_cutoff_criteria']
+
+def worker_run_loop(run_id):
+    gen = last_generation(run_id) or 0
+
+    converged = False
+    while not converged:
+        size_of_generation = config['children_per_generation']
+
+        while materials_in_generation(run_id, gen) < size_of_generation:
+            if gen == 0:
+                print("writing new seed...")
+                material = write_seed_definition_files(run_id, config['number_of_atom_types'])
+            else:
+                print("selecting a parent / running retests on parent / mutating / simulating")
+                parent_id = select_parent(run_id, max_generation=(gen - 1),
+                                                  generation_limit=config['children_per_generation'])
+
+                parent = session.query(Material).get(parent_id)
+
+                # run retests until we've run enough
+                while parent.retest_passed is None:
+                    print("running retest...")
+                    retest(parent, config['retests']['number'], config['retests']['tolerance'])
+                    session.refresh(parent)
+
+                if not parent.retest_passed:
+                    print("parent failed retest. restarting with parent selection.")
+                    continue
+
+                mutation_strength = mutate(run_id, gen, parent)
+                material = write_child_definition_files(run_id, parent_id, gen, mutation_strength)
+
+            run_all_simulations(material)
+            session.add(material)
+            session.commit()
+
+            material.generation_index = material.calculate_generation_index()
+            if material.generation_index < config['children_per_generation']:
+                session.add(material)
+            else:
+                # delete excess rows
+                session.delete(material)
+            session.commit()
+        gen += 1
+        converged = evaluate_convergence(run_id, gen)
