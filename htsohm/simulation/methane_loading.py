@@ -35,19 +35,21 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
 
 def parse_energy(output_file, line_number, interaction, results):
     with open(output_file) as origin:
-        line = origin[line_number]
-        if interaction == 'host_host':
-            results['ml_host_host_avg'] = float(line.split()[1])
-            results['ml_host_host_vdw'] = float(line.split()[5])
-            results['ml_host_host_cou'] = float(line.split()[7])
-        elif interaction == 'adsorbate_adsorbate':
-            results['ml_adsorbate_adsorbate_avg'] = float(line.split()[1])
-            results['ml_adsorbate_adsorbate_vdw'] = float(line.split()[5])
-            results['ml_adsorbate_adsorbate_cou'] = float(line.split()[7])
-        elif interaction == 'host_adsorbate':
-            results['ml_host_adsorbate_avg'] = float(line.split()[1])
-            results['ml_host_adsorbate_vdw'] = float(line.split()[5])
-            results['ml_host_adsorbate_cou'] = float(line.split()[7])
+        line_counter = 1
+        for line in origin:
+            if line_counter == line_number:
+                if interaction == 'host_host':
+                    results['ml_host_host_avg'] = float(line.split()[1])
+                    results['ml_host_host_vdw'] = float(line.split()[5])
+                    results['ml_host_host_cou'] = float(line.split()[7])
+                elif interaction == 'adsorbate_adsorbate':
+                    results['ml_adsorbate_adsorbate_avg'] = float(line.split()[1])
+                    results['ml_adsorbate_adsorbate_vdw'] = float(line.split()[5])
+                    results['ml_adsorbate_adsorbate_cou'] = float(line.split()[7])
+                elif interaction == 'host_adsorbate':
+                    results['ml_host_adsorbate_avg'] = float(line.split()[1])
+                    results['ml_host_adsorbate_vdw'] = float(line.split()[5])
+                    results['ml_host_adsorbate_cou'] = float(line.split()[7])
     return results
 
 def parse_output(output_file):
@@ -105,6 +107,7 @@ def run(run_id, material_id, helium_void_fraction):
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "MethaneLoading.input")
     write_raspa_file(filename, run_id, material_id, helium_void_fraction)
+    print("Simulating methane loading in %s-%s..." % (run_id, material_id))
     subprocess.run(['simulate', './MethaneLoading.input'], check=True, cwd=output_dir)
 
     filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)

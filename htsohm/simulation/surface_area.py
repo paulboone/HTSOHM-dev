@@ -63,6 +63,7 @@ def run(run_id, material_id):
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "SurfaceArea.input")
     write_raspa_file(filename, run_id, material_id)
+    print("Calculating surface area of %s-%s..." % (run_id, material_id))
     subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd=output_dir)
 
     filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
