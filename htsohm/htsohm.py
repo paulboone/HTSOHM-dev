@@ -249,7 +249,8 @@ def worker_run_loop(run_id):
                 session.add(material)
             else:
                 # delete excess rows
-                session.delete(material)
+                # session.delete(material)
+                pass
             session.commit()
         gen += 1
         converged = evaluate_convergence(run_id, gen)
