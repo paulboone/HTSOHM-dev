@@ -3,3 +3,4 @@ psycopg2
 numpy
 SQLAlchemy
 git+https://github.com/WilmerLab/raspa2
+pytest
