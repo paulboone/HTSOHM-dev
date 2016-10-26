@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 import shutil
@@ -48,6 +49,7 @@ def parse_output(output_file):
         "%s\tA^2\n"      % (results['sa_unit_cell_surface_area']) +
         "%s\tm^2/g\n"    % (results['sa_gravimetric_surface_area']) +
         "%s\tm^2/cm^3"   % (results['sa_volumetric_surface_area']))
+    sys.stdout.flush()
     return results
 
 def run(run_id, material_id):
@@ -59,11 +61,13 @@ def run(run_id, material_id):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
+        sys.stdout.flush()
     output_dir = os.path.join(path, 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "SurfaceArea.input")
     write_raspa_file(filename, run_id, material_id)
     print("Calculating surface area of %s-%s..." % (run_id, material_id))
+    sys.stdout.flush()
     subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd=output_dir)
 
     filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)

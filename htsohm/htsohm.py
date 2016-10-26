@@ -1,3 +1,4 @@
+import sys
 from math import sqrt
 
 import numpy as np
@@ -170,8 +171,10 @@ def calculate_mutation_strength(run_id, generation, parent):
 
     if mutation_strength:
         print("Mutation strength already calculated for this bin and generation.")
+        sys.stdout.flush()
     else:
         print("Calculating mutation strength...")
+        sys.stdout.flush()
         mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone()
         mutation_strength.generation = generation
 
@@ -183,12 +186,14 @@ def calculate_mutation_strength(run_id, generation, parent):
                 mutation_strength.strength *= 2
         except ZeroDivisionError:
             print("No prior generation materials in this bin with children.")
+            sys.stdout.flush()
 
         try:
             session.add(mutation_strength)
             session.commit()
         except FlushError as e:
             print("Somebody beat us to saving a row with this generation. That's ok!")
+            sys.stdout.flush()
             # it's ok b/c this calculation should always yield the exact same result!
 
     return mutation_strength.strength
@@ -207,6 +212,7 @@ def evaluate_convergence(run_id, generation):
     bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
     variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
     print('\nCONVERGENCE:\t%s\n' % variance)
+    sys.stdout.flush()
     return variance <= config['convergence_cutoff_criteria']
 
 def worker_run_loop(run_id):
@@ -219,9 +225,11 @@ def worker_run_loop(run_id):
         while materials_in_generation(run_id, gen) < size_of_generation:
             if gen == 0:
                 print("writing new seed...")
+                sys.stdout.flush()
                 material = write_seed_definition_files(run_id, config['number_of_atom_types'])
             else:
                 print("selecting a parent / running retests on parent / mutating / simulating")
+                sys.stdout.flush()
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
                                                   generation_limit=config['children_per_generation'])
 
@@ -230,11 +238,13 @@ def worker_run_loop(run_id):
                 # run retests until we've run enough
                 while parent.retest_passed is None:
                     print("running retest...")
+                    sys.stdout.flush()
                     retest(parent, config['retests']['number'], config['retests']['tolerance'])
                     session.refresh(parent)
 
                 if not parent.retest_passed:
                     print("parent failed retest. restarting with parent selection.")
+                    sys.stdout.flush()
                     continue
 
                 mutation_strength = calculate_mutation_strength(run_id, gen, parent)

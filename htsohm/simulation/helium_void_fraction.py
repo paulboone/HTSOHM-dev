@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 import shutil
@@ -39,8 +40,10 @@ def parse_output(output_file):
                 print()
     try:
         print("\nVOID FRACTION :   %s\n" % (results['vf_helium_void_fraction']))
+        sys.stdout.flush()
     except KeyError:
         print("\nERROR PARSING VOID FRACTION DATA.")
+        sys.stdout.flush()
     return results
 
 def run(run_id, material_id):
@@ -52,11 +55,13 @@ def run(run_id, material_id):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
+        sys.stdout.flush()
     output_dir = os.path.join(path, 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "VoidFraction.input")
     write_raspa_file(filename, run_id, material_id)
     print("Calculating void fraction of %s-%s..." % (run_id, material_id))
+    sys.stdout.flush()
     subprocess.run(['simulate', './VoidFraction.input'], check=True, cwd=output_dir)
 
     filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)

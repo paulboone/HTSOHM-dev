@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 import shutil
@@ -91,6 +92,7 @@ def parse_output(output_file):
         "mol/kg\t\t%s\t%s\n" % (results['ml_absolute_molar_loading'], results['ml_excess_molar_loading']) +
         "cc/g\t\t%s\t%s\n"   % (results['ml_absolute_gravimetric_loading'], results['ml_excess_gravimetric_loading']) +
         "cc/cc\t\t%s\t%s\n"  % (results['ml_absolute_volumetric_loading'], results['ml_excess_volumetric_loading']))
+    sys.stdout.flush()
 
     return results
 
@@ -103,11 +105,13 @@ def run(run_id, material_id, helium_void_fraction):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
+        sys.stdout.flush()
     output_dir = os.path.join(path, 'output_%s' % material_id)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "MethaneLoading.input")
     write_raspa_file(filename, run_id, material_id, helium_void_fraction)
     print("Simulating methane loading in %s-%s..." % (run_id, material_id))
+    sys.stdout.flush()
     subprocess.run(['simulate', './MethaneLoading.input'], check=True, cwd=output_dir)
 
     filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)
