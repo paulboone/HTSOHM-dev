@@ -147,7 +147,7 @@ def retest(m_orig, retests, tolerance):
 
     session.commit()
 
-def mutate(run_id, generation, parent):
+def calculate_mutation_strength(run_id, generation, parent):
     """Retrieve the latest mutation_strength for the parent, or calculate it if missing.
 
     In the event that a particular bin contains parents whose children exhibit radically
@@ -237,7 +237,7 @@ def worker_run_loop(run_id):
                     print("parent failed retest. restarting with parent selection.")
                     continue
 
-                mutation_strength = mutate(run_id, gen, parent)
+                mutation_strength = calculate_mutation_strength(run_id, gen, parent)
                 material = write_child_definition_files(run_id, parent_id, gen, mutation_strength)
 
             run_all_simulations(material)
@@ -249,7 +249,8 @@ def worker_run_loop(run_id):
                 session.add(material)
             else:
                 # delete excess rows
-                session.delete(material)
+                # session.delete(material)
+                pass
             session.commit()
         gen += 1
         converged = evaluate_convergence(run_id, gen)
