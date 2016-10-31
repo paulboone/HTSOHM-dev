@@ -1,6 +1,7 @@
-pyyaml
-psycopg2
-numpy
-SQLAlchemy
+numpy ~= 1.11
+psycopg2 ~= 2.6
+pytest ~= 3.0
+pyyaml ~= 3.11
+SQLAlchemy ~= 1.0
+
 git+https://github.com/WilmerLab/raspa2
-pytest
