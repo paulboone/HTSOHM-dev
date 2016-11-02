@@ -79,8 +79,10 @@ def run(run_id, material_id):
             output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
             results = parse_output(output_file)
             shutil.rmtree(output_dir, ignore_errors=True)
-        except FileNotFoundError:
-            print('WARNING: FileNotFoundError, resimulating...')
+
+        except (FileNotFoundError, KeyError) as err:
+            print(err)
+            print(err.args)
             continue
         break
 
