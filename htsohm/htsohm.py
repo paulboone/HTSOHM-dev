@@ -114,8 +114,6 @@ def run_all_simulations(material):
                                     *config['void_fraction_limits'],
                                     config['number_of_convergence_bins'])
 
-
-
 def retest(m_orig, retests, tolerance):
     """Recalculate material structure-properties to prevent statistical errors.
 

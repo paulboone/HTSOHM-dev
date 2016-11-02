@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 import shutil
+from datetime import datetime
 
 import htsohm
 from htsohm import config
@@ -66,13 +67,21 @@ def run(run_id, material_id):
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "SurfaceArea.input")
     write_raspa_file(filename, run_id, material_id)
-    print("Calculating surface area of %s-%s..." % (run_id, material_id))
-    sys.stdout.flush()
-    subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd=output_dir)
+    while True:
+        try:
+            print("Date :\t%s" % datetime.now().date().isoformat())
+            print("Time :\t%s" % datetime.now().time().isoformat())
+            print("Calculating surface area of %s-%s..." % (run_id, material_id))
+            sys.stdout.flush()
+            subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd=output_dir)
 
-    filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
-    output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
-    results = parse_output(output_file)
-    shutil.rmtree(output_dir, ignore_errors=True)
+            filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
+            output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
+            results = parse_output(output_file)
+            shutil.rmtree(output_dir, ignore_errors=True)
+        except FileNotFoundError:
+            print('WARNING: FileNotFoundError, resimulating...')
+            continue
+        break
 
     return results

@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 import shutil
+from datetime import datetime
 
 import htsohm
 from htsohm import config
@@ -34,25 +35,6 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
             "            SwapProbability\t\t1.0\n" +
             "            CreateNumberOfMolecules\t0\n")
 
-def parse_energy(output_file, line_number, interaction, results):
-    with open(output_file) as origin:
-        line_counter = 1
-        for line in origin:
-            if line_counter == line_number:
-                if interaction == 'host_host':
-                    results['ml_host_host_avg'] = float(line.split()[1])
-                    results['ml_host_host_vdw'] = float(line.split()[5])
-                    results['ml_host_host_cou'] = float(line.split()[7])
-                elif interaction == 'adsorbate_adsorbate':
-                    results['ml_adsorbate_adsorbate_avg'] = float(line.split()[1])
-                    results['ml_adsorbate_adsorbate_vdw'] = float(line.split()[5])
-                    results['ml_adsorbate_adsorbate_cou'] = float(line.split()[7])
-                elif interaction == 'host_adsorbate':
-                    results['ml_host_adsorbate_avg'] = float(line.split()[1])
-                    results['ml_host_adsorbate_vdw'] = float(line.split()[5])
-                    results['ml_host_adsorbate_cou'] = float(line.split()[7])
-    return results
-
 def parse_output(output_file):
     results = {}
     with open(output_file) as origin:
@@ -72,26 +54,39 @@ def parse_output(output_file):
                 results['ml_excess_volumetric_loading'] = float(line.split()[6])
             elif "Average Host-Host energy:" in line:
                 host_host_line = line_counter + 8
-                results = parse_energy(
-                    output_file, host_host_line, 'host_host', results
-                )
             elif "Average Adsorbate-Adsorbate energy:" in line:
                 adsorbate_adsorbate_line = line_counter + 8
-                results = parse_energy(
-                    output_file, adsorbate_adsorbate_line, 'adsorbate_adsorbate', results
-                )
             elif "Average Host-Adsorbate energy:" in line:
                 host_adsorbate_line = line_counter + 8
-                results = parse_energy(
-                        output_file, host_adsorbate_line, 'host_adsorbate', results
-                )
+            line_counter += 1
+
+    with open(output_file) as origin:
+        line_counter = 1
+        for line in origin:
+            if line_counter == host_host_line:
+                results['ml_host_host_avg'] = float(line.split()[1])
+                results['ml_host_host_vdw'] = float(line.split()[5])
+                results['ml_host_host_cou'] = float(line.split()[7])
+            elif line_counter == adsorbate_adsorbate_line:
+                results['ml_adsorbate_adsorbate_avg'] = float(line.split()[1])
+                results['ml_adsorbate_adsorbate_vdw'] = float(line.split()[5])
+                results['ml_adsorbate_adsorbate_cou'] = float(line.split()[7])
+            elif line_counter == host_adsorbate_line:
+                results['ml_host_adsorbate_avg'] = float(line.split()[1])
+                results['ml_host_adsorbate_vdw'] = float(line.split()[5])
+                results['ml_host_adsorbate_cou'] = float(line.split()[7])
             line_counter += 1
 
     print(
         "\nMETHANE LOADING\tabsolute\texcess\n" +
         "mol/kg\t\t%s\t%s\n" % (results['ml_absolute_molar_loading'], results['ml_excess_molar_loading']) +
         "cc/g\t\t%s\t%s\n"   % (results['ml_absolute_gravimetric_loading'], results['ml_excess_gravimetric_loading']) +
-        "cc/cc\t\t%s\t%s\n"  % (results['ml_absolute_volumetric_loading'], results['ml_excess_volumetric_loading']))
+        "cc/cc\t\t%s\t%s\n"  % (results['ml_absolute_volumetric_loading'], results['ml_excess_volumetric_loading']) +
+        "\nENERGIES\thost-host\tadsorbate-adsorbate\thost-adsorbate\n" +
+        "avg\t\t%s\t\t%s\t\t%s\n" % (results['ml_host_host_avg'], results['ml_adsorbate_adsorbate_avg'], results['ml_host_adsorbate_avg']) +
+        "vdw\t\t%s\t\t%s\t\t%s\n" % (results['ml_host_host_vdw'], results['ml_adsorbate_adsorbate_vdw'], results['ml_host_adsorbate_vdw']) +
+        "cou\t\t%s\t\t%s\t\t\t%s\n" % (results['ml_host_host_cou'], results['ml_adsorbate_adsorbate_cou'], results['ml_host_adsorbate_cou'])
+    )
     sys.stdout.flush()
 
     return results
@@ -110,13 +105,21 @@ def run(run_id, material_id, helium_void_fraction):
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "MethaneLoading.input")
     write_raspa_file(filename, run_id, material_id, helium_void_fraction)
-    print("Simulating methane loading in %s-%s..." % (run_id, material_id))
-    sys.stdout.flush()
-    subprocess.run(['simulate', './MethaneLoading.input'], check=True, cwd=output_dir)
+    while True:
+        try:
+            print("Date :\t%s" % datetime.now().date().isoformat())
+            print("Time :\t%s" % datetime.now().time().isoformat())
+            print("Simulating methane loading in %s-%s..." % (run_id, material_id))
+            sys.stdout.flush()
+            subprocess.run(['simulate', './MethaneLoading.input'], check=True, cwd=output_dir)
 
-    filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)
-    output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
-    results = parse_output(output_file)
-    shutil.rmtree(output_dir, ignore_errors=True)
+            filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)
+            output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
+            results = parse_output(output_file)
+            shutil.rmtree(output_dir, ignore_errors=True)
+        except FileNotFoundError:
+            print('WARNING: FileNotFoundError, resimulating...')
+            continue
+        break
 
     return results
