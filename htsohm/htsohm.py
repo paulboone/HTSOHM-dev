@@ -139,7 +139,15 @@ def retest(m_orig, retests, tolerance):
         m_orig.retest_num += 1
 
         if m_orig.retest_num == retests:
-            m_orig.retest_passed = m.calculate_retest_result(tolerance)
+            while True:
+                try:
+                    m_orig.retest_passed = m.calculate_retest_result(tolerance)
+                except ZeroDivisionError as err:
+                    print(err)
+                    print(err.args)
+                    continue
+                break
+
     else:
         pass
         # otherwise our test is extra / redundant and we don't save it
