@@ -1,11 +1,13 @@
 #HTSOHM-dev
 
+Master Branch Status: [![Build Status]](https://travis-ci.org/paulboone/HTSOHM-dev.svg?branch=master)
+
 This is a package which can be used to map the structure-property space   
 spanned by hypothetical, porous <i>pseudo materials</i>. This package contains   
 modules that manage randomly-generating libraries of pseudo-materials,   
 distributing many simulations across a computing cluster, and selectively   
 mutating rare materials--in an iterative process.
- 
+
 ## Getting started
 
 The HSTOHM-dev libraries were written predominantly in Python3 and Bash. It   
@@ -32,7 +34,7 @@ To run the program, execute:
 `<NoB>` : number of bins.
 
 By default the program will terminate after 20 generations.   
-   
+
 Please send questions/comments/concerns to `ark111@pitt.edu`.
 
 ## License
