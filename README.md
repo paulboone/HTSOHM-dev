@@ -1,6 +1,6 @@
 #HTSOHM-dev
 
-Master Branch Status: [![Build Status](https://travis-ci.org/WilmerLab/HTSOHM-dev.svg?branch=testing)](https://travis-ci.org/WilmerLab/HTSOHM-dev)
+Master Branch Status: [![Build Status](https://travis-ci.org/WilmerLab/HTSOHM-dev.svg?branch=master)](https://travis-ci.org/WilmerLab/HTSOHM-dev)
 
 This is a package which can be used to map the structure-property space   
 spanned by hypothetical, porous <i>pseudo materials</i>. This package contains   
