@@ -1,5 +1,6 @@
 import sys
 from math import sqrt
+from datetime import datetime
 
 import numpy as np
 from sqlalchemy.sql import func, or_
@@ -9,6 +10,9 @@ from htsohm import config
 from htsohm.db import session, Material, MutationStrength
 from htsohm.material_files import write_seed_definition_files, write_child_definition_files
 from htsohm import simulation
+
+#from htsohm.files import load_config_file
+#config = load_config_file('settings/dev_run.yaml')
 
 def materials_in_generation(run_id, generation):
     return session.query(Material).filter(
@@ -244,6 +248,8 @@ def worker_run_loop(run_id):
                 # run retests until we've run enough
                 while parent.retest_passed is None:
                     print("running retest...")
+                    print("Date :\t%s" % datetime.now().date().isoformat())
+                    print("Time :\t%s" % datetime.now().time().isoformat())
                     sys.stdout.flush()
                     retest(parent, config['retests']['number'], config['retests']['tolerance'])
                     session.refresh(parent)

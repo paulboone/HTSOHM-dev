@@ -3,9 +3,13 @@ import os
 import subprocess
 import shutil
 from datetime import datetime
+from uuid import uuid4
 
 import htsohm
 from htsohm import config
+
+#from htsohm.files import load_config_file
+#config = load_config_file('settings/dev_run.yaml')
 
 def write_raspa_file(filename, run_id, material_id):
     simulation_cycles = config['surface_area']['simulation_cycles']
@@ -55,6 +59,7 @@ def parse_output(output_file):
 
 def run(run_id, material_id):
     simulation_directory  = config['simulations_directory']
+#    simulation_directory = 'HTSOHM'
     if simulation_directory == 'HTSOHM':
         htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
         path = os.path.join(htsohm_dir, run_id)
@@ -63,7 +68,8 @@ def run(run_id, material_id):
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
         sys.stdout.flush()
-    output_dir = os.path.join(path, 'output_%s' % material_id)
+    output_dir = os.path.join(path, 'output_%s_%s' % (material_id, uuid4()))
+    print("Output directory :\t%s" % output_dir)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "SurfaceArea.input")
     write_raspa_file(filename, run_id, material_id)
