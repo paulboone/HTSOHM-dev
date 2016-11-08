@@ -8,9 +8,6 @@ from uuid import uuid4
 import htsohm
 from htsohm import config
 
-#from htsohm.files import load_config_file
-#config = load_config_file('settings/dev_run.yaml')
-
 def write_raspa_file(filename, run_id, material_id):
     simulation_cycles = config['surface_area']['simulation_cycles']
     with open(filename, "w") as raspa_input_file:
@@ -54,12 +51,10 @@ def parse_output(output_file):
         "%s\tA^2\n"      % (results['sa_unit_cell_surface_area']) +
         "%s\tm^2/g\n"    % (results['sa_gravimetric_surface_area']) +
         "%s\tm^2/cm^3"   % (results['sa_volumetric_surface_area']))
-    sys.stdout.flush()
     return results
 
 def run(run_id, material_id):
     simulation_directory  = config['simulations_directory']
-#    simulation_directory = 'HTSOHM'
     if simulation_directory == 'HTSOHM':
         htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
         path = os.path.join(htsohm_dir, run_id)
@@ -67,7 +62,6 @@ def run(run_id, material_id):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
-        sys.stdout.flush()
     output_dir = os.path.join(path, 'output_%s_%s' % (material_id, uuid4()))
     print("Output directory :\t%s" % output_dir)
     os.makedirs(output_dir, exist_ok=True)
@@ -78,14 +72,13 @@ def run(run_id, material_id):
             print("Date :\t%s" % datetime.now().date().isoformat())
             print("Time :\t%s" % datetime.now().time().isoformat())
             print("Calculating surface area of %s-%s..." % (run_id, material_id))
-            sys.stdout.flush()
             subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd=output_dir)
 
             filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
             output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
             results = parse_output(output_file)
             shutil.rmtree(output_dir, ignore_errors=True)
-
+            sys.stdout.flush()
         except (FileNotFoundError, KeyError) as err:
             print(err)
             print(err.args)

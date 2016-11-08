@@ -11,9 +11,6 @@ from htsohm.db import session, Material, MutationStrength
 from htsohm.material_files import write_seed_definition_files, write_child_definition_files
 from htsohm import simulation
 
-#from htsohm.files import load_config_file
-#config = load_config_file('settings/dev_run.yaml')
-
 def materials_in_generation(run_id, generation):
     return session.query(Material).filter(
         Material.run_id == run_id,
@@ -143,14 +140,7 @@ def retest(m_orig, retests, tolerance):
         m_orig.retest_num += 1
 
         if m_orig.retest_num == retests:
-            while True:
-                try:
-                    m_orig.retest_passed = m.calculate_retest_result(tolerance)
-                except ZeroDivisionError as err:
-                    print(err)
-                    print(err.args)
-                    continue
-                break
+            m_orig.retest_passed = m.calculate_retest_result(tolerance)
 
     else:
         pass
@@ -181,10 +171,8 @@ def calculate_mutation_strength(run_id, generation, parent):
 
     if mutation_strength:
         print("Mutation strength already calculated for this bin and generation.")
-        sys.stdout.flush()
     else:
         print("Calculating mutation strength...")
-        sys.stdout.flush()
         mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone()
         mutation_strength.generation = generation
 
@@ -196,16 +184,14 @@ def calculate_mutation_strength(run_id, generation, parent):
                 mutation_strength.strength *= 2
         except ZeroDivisionError:
             print("No prior generation materials in this bin with children.")
-            sys.stdout.flush()
 
         try:
             session.add(mutation_strength)
             session.commit()
         except FlushError as e:
             print("Somebody beat us to saving a row with this generation. That's ok!")
-            sys.stdout.flush()
             # it's ok b/c this calculation should always yield the exact same result!
-
+    sys.stdout.flush()
     return mutation_strength.strength
 
 def evaluate_convergence(run_id, generation):
@@ -235,11 +221,9 @@ def worker_run_loop(run_id):
         while materials_in_generation(run_id, gen) < size_of_generation:
             if gen == 0:
                 print("writing new seed...")
-                sys.stdout.flush()
                 material = write_seed_definition_files(run_id, config['number_of_atom_types'])
             else:
                 print("selecting a parent / running retests on parent / mutating / simulating")
-                sys.stdout.flush()
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
                                                   generation_limit=config['children_per_generation'])
 
@@ -250,13 +234,11 @@ def worker_run_loop(run_id):
                     print("running retest...")
                     print("Date :\t%s" % datetime.now().date().isoformat())
                     print("Time :\t%s" % datetime.now().time().isoformat())
-                    sys.stdout.flush()
                     retest(parent, config['retests']['number'], config['retests']['tolerance'])
                     session.refresh(parent)
 
                 if not parent.retest_passed:
                     print("parent failed retest. restarting with parent selection.")
-                    sys.stdout.flush()
                     continue
 
                 mutation_strength = calculate_mutation_strength(run_id, gen, parent)
@@ -274,5 +256,6 @@ def worker_run_loop(run_id):
                 # session.delete(material)
                 pass
             session.commit()
+            sys.stdout.flush()
         gen += 1
         converged = evaluate_convergence(run_id, gen)

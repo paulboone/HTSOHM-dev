@@ -167,7 +167,6 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     force_field_file = os.path.join(child_forcefield_directory, 'force_field.def')
     write_force_field(force_field_file)                        # WRITE FORCE_FIELD.DEF
     print('  - force_field.def\tWRITTEN.')
-    sys.stdout.flush()
 
     ########################################################################
     # copy pseudo_atoms.def
@@ -175,7 +174,6 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     parent_pseudo_file = os.path.join(parent_forcefield_directory, 'pseudo_atoms.def')
     shutil.copy(parent_pseudo_file, child_forcefield_directory)    # COPY PSEUDO_ATOMS.DEF
     print('  - pseudo_atoms.def\tWRITTEN.')
-    sys.stdout.flush()
 
     ########################################################################
     # perturb LJ-parameters, write force_field_mixing_rules.def
@@ -203,7 +201,6 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
         mix_file = os.path.join(child_forcefield_directory, 'force_field_mixing_rules.def')
         write_mixing_rules(mix_file, atom_types)
         print('  - force_field_mixing_rules.def\tWRITTEN.')
-        sys.stdout.flush()
 
     ########################################################################
     # load values from parent cif-file

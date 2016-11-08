@@ -8,9 +8,6 @@ from uuid import uuid4
 import htsohm
 from htsohm import config
 
-#from htsohm.files import load_config_file
-#config = load_config_file('settings/dev_run.yaml')
-
 def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
     simulation_cycles      = config['methane_loading']['simulation_cycles']
     initialization_cycles  = config['methane_loading']['initialization_cycles']
@@ -91,13 +88,11 @@ def parse_output(output_file):
         "vdw\t\t%s\t\t%s\t\t%s\n" % (results['ml_host_host_vdw'], results['ml_adsorbate_adsorbate_vdw'], results['ml_host_adsorbate_vdw']) +
         "cou\t\t%s\t\t%s\t\t\t%s\n" % (results['ml_host_host_cou'], results['ml_adsorbate_adsorbate_cou'], results['ml_host_adsorbate_cou'])
     )
-    sys.stdout.flush()
 
     return results
 
 def run(run_id, material_id, helium_void_fraction):
     simulation_directory  = config['simulations_directory']
-#    simulation_directory = 'HTSOHM'
     if simulation_directory == 'HTSOHM':
         htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
         path = os.path.join(htsohm_dir, run_id)
@@ -105,7 +100,6 @@ def run(run_id, material_id, helium_void_fraction):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
-        sys.stdout.flush()
     output_dir = os.path.join(path, 'output_%s_%s' % (material_id, uuid4()))
     print("Output directory :\t%s" % output_dir)
     os.makedirs(output_dir, exist_ok=True)
@@ -116,15 +110,16 @@ def run(run_id, material_id, helium_void_fraction):
             print("Date :\t%s" % datetime.now().date().isoformat())
             print("Time :\t%s" % datetime.now().time().isoformat())
             print("Simulating methane loading in %s-%s..." % (run_id, material_id))
-            sys.stdout.flush()
             subprocess.run(['simulate', './MethaneLoading.input'], check=True, cwd=output_dir)
 
             filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)
             output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
             results = parse_output(output_file)
             shutil.rmtree(output_dir, ignore_errors=True)
-        except FileNotFoundError:
-            print('WARNING: FileNotFoundError, resimulating...')
+            sys.stdout.flush()
+        except FileNotFoundError as err:
+            print(err)
+            print(err.args)
             continue
         break
 
