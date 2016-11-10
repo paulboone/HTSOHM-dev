@@ -9,44 +9,81 @@ distributing many simulations across a computing cluster, and selectively
 mutating rare materials--in an iterative process.
 
 ## Getting started
+This package was built to be run locally, or on a computing cluster. To run on   
+a cluster, the following must be installed:   
+  - Torque/PBS (qsub)   
+  - Python 3.5.1     
+In any case, following Python packages are required:   
+  - pyyaml   
+  - psycopg2   
+  - numpy   
+  - SQLAlchemy   
+  - RASPA2 (git+https://github.com/WilmerLab/raspa2)   
+  
+## First time setup
+```
+# If using environment modules    
+module purge   
+module load python/3.5.1/environment/module    
 
-The HSTOHM-dev libraries were written predominantly in Python3 and Bash. It   
-also requires `RASPA-2.0`, available :   
+# Clone HTSOHM repo    
+git clone https://github.com/WilmerLab/HTSOHM-dev.git    
 
-https://github.com/WilmerLAb/RASPA2
+# Create virual environment for Python packages    
+mkdir -p ~/venv    
+pyvenv ~/venv/htsohm    
+source ~/venv/htsohm/bin/activate    
 
-To configure HTSOHM, you may run `configure.sh`, which modifies your .bashrc
-file to add some necessary environment variables. PLEASE REVIEW the configure.sh
-script before running it to make sure it applies to your platform and
-environment.
-
-You will need a database.yaml file for HTSOHM to use to store results in. You
-can use the database.sample.yaml file (just copy it to database.yaml) if you
-just want to use a local SQLite database. Otherwise, enter in your
-connection_string into the database.yaml file per the format of the example
-file.
-
-To run the program, execute:    
-  `python $HTSOHM_DIR/bin/HTSOHM.py <MpG> <NoA> <S0> <NoB>`    
-`<MpG>` : number of materials per generation.   
-`<NoA>` : number of atom-types.   
-`<S0>`  : initial strength-parameter.
-`<NoB>` : number of bins.
-
-By default the program will terminate after 20 generations.   
-
+# Install Python packages   
+cd path/to/htsohm/repo    
+pip install -r requirements.txt    
+```
+You will need a database.yaml file for HTSOHM to use to store results. You    
+can use the database.sample.yaml file (just copy it to database.yaml) if you    
+just want to use a local SQLite database. Otherwise, enter in your    
+connection_string into the database.yaml file per the format of the example    
+file.    
+  
+You will also need configuration file to specify the run-parameters. You can    
+use the htsohm.sample.yaml file (just copy it and change the values specified    
+within).    
+  
+## Running HTSOHM
+### Activating the htsohm virtual environment:
+```
+module purge
+module load python/3.5.1/environment/module
+source ~/venv/htsohm/bin/activate
+cd path/to/htsohm/repo
+```
+### Starting a run:    
+```
+./hts.py start path/to/config      
+```
+### Launching a worker locally:    
+```
+./hts.py launch_worker run_id    
+```
+### Launching workers on a cluster:      
+```
+qsub -v='run_id' launch_workers_qsub.sh   
+```
+When running on a cluster, we recommend using GNU screen or Tmux; one screen    
+running the htsohm virtual environment, and one to be used to access cluster    
+resources such as PBS/Torque.
+  
 Please send questions/comments/concerns to `ark111@pitt.edu`.
-
+  
 ## License
-
-HTSOHM-dev and related modules released under the MIT License 2016.
-
+  
+HTSOHM-dev and related modules released under the MIT License 2016.    
+  
 ## Development environment
 
 ```
 3.5.1 |Anaconda 2.4.1 (64-bit)| (default, Dec  7 2015, 11:16:01)
 [GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]
-
 Bash 4.1.2(1)-release
 RHEL 6.6	2.6.32-358
+psql (PostgreSQL) 8.4.20
 ```

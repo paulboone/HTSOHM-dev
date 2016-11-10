@@ -2,14 +2,14 @@
 #
 # Example shell script for running job that runs off the Wilmerlab subjobserver.
 # $Revision: 1.0 $
-# $Date:  2016-03-21 $
-# $Author: paulboone $
+# $Date:  2016-11-10 $
+# $Author: akaija $
 
 #PBS -j oe
-#PBS -N htsohm-testing
+#PBS -N htsohm
 #PBS -q shared
-#PBS -l nodes=1:ppn=5
-#PBS -l walltime=00:10:00
+#PBS -l nodes=1:ppn=20
+#PBS -l walltime=10:00:00
 #PBS -l mem=2GB
 #PBS -S /bin/bash
 
