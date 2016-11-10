@@ -26,7 +26,7 @@ def start(config_path):
     
     run_dir = os.path.join(htsohm_dir, run_id)
     os.makedirs(run_dir, exist_ok=True)
-    config_file = os.path.join(run_dir, 'run_parameters.yaml')
+    config_file = os.path.join(run_dir, 'config.yaml')
     with open(config_file, 'w') as file:
         yaml.dump(config, file, default_flow_style=False)
     print('Run created with id: %s' % run_id)
