@@ -25,13 +25,15 @@ def random_number_density(number_density_limits, lattice_constants):
         - number_of_atoms              some random number of atoms per unit cell, according to
                                        predefined limits.
     """
-    max_number_density = number_density_limits[1]
-    a = lattice_constants["a"]
-    b = lattice_constants["b"]
-    c = lattice_constants["c"]
-    max_number_of_atoms = int(max_number_density * a * b * c)
-    number_of_atoms = randrange(2, max_number_of_atoms, 1)
-    return number_of_atoms
+    min_ND = number_density_limits[0]
+    max_ND = number_density_limits[1]
+    v = lattice_constants["a"] * lattice_constants["b"] * lattice_constants["c"]
+    min_atoms = int(min_ND * v)
+    max_atoms = int(max_ND * v)
+    if min_atoms < 2:
+        min_atoms = 2
+    atoms = randrange(min_atoms, max_atoms, 1)
+    return atoms
 
 def write_seed_definition_files(run_id, number_of_atomtypes):
     """Write .def and .cif files for a randomly-generated porous material.
