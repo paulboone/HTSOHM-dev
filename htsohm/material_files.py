@@ -31,7 +31,7 @@ def random_number_density(number_density_limits, lattice_constants):
     min_atoms = int(min_ND * v)
     max_atoms = int(max_ND * v)
     if min_atoms < 2:
-        min_atoms = 2
+        min_atoms = int(2)
     atoms = randrange(min_atoms, max_atoms, 1)
     return atoms
 
@@ -73,11 +73,17 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
 
     ########################################################################
     # define pseudo atom types by randomly-generating sigma and epsilon values
+    #
+    # NOTE :  assignment of partial charges is not supported in this version,
+    #         and not necessary when modelling gases without dipole moments
+    #         (such as methane). Charge assignment and mutation will appear
+    #         in the next stable release.
+    #
     atom_types = []
     for chemical_id in range(number_of_atomtypes):
         atom_types.append({
             "chemical-id" : "A_%s" % chemical_id,
-            "charge"      : 0.,    # charge assignment to be re-implemented!!!,
+            "charge"      : 0.,    # See NOTE above.
             "epsilon"     : round(uniform(*epsilon_limits), 4),
             "sigma"       : round(uniform(*sigma_limits), 4)
         })
@@ -179,6 +185,12 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     ########################################################################
     # perturb LJ-parameters, write force_field_mixing_rules.def
+    #
+    # NOTE :  assignment of partial charges is not supported in this version,
+    #         and not necessary when modelling gases without dipole moments
+    #         (such as methane). Charge assignment and mutation will appear
+    #         in the next stable release.
+    #
     p_mix = os.path.join(parent_forcefield_directory, 'force_field_mixing_rules.def')
     n1, n2, old_epsilons, old_sigmas = np.genfromtxt(
         p_mix, unpack=True, skip_header=7, skip_footer=9
@@ -195,7 +207,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
         ), 4)
         atom_type = {
             "chemical-id" : chemical_ids[i],
-            "charge"      : 0.,
+            "charge"      : 0.,    # See NOTE above.
             "epsilon"     : epsilon,
             "sigma"       : sigma}
         atom_types.append(atom_type)
