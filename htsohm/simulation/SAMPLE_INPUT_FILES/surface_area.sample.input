@@ -1,0 +1,18 @@
+SimulationType            MonteCarlo
+NumberOfCycles            10
+PrintEvery                1
+PrintPropertiesEvery      1
+
+Forcefield 
+CutOff 12.8
+
+Framework 0
+FrameworkName 
+UnitCells 1 1 1
+SurfaceAreaProbeDistance Minimum
+
+Component 0 MoleculeName               N2
+            StartingBead               0
+            MoleculeDefinition         TraPPE
+            SurfaceAreaProbability     1.0
+            CreateNumberOfMolecules    0

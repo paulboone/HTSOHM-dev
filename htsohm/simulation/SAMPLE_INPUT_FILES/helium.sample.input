@@ -1,0 +1,17 @@
+SimulationType          MonteCarlo
+NumberOfCycles          100
+PrintEvery              10
+PrintPropertiesEvery    10
+            
+Forcefield              2016-10-07T17:19:20.132501-59fc592d-981e-4ae8-a937-615d95acbf1e
+CutOff                  12.8
+            
+Framework 0
+FrameworkName 2016-10-07T17:19:20.132501-59fc592d-981e-4ae8-a937-615d95acbf1e
+UnitCells 1 1 1
+ExternalTemperature 298.8
+            
+Component 0 MoleculeName            helium
+            MoleculeDefinition      TraPPE
+            WidomProbability        1.0
+            CreateNumberOfMolecules 0
