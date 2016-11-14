@@ -14,16 +14,24 @@ from htsohm import config
 from htsohm.db import session, Material
 
 def random_number_density(number_density_limits, lattice_constants):
-    """Returns some random number of atoms per unit cell, within the defined density limits.
-    There are two inputs :
-        - number_density limits        a list of the form [minimum, maximum]
-        - lattice_constants            a dictionary of crystal lattice parameters of the form
-                                           {"a" : <float>,
-                                            "b" : <float>,
-                                            "c" : <float>}
-    And one output:
-        - number_of_atoms              some random number of atoms per unit cell, according to
-                                       predefined limits.
+    """Produces random number for atom-sites in a unit cell, constrained by
+    some number density limits.
+
+    Args:
+        number_density_limits (list): min and max number densities, for example:
+            [min_(float), max_(float)]
+        lattice_constants (dict): crystal lattice constants, for example:
+            {"a" : (float),
+             "b" : (float),
+             "c" : (float)}
+    
+    Returns:
+        atoms (int): some random number of atom-sites under the imposed limits.
+
+        If the minimum number density results in a unit cell with less than 2
+        atom-sites with the given lattice constants, a minimum number density
+        of TWO ATOM SITES PER UNIT CELL is imposed.
+    
     """
     min_ND = number_density_limits[0]
     max_ND = number_density_limits[1]
@@ -38,19 +46,27 @@ def random_number_density(number_density_limits, lattice_constants):
 def write_seed_definition_files(run_id, number_of_atomtypes):
     """Write .def and .cif files for a randomly-generated porous material.
 
-    Each material is defined by it's structural information (stored in a .cif-file) and force field
-    definition files:
-    - <material_name>.cif            contains structural information including crystal lattice
-                                     parameters and atom-site positions (and corresponding chemical
-                                     species).
-    - force_field.def                this file can be used to overwrite previously-defined
-                                     interactions. by default there are no exceptions.
-    - force_field_mixing_rules.def   this file contains sigma and epsilon values to define Lennard-
-                                     Jones type interactions.
-    - pseudo_atoms.def               this file contains pseudo-atom definitions, including partial
-                                     charge, atomic mass, atomic radii, and more.
-    """
+    Args:
+        run_id (str): identification string for run.
+        number_of_atomtypes (int): number of different chemical species used to
+            populate the unit cell.
 
+    Returns:
+        material (sqlalchemy.orm.query.Query): database row for storing 
+            simulation data specific to the material. See
+            `htsohm/db/material.py` for more information.
+
+        Atom-sites and unit-cell dimensions are stored in a .cif-file within
+        RASPA's structures library: `$(raspa-dir)/structures/cif`. Force field
+        parameters are stored within that material's directory in the RASPA
+        library: `$(raspa-dir)/forcefield/(run_id)-(uuid)`. Partial charges,
+        atomic radii, and more define each chemical species in 
+        `pseudo_atoms.def`. Lennard-Jones type interactions (sigma, 
+        epsilon-values) are defined in `force_field_mixing_rules.def`. These
+        interactions can be overwritten in `force_field.def`, but by default
+        no interactions are overwritten in this file.
+ 
+    """
     lattice_limits          = config["lattice_constant_limits"]
     number_density_limits   = config["number_density_limits"]
     epsilon_limits          = config["epsilon_limits"]
@@ -117,7 +133,17 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
     return material
 
 def closest_distance(x, y):
-    """Find the `closest` distance over a periodic boundary.
+    """Finds closest distance between two points across periodic boundaries.
+
+    Args:
+        x (float): value in range [0,1].
+        y (float): value in range [0,1].
+
+    Returns:
+        D (float): closest distance measured between `x` and `y`, with
+            periodic boundaries at 0 and 1. For example, the disance between
+            x = 0.2 and y = 0.8 would be 0.4, and not 0.6.
+
     """
     a = 1 - y + x
     b = abs(y - x)
@@ -125,7 +151,18 @@ def closest_distance(x, y):
     return min(a, b, c)
 
 def random_position(x_o, x_r, strength):
-    """Given two values, return some random point between them.
+    """Produces a point along the closest path between two points.
+
+    Args:
+        x_o (float): value in range [0,1].
+        x_r (float): value in range [0,1].
+        strength (float): refers to mutation strength. Value determines
+            fractional distance to `x_r` from `x_o`.
+
+    Returns:
+        xfrac (float): a value between `x_o` and `x_r` across the closest
+            distance accross periodic boundaries at 0 and 1.
+
     """
     dx = closest_distance(x_o, x_r)
     if (x_o > x_r
@@ -143,13 +180,24 @@ def random_position(x_o, x_r, strength):
     return xfrac
 
 def write_child_definition_files(run_id, parent_id, generation, mutation_strength):
-    """Mutate a parent-material's definition files to create new, child-material.
-    At this point, a generation of materials has been initialized with parent-material IDs (primary
-    keys). This function loads the necessary parameters from the selected parent's definition
-    files, perturbs all of these values, and then writes them to new definition-files, creating
-    a new material. The degree to which each value is perturbed is controlled by the mutation-
-    strength-parameter."""
+    """Modifies a "parent" material's definition files by perturbing each
+    parameter by some factor, dictated by the `mutation_strength`.
+    
+    Args:
+        run_id (str): identification string for run.
+        parent_id (str): uuid, identifying parent material in database.
+        generation (int): iteration count for overall bin-mutate-simulate routine.
+        mutation_strength (float): perturbation factor [0, 1].
 
+    Returns:
+        new_material (sqlalchemy.orm.query.Query): database row for storing 
+            simulation data specific to the material. See
+            `htsohm/db/material.py` for more information.
+
+    Todo:
+        * Add methods for assigning and mutating charges.
+
+    """
     parent = session.query(Material).get(str(parent_id))
 
     ########################################################################
@@ -185,12 +233,6 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     ########################################################################
     # perturb LJ-parameters, write force_field_mixing_rules.def
-    #
-    # NOTE :  assignment of partial charges is not supported in this version,
-    #         and not necessary when modelling gases without dipole moments
-    #         (such as methane). Charge assignment and mutation will appear
-    #         in the next stable release.
-    #
     p_mix = os.path.join(parent_forcefield_directory, 'force_field_mixing_rules.def')
     n1, n2, old_epsilons, old_sigmas = np.genfromtxt(
         p_mix, unpack=True, skip_header=7, skip_footer=9
@@ -207,7 +249,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
         ), 4)
         atom_type = {
             "chemical-id" : chemical_ids[i],
-            "charge"      : 0.,    # See NOTE above.
+            "charge"      : 0.,    # See Docstring Todo.
             "epsilon"     : epsilon,
             "sigma"       : sigma}
         atom_types.append(atom_type)
@@ -280,6 +322,27 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     return new_material
 
 def write_cif_file(cif_file, lattice_constants, atom_sites):
+    """Writes .cif file for structural information.
+
+    Args:
+        cif_file (str): path to .cif-file, for example:
+            `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`.
+        lattice_constants (dict): crystal lattice constants, for example:
+            {"a" : (float),
+             "b" : (float),
+             "c" : (float)}
+        atom_sites (list): dictionaries for each atom-site describing position
+            and chemical species, for example:
+            {"chemical-id" : chemical_id,
+             "x-frac"      : x,
+             "y-frac"      : y,
+             "z-frac"      : z}
+
+        Returns:
+            Writes .cif file in RASPA's library,
+            `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`.
+
+    """
     with open(cif_file, "w") as file:
         file.write(
             "\nloop_\n" +
@@ -305,6 +368,23 @@ def write_cif_file(cif_file, lattice_constants, atom_sites):
             file.write("%s\tC\t%s\t%s\t%s\n" % (chemical, x, y, z))
 
 def write_mixing_rules(mix_file, atom_types):
+    """Writes .def file for forcefield information.
+
+    Args:
+        mix_file (str): path to mixing-rules file, for example:
+            `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field_mixing_rules.def`
+        atom_types (list): dictionaries for each atom-type describing LJ-type
+            interactions, for example:
+            {"chemical-id" : chemical_ids[i],
+             "charge"      : 0.,
+             "epsilon"     : epsilon,
+             "sigma"       : sigma}
+
+    Returns:
+        Writes file within RASPA's library,
+        `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field_mixing_rules.def`
+
+    """
     with open(mix_file, "w") as file:
         file.write(
             "# general rule for shifted vs truncated\n" +
@@ -335,6 +415,26 @@ def write_mixing_rules(mix_file, atom_types):
 
             "Lorentz-Berthelot")
 def write_pseudo_atoms(psu_file, atom_types):
+    """Writes .def file for chemical information.
+
+    Args:
+        psu_file (str): path to pseudo atoms definitions file, for example:
+            `$(raspa-dir)/forcefield/(run_id)-(uuid)/pseudo_atoms.def`
+        atom_types (list): dictionaries for each chemical species, including
+            an identification string and charge, for example:
+            interactions, for example:
+            {"chemical-id" : chemical_ids[i],
+             "charge"      : 0.,
+             "epsilon"     : epsilon,
+             "sigma"       : sigma}
+
+    Returns:
+        Writes file within RASPA's library,
+        `$(raspa-dir)/forcefield/(run_id)-(uuid)/pseudo_atoms.def`
+
+        NOTE: ALL CHARGES ARE 0. IN THIS VERSION.
+
+    """
     with open(psu_file, "w") as file:
         file.write(
             "#number of pseudo atoms\n" +
@@ -357,6 +457,19 @@ def write_pseudo_atoms(psu_file, atom_types):
             "H_com\tno\tH\tH\t0\t0.0\t-0.936\t0.0\t1.0\t0.7\t0\t0\trelative\t0\n")
 
 def write_force_field(for_file):
+    """Writes .def file to overwrite LJ-type interactions.
+
+    Args:
+        for_file (str): path to .def-file, for example:
+            `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field.def`
+
+    Returns:
+        Writes file within RASPA's library.
+        `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field.def`
+
+        NOTE: NO INTERACTIONS ARE OVERWRITTEN BY DEFAULT.
+
+    """
     with open(for_file, "w") as file:
         file.write(
             "# rules to overwrite\n" +

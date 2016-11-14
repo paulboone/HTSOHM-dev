@@ -9,6 +9,17 @@ import htsohm
 from htsohm import config
 
 def write_raspa_file(filename, run_id, material_id):
+    """Writes RASPA input file for calculating helium void fraction.
+
+    Args:
+        filename (str): path to input file.
+        run_id (str): identification string for run.
+        material_id (str): uuid for material.
+
+    Returns:
+        Writes RASPA input-file.
+
+    """
     simulation_cycles = config['helium_void_fraction']['simulation_cycles']
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(
@@ -31,6 +42,15 @@ def write_raspa_file(filename, run_id, material_id):
             "            CreateNumberOfMolecules\t0\n")
 
 def parse_output(output_file):
+    """Parse output file for void fraction data.
+
+    Args:
+        output_file (str): path to simulation output file.
+
+    Returns:
+        results (dict): average Widom Rosenbluth-weight.
+
+    """
     results = {}
     with open(output_file) as origin:
         for line in origin:
@@ -41,6 +61,16 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id):
+    """Runs void fraction simulation.
+
+    Args:
+        run_id (str): identification string for run.
+        material_id (str): unique identifier for material.
+
+    Returns:
+        results (dict): void fraction simulation results.
+
+    """
     simulation_directory  = config['simulations_directory']
     if simulation_directory == 'HTSOHM':
         htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))

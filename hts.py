@@ -17,6 +17,15 @@ def hts():
 @hts.command()
 @click.argument('config_path',type=click.Path())
 def start(config_path):
+    """Create a new run.
+    
+    Args:
+        config_path (str): path to config-file (ex: setting/htsohm.sample.yaml)
+
+    Returns:
+        Prints run_id.
+
+    """
     config = load_config_file(config_path)
     htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
     run_id = datetime.now().isoformat()
@@ -34,6 +43,12 @@ def start(config_path):
 @hts.command()
 @click.argument('run_id')
 def launch_worker(run_id):
+    """Start process to manage run.
+
+    Args:
+        run_id (str): identification string for run.
+
+    """
     htsohm._init(run_id)
     worker_run_loop(run_id)
 

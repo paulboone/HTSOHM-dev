@@ -9,6 +9,17 @@ import htsohm
 from htsohm import config
 
 def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
+    """Writes RASPA input file for simulating methane loading.
+
+    Args:
+        filename (str): path to input file.
+        run_id (str): identification string for run.
+        material_id (str): uuid for material.
+
+    Returns:
+        Writes RASPA input-file.
+
+    """
     simulation_cycles      = config['methane_loading']['simulation_cycles']
     initialization_cycles  = config['methane_loading']['initialization_cycles']
     with open(filename, "w") as raspa_input_file:
@@ -37,6 +48,18 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
             "            CreateNumberOfMolecules\t0\n")
 
 def parse_output(output_file):
+    """Parse output file for void fraction data.
+
+    Args:
+        output_file (str): path to simulation output file.
+
+    Returns:
+        results (dict): absolute and excess molar, gravimetric, and volumetric
+            methane loadings, as well as energy of average, van der Waals, and
+            Coulombic host-host, host-adsorbate, and adsorbate-adsorbate
+            interactions.
+
+    """
     results = {}
     with open(output_file) as origin:
         line_counter = 1
@@ -92,6 +115,17 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id, helium_void_fraction):
+    """Runs methane loading simulation.
+
+    Args:
+        run_id (str): identification string for run.
+        material_id (str): unique identifier for material.
+        helium_void_fraction (float): material's calculated void fraction.
+
+    Returns:
+        results (dict): methane loading simulation results.
+
+    """
     simulation_directory  = config['simulations_directory']
     if simulation_directory == 'HTSOHM':
         htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
