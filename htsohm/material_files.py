@@ -411,8 +411,9 @@ def write_mixing_rules(mix_file, atom_types):
             "He\tlennard-jones\t10.9\t2.64\n" +
             "H_h2\tnone\n" +
             "H_com\tlennard-jones\t36.7\t2.958\n" +
+            "Kr\tlennard-jones\t167.062\t3.924\n" +
+            "Xe\tlennard-jones\t110.704\t3.690\n" +
             "# general mixing rule for Lennard-Jones\n" +
-
             "Lorentz-Berthelot")
 def write_pseudo_atoms(psu_file, atom_types):
     """Writes .def file for chemical information.
@@ -454,7 +455,10 @@ def write_pseudo_atoms(psu_file, atom_types):
             "CH4_sp3\tyes\tC\tC\t0\t16.04246\t0.0\t0.0\t1.0\t1.00\t0\t0\trelative\t0\n" +
             "He\tyes\tHe\tHe\t0\t4.002602\t0.0\t0.0\t1.0\t1.0\t0\t0\trelative\t0\n" +
             "H_h2\tyes\tH\tH\t0\t1.00794\t0.468\t0.0\t1.0\t0.7\t0\t0\trelative\t0\n" +
-            "H_com\tno\tH\tH\t0\t0.0\t-0.936\t0.0\t1.0\t0.7\t0\t0\trelative\t0\n")
+            "H_com\tno\tH\tH\t0\t0.0\t-0.936\t0.0\t1.0\t0.7\t0\t0\trelative\t0\n" +
+            "Xe\tyes\tXe\tXe\t0\t131.293\t0.0\t0.0\t1.0\t2.459\t0\t0\trelative\t0\n" +
+            "Kr\tyes\tKr\tKr\t0\t83.798\t0.0\t0.0\t1.0\t2.27\t0\t0\trelative\t0\n"
+        )
 
 def write_force_field(for_file):
     """Writes .def file to overwrite LJ-type interactions.
