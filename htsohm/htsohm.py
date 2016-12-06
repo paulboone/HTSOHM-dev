@@ -136,9 +136,22 @@ def run_all_simulations(material):
 
     ############################################################################
     # run methane loading simulation
-    results = simulation.methane_loading.run(material.run_id,
-                                             material.uuid,
-                                             material.vf_helium_void_fraction)
+    adsorbate = config['gas_adsorbate']
+    arguments = [
+        material.run_id,
+        material.uuid,
+        material.vf_helium_void_fraction
+    ]
+
+    if adsorbate == 'methane':
+        results = simulation.methane_loading.run(*arguments)
+
+    elif adsorbate == 'xenon':
+        results = simulation.xenon_loading.run(*arguments)
+
+    elif adsorbate == 'krypton':
+        results = simulation.krypton_loading.run(*arguments)
+
     material.update_from_dict(results)
 
     ############################################################################

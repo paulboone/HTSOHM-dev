@@ -392,7 +392,7 @@ def write_mixing_rules(mix_file, atom_types):
             "# general rule tailcorrections\n" +
             "no\n" +
             "# number of defined interactions\n" +
-            "%s\n" % (len(atom_types) + 8) +
+            "%s\n" % (len(atom_types) + 10) +
             "# type interaction, parameters.    " +
             "IMPORTANT: define shortest matches first, so" +
             " that more specific ones overwrites these\n")
@@ -439,7 +439,7 @@ def write_pseudo_atoms(psu_file, atom_types):
     with open(psu_file, "w") as file:
         file.write(
             "#number of pseudo atoms\n" +
-            "%s\n" % (len(atom_types) + 8) +
+            "%s\n" % (len(atom_types) + 10) +
             "#type\tprint\tas\tchem\toxidation\tmass\tcharge\tpolarization\tB-factor\tradii\t" +
                  "connectivity\tanisotropic\tanisotrop-type\ttinker-type\n")
         for atom_type in atom_types:
