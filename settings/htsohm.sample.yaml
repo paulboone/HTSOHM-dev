@@ -6,8 +6,8 @@
 #   'helium_void_fraction_simulation_cycles int             1 - inf
 #   'number_of_convergence_bins'            int             1 - inf
 #   'maximum_number_of_generations'         int             1 - inf
-#   'methane_loading_initialization_cycles  int             1 - inf
-#   'methane_loading_simulation_cycles      int             1 - inf
+#   'gas_loading_initialization_cycles  int             1 - inf
+#   'gas_loading_simulation_cycles      int             1 - inf
 #   'number_of_dummy_test_trials'           inf             1 - inf
 #   'dummy_test_tolerance'                  float           0 - inf
 #   'convergence_cutoff_criteria'           float           0 - inf
@@ -21,7 +21,7 @@
 #   'surface_area_simulation_cycles'        int             0 - inf
 
 simulations_directory: 'HTSOHM'
-children_per_generation: 10
+children_per_generation: 5
 maximum_number_of_generations: 50
 number_of_atom_types: 4
 initial_mutation_strength: 0.2
@@ -36,7 +36,7 @@ lattice_constant_limits: [25.6, 51.2]
 number_density_limits: [1.49e-05, 0.02122]
 sigma_limits: [1.052, 6.549]
 
-methane_loading_limits: [0, 350]
+gas_loading_limits: [0, 350]
 surface_area_limits: [0, 4500]
 void_fraction_limits: [0, 1]
 
@@ -44,7 +44,7 @@ retests:
   number: 3
   tolerance: 0.25
 
-methane_loading:
+gas_loading:
   simulation_cycles: 100
   initialization_cycles: 100
 helium_void_fraction:

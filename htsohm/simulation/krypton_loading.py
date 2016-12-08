@@ -102,7 +102,7 @@ def parse_output(output_file):
             line_counter += 1
 
     print(
-        "\nMETHANE LOADING\tabsolute\texcess\n" +
+        "\nKRYPTON LOADING\tabsolute\texcess\n" +
         "mol/kg\t\t%s\t%s\n" % (results['ml_absolute_molar_loading'], results['ml_excess_molar_loading']) +
         "cc/g\t\t%s\t%s\n"   % (results['ml_absolute_gravimetric_loading'], results['ml_excess_gravimetric_loading']) +
         "cc/cc\t\t%s\t%s\n"  % (results['ml_absolute_volumetric_loading'], results['ml_excess_volumetric_loading']) +
@@ -115,7 +115,7 @@ def parse_output(output_file):
     return results
 
 def run(run_id, material_id, helium_void_fraction):
-    """Runs methane loading simulation.
+    """Runs krypton loading simulation.
 
     Args:
         run_id (str): identification string for run.
@@ -123,7 +123,7 @@ def run(run_id, material_id, helium_void_fraction):
         helium_void_fraction (float): material's calculated void fraction.
 
     Returns:
-        results (dict): methane loading simulation results.
+        results (dict): krypton loading simulation results.
 
     """
     simulation_directory  = config['simulations_directory']
@@ -143,7 +143,7 @@ def run(run_id, material_id, helium_void_fraction):
         try:
             print("Date :\t%s" % datetime.now().date().isoformat())
             print("Time :\t%s" % datetime.now().time().isoformat())
-            print("Simulating methane loading in %s-%s..." % (run_id, material_id))
+            print("Simulating krypton loading in %s-%s..." % (run_id, material_id))
             subprocess.run(['simulate', './KryptonLoading.input'], check=True, cwd=output_dir)
 
             filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)

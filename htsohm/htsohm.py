@@ -83,7 +83,7 @@ def select_parent(run_id, max_generation, generation_limit):
     bins_and_counts = session \
         .query(
             func.count(Material.id),
-            Material.methane_loading_bin,
+            Material.gas_loading_bin,
             Material.surface_area_bin,
             Material.void_fraction_bin
         ) \
@@ -94,7 +94,7 @@ def select_parent(run_id, max_generation, generation_limit):
             Material.generation_index < generation_limit,
         ) \
         .group_by(
-            Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
+            Material.gas_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
         ).all()[1:]
     bins = [{"ML" : i[1], "SA" : i[2], "VF" : i[3]} for i in bins_and_counts]
     total = sum([i[0] for i in bins_and_counts])
@@ -107,7 +107,7 @@ def select_parent(run_id, max_generation, generation_limit):
         .filter(
             Material.run_id == run_id,
             or_(Material.retest_passed == True, Material.retest_passed == None),
-            Material.methane_loading_bin == parent_bin["ML"],
+            Material.gas_loading_bin == parent_bin["ML"],
             Material.surface_area_bin == parent_bin["SA"],
             Material.void_fraction_bin == parent_bin["VF"],
             Material.generation <= max_generation,
@@ -118,13 +118,13 @@ def select_parent(run_id, max_generation, generation_limit):
     return int(np.random.choice(potential_parents))
 
 def run_all_simulations(material):
-    """Simulate helium void fraction, methane loading, and surface area.
+    """Simulate helium void fraction, gas loading, and surface area.
 
     Args:
         material (sqlalchemy.orm.query.Query): material to be analyzed.
 
     Returns:
-        Adds simulated data for helium void fraction, methane loading, heat of
+        Adds simulated data for helium void fraction, gas loading, heat of
         adsorption, surface area, and corresponding bins to row in database
         corresponding to the input-material.
         
@@ -135,7 +135,7 @@ def run_all_simulations(material):
     material.update_from_dict(results)
 
     ############################################################################
-    # run methane loading simulation
+    # run gas loading simulation
     adsorbate = config['gas_adsorbate']
     arguments = [
         material.run_id,
@@ -161,8 +161,8 @@ def run_all_simulations(material):
 
     ############################################################################
     # assign material to bin
-    material.methane_loading_bin = calc_bin(material.ml_absolute_volumetric_loading,
-                                        *config['methane_loading_limits'],
+    material.gas_loading_bin = calc_bin(material.gl_absolute_volumetric_loading,
+                                        *config['gas_loading_limits'],
                                         config['number_of_convergence_bins'])
     material.surface_area_bin = calc_bin(material.sa_volumetric_surface_area,
                                     *config['surface_area_limits'],
@@ -192,7 +192,7 @@ def retest(m_orig, retests, tolerance):
     # if the row is presently locked, this method blocks until the row lock is released
     session.refresh(m_orig, lockmode='update')
     if m_orig.retest_num < retests:
-        m_orig.retest_methane_loading_sum += m.ml_absolute_volumetric_loading
+        m_orig.retest_gas_loading_sum += m.gl_absolute_volumetric_loading
         m_orig.retest_surface_area_sum += m.sa_volumetric_surface_area
         m_orig.retest_void_fraction_sum += m.vf_helium_void_fraction
         m_orig.retest_num += 1
@@ -270,7 +270,7 @@ def evaluate_convergence(run_id, generation):
             Material.generation_index < config['children_per_generation']
         ) \
         .group_by(
-            Material.methane_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
+            Material.gas_loading_bin, Material.surface_area_bin, Material.void_fraction_bin
         ).all()
     bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
     variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))

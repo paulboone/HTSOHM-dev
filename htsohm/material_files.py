@@ -235,11 +235,14 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     # perturb LJ-parameters, write force_field_mixing_rules.def
     p_mix = os.path.join(parent_forcefield_directory, 'force_field_mixing_rules.def')
     n1, n2, old_epsilons, old_sigmas = np.genfromtxt(
-        p_mix, unpack=True, skip_header=7, skip_footer=9
+        p_mix, unpack=True, skip_header=7, skip_footer=11
     )
     chemical_ids = np.genfromtxt(
-        p_mix, unpack=True, skip_header=7, skip_footer=9, usecols=0, dtype=str
+        p_mix, unpack=True, skip_header=7, skip_footer=11, usecols=0, dtype=str
     )
+    print('Mixing rules\nchem\tep\tsig')
+    for i in range(len(chemical_ids)):
+        print('%s\t%s\t%s' % (chemical_ids[i], old_epsilons[i], old_sigmas[i]))
     atom_types = []
     for i in range(len(chemical_ids)):
         epsilon = round( old_epsilons[i] + mutation_strength * (uniform(*epsilon_limits) -
