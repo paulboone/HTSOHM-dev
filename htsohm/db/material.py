@@ -5,6 +5,7 @@ import uuid
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean
 from sqlalchemy.sql import text
 
+from htsohm import config
 from htsohm.db import Base, session, engine
 
 class Material(Base):
@@ -205,16 +206,37 @@ class Material(Base):
             (bool) True if material has NOT failed any of all re-tests.
 
         """
-        gl_o = self.gl_absolute_volumetric_loading    # initally-calculated values
-        sa_o = self.sa_volumetric_surface_area
-        vf_o = self.vf_helium_void_fraction
+        simulations = config['material_properties']
 
-        gl_mean = self.retest_gas_loading_sum / self.retest_num
-        sa_mean = self.retest_surface_area_sum / self.retest_num
-        vf_mean = self.retest_void_fraction_sum / self.retest_num
+        if 'gas_loading' in simulations:
+            gl_o = self.gl_absolute_volumetric_loading    # initally-calculated values
+            gl_mean = self.retest_gas_loading_sum / self.retest_num
+        else:
+            gl_o = 0
+            gl_mean = 0
 
-        retest_failed = (abs(gl_mean - gl_o) >= tolerance * gl_o or
-                         abs(sa_mean - sa_o) >= tolerance * sa_o or
-                         abs(vf_mean - vf_o) >= tolerance * vf_o)
+        if 'surface_area' in simulations:
+            sa_o = self.sa_volumetric_surface_area
+            sa_mean = self.retest_surface_area_sum / self.retest_num
+        else:
+            sa_o = 0
+            sa_mean = 0
+
+        if 'void_fraction' in simulations:
+            vf_o = self.vf_helium_void_fraction
+            vf_mean = self.retest_void_fraction_sum / self.retest_num
+        else:
+            vf_o = 0
+            vf_mean = 0
+
+        print('GL DEV\t%s' % (gl_mean - gl_o))
+        print('SA DEV\t%s' % (sa_mean - sa_o))
+        print('VF DEV\t%s' % (vf_mean - vf_o))
+
+        retest_failed = (
+            abs(gl_mean - gl_o) >= tolerance * gl_o and gl_o != 0 or
+            abs(sa_mean - sa_o) >= tolerance * sa_o and sa_o != 0 or
+            abs(vf_mean - vf_o) >= tolerance * vf_o and vf_o != 0
+        )
 
         return not retest_failed
