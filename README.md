@@ -71,6 +71,12 @@ qsub -v='run_id' launch_workers_qsub.sh
 When running on a cluster, we recommend using GNU screen or Tmux; one screen    
 running the htsohm virtual environment, and one to be used to access cluster    
 resources such as PBS/Torque.
+
+### Install to virtual environment:
+```
+cd /path/to/htsohm/repo
+~/venv/htsohm/bin/python setup.py install
+```
   
 Please send questions/comments/concerns to `ark111@pitt.edu`.
   
