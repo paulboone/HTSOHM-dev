@@ -27,8 +27,6 @@ number_of_atom_types: 4
 initial_mutation_strength: 0.2
 number_of_convergence_bins: 10
 convergence_cutoff_criteria: -0.05
-gas_adsorbate: 'methane'
-material_properties: ['gas_loading', 'surface_area', 'void_fraction']
 
 charge_limit: 0.0
 elemental_charge: 0.0001
@@ -37,18 +35,22 @@ lattice_constant_limits: [25.6, 51.2]
 number_density_limits: [1.49e-05, 0.02122]
 sigma_limits: [1.052, 6.549]
 
-gas_loading_limits: [0, 350]
-surface_area_limits: [0, 4500]
-void_fraction_limits: [0, 1]
-
 retests:
   number: 3
   tolerance: 0.25
 
-gas_loading:
+material_properties: ['gas_adsorption', 'surface_area', 'helium_void_fraction']
+
+gas_adsorption:
+  adsorbate: 'methane'
   simulation_cycles: 100
   initialization_cycles: 100
+  external_temperature: 298
+  external_pressure: 3500000
+  limits: [0, 300]
 helium_void_fraction:
   simulation_cycles: 100
+  limits: [0, 1]
 surface_area:
   simulation_cycles: 10
+  limits: [0, 4500]

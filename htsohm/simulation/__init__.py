@@ -1,5 +1,3 @@
 import htsohm.simulation.helium_void_fraction
-import htsohm.simulation.methane_loading
-import htsohm.simulation.xenon_loading
-import htsohm.simulation.krypton_loading
+import htsohm.simulation.gas_adsorption
 import htsohm.simulation.surface_area

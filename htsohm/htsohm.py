@@ -81,11 +81,11 @@ def select_parent(run_id, max_generation, generation_limit):
     """
     simulations = config['material_properties']
     queries = []
-    if 'gas_loading' in simulations:
-        queries.append( getattr(Material, 'gas_loading_bin') )
+    if 'gas_adsorption' in simulations:
+        queries.append( getattr(Material, 'gas_adsorption_bin') )
     if 'surface_area' in simulations:
         queries.append( getattr(Material, 'surface_area_bin') )
-    if 'void_fraction' in simulations:
+    if 'helium_void_fraction' in simulations:
         queries.append( getattr(Material, 'void_fraction_bin') )
 
     # Each bin is counted...
@@ -101,24 +101,30 @@ def select_parent(run_id, max_generation, generation_limit):
             Material.generation_index < generation_limit,
         ) \
         .group_by(*queries).all()[1:]
-    bins = [ [ j for j in i[1:] ] for i in bins_and_counts ]
+
+    bins = []
+    for i in bins_and_counts:
+        bin = {}
+        for j in range(len(queries)):
+            bin[queries[j]] = i[j + 1]
+        bins.append(bin)
     total = sum([i[0] for i in bins_and_counts])
     # ...then assigned a weight.
-    weights = [i[0] / float(total) for i in bins_and_counts]
-
-    parent_bin = bins[ np.random.choice( range( len(bins) ), p=weights ) ]
-    new_queries = [queries[i] == parent_bin[i] for i in range(len(queries))]
+    weights = [ total / float(i[0]) for i in bins_and_counts ]
+    normalized_weights = [ weight / sum(weights) for weight in weights ]
+    parent_bin = np.random.choice(bins, p = normalized_weights)
+    
+    parent_queries = [i == parent_bin[i] for i in queries]
     parent_query = session \
         .query(Material.id) \
         .filter(
             Material.run_id == run_id,
             or_(Material.retest_passed == True, Material.retest_passed == None),
-            *new_queries,
+            *parent_queries,
             Material.generation <= max_generation,
             Material.generation_index < generation_limit,
         ).all()
     potential_parents = [i[0] for i in parent_query]
-
     return int(np.random.choice(potential_parents))
 
 def run_all_simulations(material):
@@ -138,43 +144,31 @@ def run_all_simulations(material):
 
     ############################################################################
     # run helium void fraction simulation
-    if 'void_fraction' in simulations:
+    if 'helium_void_fraction' in simulations:
         results = simulation.helium_void_fraction.run(material.run_id, material.uuid)
         material.update_from_dict(results)
         material.void_fraction_bin = calc_bin(
             material.vf_helium_void_fraction,
-            *config['void_fraction_limits'],
+            *config['helium_void_fraction']['limits'],
             config['number_of_convergence_bins']
         )
     else:
         material.void_fraction_bin = 0
     ############################################################################
     # run gas loading simulation
-    if 'gas_loading' in simulations:
-        adsorbate = config['gas_adsorbate']
-        arguments = [
-            material.run_id,
-            material.uuid,
-            material.vf_helium_void_fraction
-        ]
-    
-        if adsorbate == 'methane':
-            results = simulation.methane_loading.run(*arguments)
-    
-        elif adsorbate == 'xenon':
-            results = simulation.xenon_loading.run(*arguments)
-    
-        elif adsorbate == 'krypton':
-            results = simulation.krypton_loading.run(*arguments)
-    
+    if 'gas_adsorption' in simulations:
+        arguments = [material.run_id, material.uuid]
+        if 'helium_void_fraction' in simulations:
+            arguments.append(material.vf_helium_void_fraction)
+        results = simulation.gas_adsorption.run(*arguments)
         material.update_from_dict(results)
-        material.gas_loading_bin = calc_bin(
-            material.gl_absolute_volumetric_loading,
-            *config['gas_loading_limits'],
+        material.gas_adsorption_bin = calc_bin(
+            material.ga_absolute_volumetric_loading,
+            *config['gas_adsorption']['limits'],
             config['number_of_convergence_bins']
         )
     else:
-        material.gas_loading_bin = 0
+        material.gas_adsorption_bin = 0
     ############################################################################
     # run surface area simulation
     if 'surface_area' in simulations:
@@ -182,7 +176,7 @@ def run_all_simulations(material):
         material.update_from_dict(results)
         material.surface_area_bin = calc_bin(
             material.sa_volumetric_surface_area,
-            *config['surface_area_limits'],
+            *config['surface_area']['limits'],
             config['number_of_convergence_bins']
         )
     else:
@@ -211,11 +205,11 @@ def retest(m_orig, retests, tolerance):
     # if the row is presently locked, this method blocks until the row lock is released
     session.refresh(m_orig, lockmode='update')
     if m_orig.retest_num < retests:
-        if 'gas_loading' in simulations:
-            m_orig.retest_gas_loading_sum += m.gl_absolute_volumetric_loading
+        if 'gas_adsorption' in simulations:
+            m_orig.retest_gas_adsorption_sum += m.ga_absolute_volumetric_loading
         if 'surface_area' in simulations:
             m_orig.retest_surface_area_sum += m.sa_volumetric_surface_area
-        if 'void_fraction' in simulations:
+        if 'helium_void_fraction' in simulations:
             m_orig.retest_void_fraction_sum += m.vf_helium_void_fraction
         m_orig.retest_num += 1
 
@@ -287,11 +281,11 @@ def evaluate_convergence(run_id, generation):
     '''
     simulations = config['material_properties']
     query_group = []
-    if 'gas_loading' in simulations:
-        query_group.append( getattr(Material, 'gas_loading_bin') )
+    if 'gas_adsorption' in simulations:
+        query_group.append( getattr(Material, 'gas_adsorption_bin') )
     if 'surface_area' in simulations:
         query_group.append( getattr(Material, 'surface_area_bin') )
-    if 'void_fraction' in simulations:
+    if 'helium_void_fraction' in simulations:
         query_group.append( getattr(Material, 'void_fraction_bin') )
 
     bin_counts = session \
