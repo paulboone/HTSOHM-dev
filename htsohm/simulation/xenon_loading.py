@@ -152,7 +152,6 @@ def run(run_id, material_id, helium_void_fraction):
                 if file_name_part in file:
                     output_file = os.path.join(output_subdir, file)
             print('OUTPUT FILE:\t%s' % output_file)
-#            output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
             results = parse_output(output_file)
             shutil.rmtree(output_dir, ignore_errors=True)
             sys.stdout.flush()

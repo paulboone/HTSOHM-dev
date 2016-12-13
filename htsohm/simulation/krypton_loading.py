@@ -20,8 +20,8 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction ):
         Writes RASPA input-file.
 
     """
-    simulation_cycles      = config['methane_loading']['simulation_cycles']
-    initialization_cycles  = config['methane_loading']['initialization_cycles']
+    simulation_cycles      = config['gas_loading']['simulation_cycles']
+    initialization_cycles  = config['gas_loading']['initialization_cycles']
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(
             "SimulationType\t\t\tMonteCarlo\n" +
@@ -55,7 +55,7 @@ def parse_output(output_file):
 
     Returns:
         results (dict): absolute and excess molar, gravimetric, and volumetric
-            methane loadings, as well as energy of average, van der Waals, and
+            krypton loadings, as well as energy of average, van der Waals, and
             Coulombic host-host, host-adsorbate, and adsorbate-adsorbate
             interactions.
 
@@ -65,17 +65,17 @@ def parse_output(output_file):
         line_counter = 1
         for line in origin:
             if "absolute [mol/kg" in line:
-                results['ml_absolute_molar_loading'] = float(line.split()[5])
+                results['gl_absolute_molar_loading'] = float(line.split()[5])
             elif "absolute [cm^3 (STP)/g" in line:
-                results['ml_absolute_gravimetric_loading'] = float(line.split()[6])
+                results['gl_absolute_gravimetric_loading'] = float(line.split()[6])
             elif "absolute [cm^3 (STP)/c" in line:
-                results['ml_absolute_volumetric_loading'] = float(line.split()[6])
+                results['gl_absolute_volumetric_loading'] = float(line.split()[6])
             elif "excess [mol/kg" in line:
-                results['ml_excess_molar_loading'] = float(line.split()[5])
+                results['gl_excess_molar_loading'] = float(line.split()[5])
             elif "excess [cm^3 (STP)/g" in line:
-                results['ml_excess_gravimetric_loading'] = float(line.split()[6])
+                results['gl_excess_gravimetric_loading'] = float(line.split()[6])
             elif "excess [cm^3 (STP)/c" in line:
-                results['ml_excess_volumetric_loading'] = float(line.split()[6])
+                results['gl_excess_volumetric_loading'] = float(line.split()[6])
             elif "Average Host-Host energy:" in line:
                 host_host_line = line_counter + 8
             elif "Average Adsorbate-Adsorbate energy:" in line:
@@ -88,28 +88,28 @@ def parse_output(output_file):
         line_counter = 1
         for line in origin:
             if line_counter == host_host_line:
-                results['ml_host_host_avg'] = float(line.split()[1])
-                results['ml_host_host_vdw'] = float(line.split()[5])
-                results['ml_host_host_cou'] = float(line.split()[7])
+                results['gl_host_host_avg'] = float(line.split()[1])
+                results['gl_host_host_vdw'] = float(line.split()[5])
+                results['gl_host_host_cou'] = float(line.split()[7])
             elif line_counter == adsorbate_adsorbate_line:
-                results['ml_adsorbate_adsorbate_avg'] = float(line.split()[1])
-                results['ml_adsorbate_adsorbate_vdw'] = float(line.split()[5])
-                results['ml_adsorbate_adsorbate_cou'] = float(line.split()[7])
+                results['gl_adsorbate_adsorbate_avg'] = float(line.split()[1])
+                results['gl_adsorbate_adsorbate_vdw'] = float(line.split()[5])
+                results['gl_adsorbate_adsorbate_cou'] = float(line.split()[7])
             elif line_counter == host_adsorbate_line:
-                results['ml_host_adsorbate_avg'] = float(line.split()[1])
-                results['ml_host_adsorbate_vdw'] = float(line.split()[5])
-                results['ml_host_adsorbate_cou'] = float(line.split()[7])
+                results['gl_host_adsorbate_avg'] = float(line.split()[1])
+                results['gl_host_adsorbate_vdw'] = float(line.split()[5])
+                results['gl_host_adsorbate_cou'] = float(line.split()[7])
             line_counter += 1
 
     print(
         "\nKRYPTON LOADING\tabsolute\texcess\n" +
-        "mol/kg\t\t%s\t%s\n" % (results['ml_absolute_molar_loading'], results['ml_excess_molar_loading']) +
-        "cc/g\t\t%s\t%s\n"   % (results['ml_absolute_gravimetric_loading'], results['ml_excess_gravimetric_loading']) +
-        "cc/cc\t\t%s\t%s\n"  % (results['ml_absolute_volumetric_loading'], results['ml_excess_volumetric_loading']) +
+        "mol/kg\t\t%s\t%s\n" % (results['gl_absolute_molar_loading'], results['gl_excess_molar_loading']) +
+        "cc/g\t\t%s\t%s\n"   % (results['gl_absolute_gravimetric_loading'], results['gl_excess_gravimetric_loading']) +
+        "cc/cc\t\t%s\t%s\n"  % (results['gl_absolute_volumetric_loading'], results['gl_excess_volumetric_loading']) +
         "\nENERGIES\thost-host\tadsorbate-adsorbate\thost-adsorbate\n" +
-        "avg\t\t%s\t\t%s\t\t%s\n" % (results['ml_host_host_avg'], results['ml_adsorbate_adsorbate_avg'], results['ml_host_adsorbate_avg']) +
-        "vdw\t\t%s\t\t%s\t\t%s\n" % (results['ml_host_host_vdw'], results['ml_adsorbate_adsorbate_vdw'], results['ml_host_adsorbate_vdw']) +
-        "cou\t\t%s\t\t%s\t\t\t%s\n" % (results['ml_host_host_cou'], results['ml_adsorbate_adsorbate_cou'], results['ml_host_adsorbate_cou'])
+        "avg\t\t%s\t\t%s\t\t%s\n" % (results['gl_host_host_avg'], results['gl_adsorbate_adsorbate_avg'], results['gl_host_adsorbate_avg']) +
+        "vdw\t\t%s\t\t%s\t\t%s\n" % (results['gl_host_host_vdw'], results['gl_adsorbate_adsorbate_vdw'], results['gl_host_adsorbate_vdw']) +
+        "cou\t\t%s\t\t%s\t\t\t%s\n" % (results['gl_host_host_cou'], results['gl_adsorbate_adsorbate_cou'], results['gl_host_adsorbate_cou'])
     )
 
     return results
@@ -146,8 +146,12 @@ def run(run_id, material_id, helium_void_fraction):
             print("Simulating krypton loading in %s-%s..." % (run_id, material_id))
             subprocess.run(['simulate', './KryptonLoading.input'], check=True, cwd=output_dir)
 
-            filename = "output_%s-%s_1.1.1_298.000000_3.5e+06.data" % (run_id, material_id)
-            output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
+            file_name_part = "output_%s-%s" % (run_id, material_id)
+            output_subdir = os.path.join(output_dir, 'Output', 'System_0')
+            for file in os.listdir(output_subdir):
+                if file_name_part in file:
+                    output_file = os.path.join(output_subdir, file)
+            print('OUTPUT FILE:\t%s' % output_file)
             results = parse_output(output_file)
             shutil.rmtree(output_dir, ignore_errors=True)
             sys.stdout.flush()
