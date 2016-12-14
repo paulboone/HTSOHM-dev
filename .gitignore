@@ -14,4 +14,5 @@ settings/database.yaml
 settings/*
 dist/
 build/
-MANIFEST/
+MANIFEST
+*.cache

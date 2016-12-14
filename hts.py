@@ -22,8 +22,7 @@ def start(config_path):
     Args:
         config_path (str): path to config-file (ex: setting/htsohm.sample.yaml)
 
-    Returns:
-        Prints run_id.
+    Prints run_id, creates run-folder with config-file.
 
     """
     config = load_config_file(config_path)
@@ -47,6 +46,8 @@ def launch_worker(run_id):
 
     Args:
         run_id (str): identification string for run.
+
+    Runs HTSOHM-method in one process.
 
     """
     htsohm._init(run_id)

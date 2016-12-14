@@ -16,8 +16,7 @@ def write_raspa_file(filename, run_id, material_id):
         run_id (str): identification string for run.
         material_id (str): uuid for material.
 
-    Returns:
-        Writes RASPA input-file.
+    Writes RASPA input-file.
 
     """
     simulation_cycles = config['surface_area']['simulation_cycles']

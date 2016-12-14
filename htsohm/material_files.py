@@ -56,15 +56,14 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
             simulation data specific to the material. See
             `htsohm/db/material.py` for more information.
 
-        Atom-sites and unit-cell dimensions are stored in a .cif-file within
-        RASPA's structures library: `$(raspa-dir)/structures/cif`. Force field
-        parameters are stored within that material's directory in the RASPA
-        library: `$(raspa-dir)/forcefield/(run_id)-(uuid)`. Partial charges,
-        atomic radii, and more define each chemical species in 
-        `pseudo_atoms.def`. Lennard-Jones type interactions (sigma, 
-        epsilon-values) are defined in `force_field_mixing_rules.def`. These
-        interactions can be overwritten in `force_field.def`, but by default
-        no interactions are overwritten in this file.
+    Atom-sites and unit-cell dimensions are stored in a .cif-file within RASPA's
+    structures library: `$(raspa-dir)/structures/cif`. Force field parameters
+    are stored within that material's directory in the RASPA library: 
+    `$(raspa-dir)/forcefield/(run_id)-(uuid)`. Partial charges, atomic radii,
+    and more define each chemical species in `pseudo_atoms.def`. Lennard-Jones
+    type interactions (sigma, epsilon-values) are defined in 
+    `force_field_mixing_rules.def`. These interactions can be overwritten in 
+    `force_field.def`, but by default no interactions are overwritten in this file.
  
     """
     lattice_limits          = config["lattice_constant_limits"]
@@ -341,9 +340,8 @@ def write_cif_file(cif_file, lattice_constants, atom_sites):
              "y-frac"      : y,
              "z-frac"      : z}
 
-        Returns:
-            Writes .cif file in RASPA's library,
-            `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`.
+    Writes .cif file in RASPA's library:
+        `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`
 
     """
     with open(cif_file, "w") as file:
@@ -383,8 +381,7 @@ def write_mixing_rules(mix_file, atom_types):
              "epsilon"     : epsilon,
              "sigma"       : sigma}
 
-    Returns:
-        Writes file within RASPA's library,
+    Writes file within RASPA's library:
         `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field_mixing_rules.def`
 
     """
@@ -470,11 +467,10 @@ def write_force_field(for_file):
         for_file (str): path to .def-file, for example:
             `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field.def`
 
-    Returns:
-        Writes file within RASPA's library.
+    Writes file within RASPA's library:
         `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field.def`
 
-        NOTE: NO INTERACTIONS ARE OVERWRITTEN BY DEFAULT.
+    NOTE: NO INTERACTIONS ARE OVERWRITTEN BY DEFAULT.
 
     """
     with open(for_file, "w") as file:

@@ -115,8 +115,7 @@ class Material(Base):
             self (class): row in material table.
             run_id : identification string for run (default = None).
 
-        Returns:
-            Initializes row in materials datatable.
+        Initializes row in materials datatable.
 
         """
         self.uuid = str(uuid.uuid4())

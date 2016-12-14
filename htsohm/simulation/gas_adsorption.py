@@ -16,8 +16,7 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction=None):
         run_id (str): identification string for run.
         material_id (str): uuid for material.
 
-    Returns:
-        Writes RASPA input-file.
+    Writes RASPA input-file.
 
     """
     simulation_cycles      = config['gas_adsorption']['simulation_cycles']

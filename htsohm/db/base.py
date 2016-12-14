@@ -24,8 +24,7 @@ class Base(object):
             self (class): class name.
             d (dict): attributes in a dictionary.
 
-        Returns:
-            Dynamically add properties from dictionary to class.
+        Dynamically adds property from dictionary to class-attribute.
         
         """
         for k, v in d.items():

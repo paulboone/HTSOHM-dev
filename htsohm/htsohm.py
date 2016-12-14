@@ -133,13 +133,11 @@ def run_all_simulations(material):
     Args:
         material (sqlalchemy.orm.query.Query): material to be analyzed.
 
-    Returns:
-        Adds simulated data for helium void fraction, gas loading, heat of
-        adsorption, surface area, and corresponding bins to row in database
-        corresponding to the input-material.
+    Depending on properties specified in config, adds simulated data for helium
+    void fraction, gas loading, heat of adsorption, surface area, and
+    corresponding bins to row in database corresponding to the input-material.
         
     """
-
     simulations = config['material_properties']
 
     ############################################################################
@@ -191,9 +189,8 @@ def retest(m_orig, retests, tolerance):
         tolerance (float): acceptance criteria as percent deviation from
             originally calculated value.
 
-    Returns:
-        Queries database to determine if there are remained retests to  be run.
-        Updates row in database with total number of retests and results.
+    Queries database to determine if there are remained retests to  be run.
+    Updates row in database with total number of retests and results.
 
     """
     m = m_orig.clone()
@@ -306,10 +303,9 @@ def worker_run_loop(run_id):
     Args:
         run_id (str): identification string for run.
 
-    Returns:
-        Writes seed generation and simulates properties, then manages overall
-        bin-mutate-simualte routine until convergence cutt-off or maximum
-        number of generations is reached.
+    Writes seed generation and simulates properties, then manages overall
+    bin-mutate-simualte routine until convergence cutt-off or maximum
+    number of generations is reached.
 
     """
     gen = last_generation(run_id) or 0
