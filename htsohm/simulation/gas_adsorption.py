@@ -39,10 +39,10 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction=None):
             "\n" +
             "Framework 0\n" +
             "FrameworkName %s-%s\n" % (run_id, material_id) +
-            "UnitCells 1 1 1"
+            "UnitCells 1 1 1\n"
         )
         if 'helium_void_fraction' != None:
-            raspa_input_file.write("HeliumVoidFraction %s" % (helium_void_fraction))
+            raspa_input_file.write("HeliumVoidFraction %s\n" % (helium_void_fraction))
         raspa_input_file.write(
             "ExternalTemperature %s\n" % (external_temperature) +               # External temperature, K 
             "ExternalPressure %s)\n" % (external_pressure) +                    # External pressure, Pa
@@ -112,9 +112,9 @@ def parse_output(output_file):
     adsorbate = config['gas_adsorption']['adsorbate']
     print(
         "\n%s ADSORPTION\tabsolute\texcess\n" % adsorbate +
-        "mol/kg\t\t%s\t%s\n" % (results['ga_absolute_molar_loading'], results['ga_excess_molar_loading']) +
-        "cc/g\t\t%s\t%s\n"   % (results['ga_absolute_gravimetric_loading'], results['ga_excess_gravimetric_loading']) +
-        "cc/cc\t\t%s\t%s\n"  % (results['ga_absolute_volumetric_loading'], results['ga_excess_volumetric_loading']) +
+        "mol/kg\t\t\t%s\t%s\n" % (results['ga_absolute_molar_loading'], results['ga_excess_molar_loading']) +
+        "cc/g\t\t\t%s\t%s\n"   % (results['ga_absolute_gravimetric_loading'], results['ga_excess_gravimetric_loading']) +
+        "cc/cc\t\t\t%s\t%s\n"  % (results['ga_absolute_volumetric_loading'], results['ga_excess_volumetric_loading']) +
         "\nENERGIES\thost-host\tadsorbate-adsorbate\thost-adsorbate\n" +
         "avg\t\t%s\t\t%s\t\t%s\n" % (results['ga_host_host_avg'], results['ga_adsorbate_adsorbate_avg'], results['ga_host_adsorbate_avg']) +
         "vdw\t\t%s\t\t%s\t\t%s\n" % (results['ga_host_host_vdw'], results['ga_adsorbate_adsorbate_vdw'], results['ga_host_adsorbate_vdw']) +
@@ -151,7 +151,7 @@ def run(run_id, material_id, helium_void_fraction=None):
     write_raspa_file(filename, run_id, material_id, helium_void_fraction)
     print("Date :\t%s" % datetime.now().date().isoformat())
     print("Time :\t%s" % datetime.now().time().isoformat())
-    print("Simulating methane loading in %s-%s..." % (run_id, material_id))
+    print("Simulating %s loading in %s-%s..." % (adsorbate, run_id, material_id))
     while True:
         try:
             subprocess.run(
@@ -167,7 +167,7 @@ def run(run_id, material_id, helium_void_fraction=None):
                     output_file = os.path.join(output_subdir, file)
             print('OUTPUT FILE:\t%s' % output_file)
             results = parse_output(output_file)
-#            shutil.rmtree(output_dir, ignore_errors=True)
+            shutil.rmtree(output_dir, ignore_errors=True)
             sys.stdout.flush()
         except FileNotFoundError as err:
             print(err)

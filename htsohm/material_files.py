@@ -240,7 +240,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     chemical_ids = np.genfromtxt(
         p_mix, unpack=True, skip_header=7, skip_footer=11, usecols=0, dtype=str
     )
-    print('Mixing rules\nchem\tep\tsig')
+    print('Mixing rules\nchem\tep\t\tsig')
     for i in range(len(chemical_ids)):
         print('%s\t%s\t%s' % (chemical_ids[i], old_epsilons[i], old_sigmas[i]))
     atom_types = []
