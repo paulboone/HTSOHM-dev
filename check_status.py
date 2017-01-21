@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import click
-from sqlalchemy import *
+from sqlalchemy import and_, asc, desc, func, MetaData, Table, or_
+from sqlalchemy.sql import select
 import yaml
 
 from htsohm.db.__init__ import engine
