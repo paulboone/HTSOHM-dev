@@ -17,6 +17,6 @@ def load_config_file(file_name):
         config (dict): parameters specified in config.
 
     """
-    with open(file_name) as file:
-         config = yaml.load(file)
+    with open(file_name) as config_file:
+         config = yaml.load(config_file)
     return config

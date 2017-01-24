@@ -323,7 +323,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
 
     return new_material
 
-def write_cif_file(cif_file, lattice_constants, atom_sites):
+def write_cif_file(file_name, lattice_constants, atom_sites):
     """Writes .cif file for structural information.
 
     Args:
@@ -344,8 +344,8 @@ def write_cif_file(cif_file, lattice_constants, atom_sites):
         `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`
 
     """
-    with open(cif_file, "w") as file:
-        file.write(
+    with open(file_name, "w") as cif_file:
+        cif_file.write(
             "\nloop_\n" +
             "_symmetry_equiv_pos_as_xyz\n" +
             "  x,y,z\n" +
@@ -366,9 +366,9 @@ def write_cif_file(cif_file, lattice_constants, atom_sites):
             x         = atom_site["x-frac"]
             y         = atom_site["y-frac"]
             z         = atom_site["z-frac"]
-            file.write("%s\tC\t%s\t%s\t%s\n" % (chemical, x, y, z))
+            cif_file.write("%s\tC\t%s\t%s\t%s\n" % (chemical, x, y, z))
 
-def write_mixing_rules(mix_file, atom_types):
+def write_mixing_rules(file_name, atom_types):
     """Writes .def file for forcefield information.
 
     Args:
@@ -385,8 +385,8 @@ def write_mixing_rules(mix_file, atom_types):
         `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field_mixing_rules.def`
 
     """
-    with open(mix_file, "w") as file:
-        file.write(
+    with open(file_name, "w") as cif_file:
+        cif_file.write(
             "# general rule for shifted vs truncated\n" +
             "shifted\n" +
             "# general rule tailcorrections\n" +
@@ -402,7 +402,7 @@ def write_mixing_rules(mix_file, atom_types):
             sigma      = atom_type["sigma"]
             file.write(
                 "%s\tlennard-jones\t%s\t%s\n" % (atom_id, epsilon, sigma))
-        file.write(
+        cif_file.write(
             "N_n2\tlennard-jones\t36.0\t3.31\n" +
             "N_com\tnone\n" +
             "C_co2\tlennard-jones\t27.0\t2.80\n" +
@@ -415,7 +415,7 @@ def write_mixing_rules(mix_file, atom_types):
             "Xe\tlennard-jones\t110.704\t3.690\n" +
             "# general mixing rule for Lennard-Jones\n" +
             "Lorentz-Berthelot")
-def write_pseudo_atoms(psu_file, atom_types):
+def write_pseudo_atoms(file_name, atom_types):
     """Writes .def file for chemical information.
 
     Args:
@@ -436,8 +436,8 @@ def write_pseudo_atoms(psu_file, atom_types):
         NOTE: ALL CHARGES ARE 0. IN THIS VERSION.
 
     """
-    with open(psu_file, "w") as file:
-        file.write(
+    with open(file_name, "w") as pseudo_atoms_file:
+        pseudo_atoms_file.write(
             "#number of pseudo atoms\n" +
             "%s\n" % (len(atom_types) + 10) +
             "#type\tprint\tas\tchem\toxidation\tmass\tcharge\tpolarization\tB-factor\tradii\t" +
@@ -445,9 +445,9 @@ def write_pseudo_atoms(psu_file, atom_types):
         for atom_type in atom_types:
             atom_id   = atom_type["chemical-id"]
             charge    = atom_type["charge"]
-            file.write(
+            pseudo_atoms_file.write(
                 "A_%s\tyes\tC\tC\t0\t12.\t%s\t0\t0\t1\t1\t0\t0\tabsolute\t0\n" % (atom_id, charge))
-        file.write(
+        pseudo_atoms_file.write(
             "N_n2\tyes\tN\tN\t0\t14.00674\t-0.4048\t0.0\t1.0\t0.7\t0\t0\trelative\t0\n" +
             "N_com\tno\tN\t-\t0\t0.0\t0.8096\t0.0\t1.0\t0.7\t0\t0\trelative\t0\n" +
             "C_co2\tyes\tC\tC\t0\t12.0\t0.70\t0.0\t1.0\t0.720\t0\t0\trelative\t0\n" +
@@ -460,7 +460,7 @@ def write_pseudo_atoms(psu_file, atom_types):
             "Kr\tyes\tKr\tKr\t0\t83.798\t0.0\t0.0\t1.0\t2.27\t0\t0\trelative\t0\n"
         )
 
-def write_force_field(for_file):
+def write_force_field(file_name):
     """Writes .def file to overwrite LJ-type interactions.
 
     Args:
@@ -473,8 +473,8 @@ def write_force_field(for_file):
     NOTE: NO INTERACTIONS ARE OVERWRITTEN BY DEFAULT.
 
     """
-    with open(for_file, "w") as file:
-        file.write(
+    with open(file_name, "w") as force_field_file:
+        force_field_file.write(
             "# rules to overwrite\n" +
             "0\n" +
             "# number of defined interactions\n" +
