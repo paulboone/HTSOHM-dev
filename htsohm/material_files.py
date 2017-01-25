@@ -327,7 +327,7 @@ def write_cif_file(file_name, lattice_constants, atom_sites):
     """Writes .cif file for structural information.
 
     Args:
-        cif_file (str): path to .cif-file, for example:
+        file_name (str): path to .cif-file, for example:
             `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`.
         lattice_constants (dict): crystal lattice constants, for example:
             {"a" : (float),
@@ -372,7 +372,7 @@ def write_mixing_rules(file_name, atom_types):
     """Writes .def file for forcefield information.
 
     Args:
-        mix_file (str): path to mixing-rules file, for example:
+        file_name (str): path to mixing-rules file, for example:
             `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field_mixing_rules.def`
         atom_types (list): dictionaries for each atom-type describing LJ-type
             interactions, for example:
@@ -385,8 +385,8 @@ def write_mixing_rules(file_name, atom_types):
         `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field_mixing_rules.def`
 
     """
-    with open(file_name, "w") as cif_file:
-        cif_file.write(
+    with open(file_name, "w") as mixing_rules_file:
+        mixing_rules__file.write(
             "# general rule for shifted vs truncated\n" +
             "shifted\n" +
             "# general rule tailcorrections\n" +
@@ -402,7 +402,7 @@ def write_mixing_rules(file_name, atom_types):
             sigma      = atom_type["sigma"]
             file.write(
                 "%s\tlennard-jones\t%s\t%s\n" % (atom_id, epsilon, sigma))
-        cif_file.write(
+        mixing_rules_file.write(
             "N_n2\tlennard-jones\t36.0\t3.31\n" +
             "N_com\tnone\n" +
             "C_co2\tlennard-jones\t27.0\t2.80\n" +
@@ -415,11 +415,12 @@ def write_mixing_rules(file_name, atom_types):
             "Xe\tlennard-jones\t110.704\t3.690\n" +
             "# general mixing rule for Lennard-Jones\n" +
             "Lorentz-Berthelot")
+
 def write_pseudo_atoms(file_name, atom_types):
     """Writes .def file for chemical information.
 
     Args:
-        psu_file (str): path to pseudo atoms definitions file, for example:
+        file_name (str): path to pseudo atoms definitions file, for example:
             `$(raspa-dir)/forcefield/(run_id)-(uuid)/pseudo_atoms.def`
         atom_types (list): dictionaries for each chemical species, including
             an identification string and charge, for example:
@@ -464,7 +465,7 @@ def write_force_field(file_name):
     """Writes .def file to overwrite LJ-type interactions.
 
     Args:
-        for_file (str): path to .def-file, for example:
+        file_name (str): path to .def-file, for example:
             `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field.def`
 
     Writes file within RASPA's library:
