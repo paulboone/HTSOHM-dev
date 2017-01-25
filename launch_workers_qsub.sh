@@ -2,14 +2,14 @@
 #
 # Example shell script for running job that runs off the Wilmerlab subjobserver.
 # $Revision: 1.0 $
-# $Date:  2016-03-21 $
-# $Author: paulboone $
+# $Date:  2016-11-10 $
+# $Author: akaija $
 
 #PBS -j oe
-#PBS -N htsohm-testing
-#PBS -q westmere
-#PBS -l nodes=1:ppn=10
-#PBS -l walltime=04:00:00
+#PBS -N htsohm
+#PBS -q shared
+#PBS -l nodes=1:ppn=20
+#PBS -l walltime=10:00:00
 #PBS -l mem=2GB
 #PBS -S /bin/bash
 
@@ -31,7 +31,7 @@ source ~/venv/htsohm/bin/activate
 cd $PBS_O_WORKDIR
 for ((i = 0; i < $PBS_NUM_PPN; i++))
 do
-    python hts.py launch_worker ${run_id} > ${run_id}/output_${PBS_O_HOST}_$!.log 2>&1 &
+    ./hts.py launch_worker ${run_id} >> ${run_id}/output_${PBS_O_HOST}_$$_$i.log 2>&1 &
 done
 
 wait
