@@ -7,8 +7,10 @@ from uuid import uuid4
 
 import htsohm
 from htsohm import config
+from htsohm.material_files import write_cif_file, write_mixing_rules
+from htsohm.material_files import write_pseudo_atoms, write_force_field
 
-def write_raspa_file(filename, run_id, material_id, helium_void_fraction=None):
+def write_raspa_file(filename, run_id, uuid, helium_void_fraction=None):
     """Writes RASPA input file for simulating gas adsorption.
 
     Args:
@@ -27,31 +29,31 @@ def write_raspa_file(filename, run_id, material_id, helium_void_fraction=None):
        
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(
-            "SimulationType\t\t\tMonteCarlo\n" +
-            "NumberOfCycles\t\t\t%s\n" % (simulation_cycles) +                  # number of MonteCarlo cycles
-            "NumberOfInitializationCycles\t%s\n" % (initialization_cycles) +    # number of initialization cycles
-            "PrintEvery\t\t\t10\n" +
-            "RestartFile\t\t\tno\n" +
+            "SimulationType                 MonteCarlo\n" +
+            "NumberOfCycles                 %s\n" % (simulation_cycles) +                  # number of MonteCarlo cycles
+            "NumberOfInitializationCycles   %s\n" % (initialization_cycles) +    # number of initialization cycles
+            "PrintEvery                     10\n" +
+            "RestartFile                    no\n" +
             "\n" +
-            "Forcefield\t\t\t%s-%s\n" % (run_id, material_id) +
-            "CutOff\t\t\t\t12.8\n" +                                            # electrostatic cut-off, Angstroms
+            "Forcefield     GenericMOFs\n" +
+            "CutOff         12.8\n" +                                            # electrostatic cut-off, Angstroms
             "\n" +
-            "Framework 0\n" +
-            "FrameworkName %s-%s\n" % (run_id, material_id) +
-            "UnitCells 1 1 1\n"
+            "Framework              0\n" +
+            "FrameworkName          %s\n" % (uuid) +
+            "UnitCells              1 1 1\n"
         )
         if 'helium_void_fraction' != None:
-            raspa_input_file.write("HeliumVoidFraction %s\n" % (helium_void_fraction))
+            raspa_input_file.write("HeliumVoidFraction     %s\n" % (helium_void_fraction))
         raspa_input_file.write(
-            "ExternalTemperature %s\n" % (external_temperature) +               # External temperature, K 
-            "ExternalPressure %s)\n" % (external_pressure) +                    # External pressure, Pa
+            "ExternalTemperature    %s\n" % (external_temperature) +               # External temperature, K 
+            "ExternalPressure       %s\n" % (external_pressure) +                    # External pressure, Pa
             "\n" +
-            "Component 0 MoleculeName\t\t%s\n" % (adsorbate) +
-            "            MoleculeDefinition\t\tTraPPE\n" +
-            "            TranslationProbability\t1.0\n" +
-            "            ReinsertionProbability\t1.0\n" +
-            "            SwapProbability\t\t1.0\n" +
-            "            CreateNumberOfMolecules\t0\n"
+            "Component 0 MoleculeName               %s\n" % (adsorbate) +
+            "            MoleculeDefinition         TraPPE\n" +
+            "            TranslationProbability     1.0\n" +
+            "            ReinsertionProbability     1.0\n" +
+            "            SwapProbability            1.0\n" +
+            "            CreateNumberOfMolecules    0\n"
         )
 
 def parse_output(output_file):
@@ -122,7 +124,7 @@ def parse_output(output_file):
 
     return results
 
-def run(run_id, material_id, helium_void_fraction=None):
+def run(run_id, uuid, helium_void_fraction=None):
     """Runs gas loading simulation.
 
     Args:
@@ -143,14 +145,18 @@ def run(run_id, material_id, helium_void_fraction=None):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
-    output_dir = os.path.join(path, 'output_%s_%s' % (material_id, uuid4()))
+    output_dir = os.path.join(path, 'output_%s_%s' % (uuid, uuid4()))
     print('Output directory :\t%s' % output_dir)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, '%s_loading.input' % adsorbate)
-    write_raspa_file(filename, run_id, material_id, helium_void_fraction)
+    write_raspa_file(filename, run_id, uuid, helium_void_fraction)
+    write_cif_file(run_id, uuid, output_dir)
+    write_mixing_rules(run_id, uuid, output_dir)
+    write_pseudo_atoms(run_id, uuid, output_dir)
+    write_force_field(output_dir)
     print("Date :\t%s" % datetime.now().date().isoformat())
     print("Time :\t%s" % datetime.now().time().isoformat())
-    print("Simulating %s loading in %s-%s..." % (adsorbate, run_id, material_id))
+    print("Simulating %s loading in %s..." % (adsorbate, uuid))
     while True:
         try:
             subprocess.run(
@@ -159,7 +165,7 @@ def run(run_id, material_id, helium_void_fraction=None):
                 cwd = output_dir
             )
         
-            file_name_part = "output_%s-%s" % (run_id, material_id)
+            file_name_part = "output_%s" % (uuid)
             output_subdir = os.path.join(output_dir, 'Output', 'System_0')
             for file in os.listdir(output_subdir):
                 if file_name_part in file:

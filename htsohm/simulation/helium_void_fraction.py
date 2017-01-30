@@ -7,8 +7,10 @@ from uuid import uuid4
 
 import htsohm
 from htsohm import config
+from htsohm.material_files import write_cif_file, write_mixing_rules
+from htsohm.material_files import write_pseudo_atoms, write_force_field
 
-def write_raspa_file(filename, run_id, material_id):
+def write_raspa_file(filename, uuid):
     """Writes RASPA input file for calculating helium void fraction.
 
     Args:
@@ -22,23 +24,23 @@ def write_raspa_file(filename, run_id, material_id):
     simulation_cycles = config['helium_void_fraction']['simulation_cycles']
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(
-            "SimulationType\t\t\tMonteCarlo\n" +
-            "NumberOfCycles\t\t\t%s\n" % simulation_cycles +     # number of MonteCarlo cycles
-            "PrintEvery\t\t\t10\n" +
-            "PrintPropertiesEvery\t\t10\n" +
+            "SimulationType         MonteCarlo\n" +
+            "NumberOfCycles         %s\n" % simulation_cycles +     # number of MonteCarlo cycles
+            "PrintEvery             10\n" +
+            "PrintPropertiesEvery   10\n" +
             "\n" +
-            "Forcefield\t\t\t%s-%s\n" % (run_id, material_id) +
-            "CutOff\t\t\t\t12.8\n" +           # LJ interaction cut-off, Angstroms
+            "Forcefield             GenericMOFs\n" +
+            "CutOff                 12.8\n" +           # LJ interaction cut-off, Angstroms
             "\n" +
-            "Framework 0\n" +
-            "FrameworkName %s-%s\n" % (run_id, material_id) +
-            "UnitCells 1 1 1\n" +
-            "ExternalTemperature 298.0\n" +    # External temperature, K
+            "Framework              0\n" +
+            "FrameworkName          %s\n" % (uuid) +
+            "UnitCells              1 1 1\n" +
+            "ExternalTemperature    298.0\n" +    # External temperature, K
             "\n" +
-            "Component 0 MoleculeName\t\thelium\n" +
-            "            MoleculeDefinition\t\tTraPPE\n" +
-            "            WidomProbability\t\t1.0\n" +
-            "            CreateNumberOfMolecules\t0\n")
+            "Component 0 MoleculeName               helium\n" +
+            "            MoleculeDefinition         TraPPE\n" +
+            "            WidomProbability           1.0\n" +
+            "            CreateNumberOfMolecules    0\n")
 
 def parse_output(output_file):
     """Parse output file for void fraction data.
@@ -59,7 +61,7 @@ def parse_output(output_file):
         print("\nVOID FRACTION :   %s\n" % (results['vf_helium_void_fraction']))
     return results
 
-def run(run_id, material_id):
+def run(run_id, uuid):
     """Runs void fraction simulation.
 
     Args:
@@ -78,18 +80,22 @@ def run(run_id, material_id):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
-    output_dir = os.path.join(path, 'output_%s_%s' % (material_id, uuid4()))
+    output_dir = os.path.join(path, 'output_%s_%s' % (uuid, uuid4()))
     print("Output directory :\t%s" % output_dir)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "VoidFraction.input")
-    write_raspa_file(filename, run_id, material_id)
+    write_raspa_file(filename, uuid)
+    write_cif_file(run_id, uuid, output_dir)
+    write_mixing_rules(run_id, uuid, output_dir)
+    write_pseudo_atoms(run_id, uuid, output_dir)
+    write_force_field(output_dir)
     while True:
         try:
             print("Date :\t%s" % datetime.now().date().isoformat())
             print("Time :\t%s" % datetime.now().time().isoformat())
-            print("Calculating void fraction of %s-%s..." % (run_id, material_id))
+            print("Calculating void fraction of %s..." % (uuid))
             subprocess.run(['simulate', './VoidFraction.input'], check=True, cwd=output_dir)
-            filename = "output_%s-%s_1.1.1_298.000000_0.data" % (run_id, material_id)
+            filename = "output_%s_1.1.1_298.000000_0.data" % (uuid)
             output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
             results = parse_output(output_file)
             shutil.rmtree(output_dir, ignore_errors=True)

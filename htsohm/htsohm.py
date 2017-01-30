@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 from sqlalchemy.sql import func, or_
 from sqlalchemy.orm.exc import FlushError
+import sqlalchemy.exc
 
 from htsohm import config
 from htsohm.db import session, Material, MutationStrength
@@ -211,7 +212,10 @@ def retest(m_orig, retests, tolerance):
         m_orig.retest_num += 1
 
         if m_orig.retest_num == retests:
-            m_orig.retest_passed = m.calculate_retest_result(tolerance)
+            try:
+                m_orig.retest_passed = m.calculate_retest_result(tolerance)
+            except ZeroDivisionError as e:
+                print('WARNING: ZeroDivisionError - material.calculate_retest_result(tolerance)')
 
     else:
         pass
@@ -259,8 +263,9 @@ def mutate(run_id, generation, parent):
         try:
             session.add(mutation_strength)
             session.commit()
-        except FlushError as e:
+        except (FlushError, sqlalchemy.exc.IntegrityError) as e:
             print("Somebody beat us to saving a row with this generation. That's ok!")
+            session.rollback()
             # it's ok b/c this calculation should always yield the exact same result!
     sys.stdout.flush()
     return mutation_strength.strength
