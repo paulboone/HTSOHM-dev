@@ -159,18 +159,31 @@ def run_all_simulations(material, pseudo_material):
         material.void_fraction_bin = 0
     ############################################################################
     # run gas loading simulation
-    if 'gas_adsorption' in simulations:
+    if 'gas_adsorption_0' in simulations and 'gas_adsorption_1' not in simulations:
         arguments = [material.run_id, pseudo_material]
         if 'helium_void_fraction' in simulations:
             arguments.append(material.vf_helium_void_fraction)
-        results = simulation.gas_adsorption.run(*arguments)
+        results = simulation.gas_adsorption_0.run(*arguments)
         material.update_from_dict(results)
         material.gas_adsorption_bin = calc_bin(
-            material.ga_absolute_volumetric_loading,
-            *config['gas_adsorption']['limits'],
+            material.ga0_absolute_volumetric_loading,
+            *config['gas_adsorption_0']['limits'],
             config['number_of_convergence_bins']
         )
-    else:
+    elif 'gas_adsorption_0' in simulations and 'gas_adsorption_1' in simulations:
+        arguments = [material.run_id, pseudo_material]
+        if 'helium_void_fraction' in simulations:
+            arguments.append(material.vf_helium_void_fraction)
+        results = simulation.gas_adsorption_0.run(*arguments)
+        material.update_from_dict(results)
+        results = simulation.gas_adsorption_1.run(*arguments)
+        material.update_from_dict(results)
+        material.gas_adsorption_bin = calc_bin(
+            abs(material.ga0_absolute_volumetric_loading - material.ga1_absolute_volumetric_loading),
+            *config['gas_adsorption_0']['limits'],
+            config['number_of_convergence_bins']
+        )
+    elif 'gas_adsorption_0' not in simulations:
         material.gas_adsorption_bin = 0
     ############################################################################
     # run surface area simulation
@@ -201,6 +214,8 @@ def retest(m_orig, retests, tolerance, pseudo_material):
     """
     m = m_orig.clone()
     run_all_simulations(m, pseudo_material)
+    print('\n\nRETEST_NUM :\t%s' % m_orig.retest_num)
+    print('retests :\t%s' % retests)
 
     simulations = config['material_properties']
 
@@ -208,17 +223,21 @@ def retest(m_orig, retests, tolerance, pseudo_material):
     # if the row is presently locked, this method blocks until the row lock is released
     session.refresh(m_orig, lockmode='update')
     if m_orig.retest_num < retests:
-        if 'gas_adsorption' in simulations:
-            m_orig.retest_gas_adsorption_sum += m.ga_absolute_volumetric_loading
+        if 'gas_adsorption_0' in simulations:
+            m_orig.retest_gas_adsorption_0_sum += m.ga0_absolute_volumetric_loading
+        if 'gas_adsorption_1' in simulations:
+            m_orig.retest_gas_adsorption_1_sum += m.ga1_absolute_volumetric_loading
         if 'surface_area' in simulations:
             m_orig.retest_surface_area_sum += m.sa_volumetric_surface_area
         if 'helium_void_fraction' in simulations:
             m_orig.retest_void_fraction_sum += m.vf_helium_void_fraction
         m_orig.retest_num += 1
+        session.commit()        
 
         if m_orig.retest_num == retests:
             try:
                 m_orig.retest_passed = m.calculate_retest_result(tolerance)
+                print('\nRETEST_PASSED :\t%s' % m_orig.retest_passed)
             except ZeroDivisionError as e:
                 print('WARNING: ZeroDivisionError - material.calculate_retest_result(tolerance)')
 
