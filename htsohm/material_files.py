@@ -12,7 +12,7 @@ import yaml
 # local application/library specific imports
 import htsohm
 from htsohm import config
-from htsohm.PseudoMaterial import PseudoMaterial
+from htsohm.pseudo_material import PseudoMaterial
 from htsohm.db import session, Material
 
 def random_number_density(number_density_limits, lattice_constants):
