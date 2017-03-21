@@ -15,6 +15,9 @@ from htsohm import config
 from htsohm.pseudo_material import PseudoMaterial
 from htsohm.db import session, Material
 
+# static directories
+htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
+
 def random_number_density(number_density_limits, lattice_constants):
     """Produces random number for atom-sites in a unit cell, constrained by
     some number density limits.
@@ -75,16 +78,15 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
     max_charge              = config["charge_limit"]
     elem_charge             = config["elemental_charge"]
 
-    htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
-    run_dir = os.path.join(htsohm_dir, run_id)
-    material_dir = os.path.join(run_dir, 'pseudo_materials')
+    material_dir = os.path.join(htsohm_dir, config['run_id'], 'pseudo_materials')
+    print(material_dir)
     if not os.path.exists(material_dir):
         os.makedirs(material_dir, exist_ok=True)
 
     ########################################################################
-    db_row = Material(run_id)
-    db_row.generation = 0
-    material = PseudoMaterial(db_row.uuid)
+    material_row = Material(run_id)
+    material_row.generation = 0
+    material = PseudoMaterial(material_row.uuid)
 
     material.atom_types = []
     for chemical_id in range(number_of_atomtypes):
@@ -109,11 +111,11 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
             atom_site[i] = round(random(), 4)
         material.atom_sites.append(atom_site)
 
-    material_file = os.path.join(material_dir, '%s.yaml' % db_row.uuid)
+    material_file = os.path.join(material_dir, '%s.yaml' % material_row.uuid)
     with open(material_file, "w") as dump_file:
         yaml.dump(material, dump_file) 
 
-    return db_row
+    return material_row, material
 
 def closest_distance(x, y):
     """Finds closest distance between two points across periodic boundaries.
@@ -188,10 +190,6 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     number_density_limits   = config["number_density_limits"]
     epsilon_limits          = config["epsilon_limits"]
     sigma_limits            = config["sigma_limits"]
-
-    htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
-    run_dir = os.path.join(htsohm_dir, run_id)
-    material_dir = os.path.join(run_dir, 'pseudo_materials')
 
     parent_row = session.query(Material).get(str(parent_id))
     parent_yaml = os.path.join(material_dir, '%s.yaml' % parent_row.uuid)
@@ -269,9 +267,9 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     with open(material_file, "w") as dump_file:
         yaml.dump(child_material, dump_file) 
 
-    return child_row
+    return child_row, child_material
 
-def write_cif_file(run_id, uuid, simulation_path):
+def write_cif_file(material, simulation_path):
     """Writes .cif file for structural information.
 
     Args:
@@ -292,13 +290,6 @@ def write_cif_file(run_id, uuid, simulation_path):
         `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`
 
     """
-    htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
-    run_dir = os.path.join(htsohm_dir, run_id)
-    material_dir = os.path.join(run_dir, 'pseudo_materials')
-    file_path = os.path.join(material_dir, "%s.yaml" % uuid)
-    with open(file_path) as material_file:
-        material = yaml.load(material_file)
-
     file_name = os.path.join(simulation_path, '%s.cif' % uuid)
     with open(file_name, "w") as cif_file:
         cif_file.write(
@@ -330,7 +321,7 @@ def write_cif_file(run_id, uuid, simulation_path):
                 atom_site["z-frac"]
             ))
 
-def write_mixing_rules(run_id, uuid, simulation_path):
+def write_mixing_rules(material, simulation_path):
     """Writes .def file for forcefield information.
 
     Args:
@@ -347,13 +338,6 @@ def write_mixing_rules(run_id, uuid, simulation_path):
         `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field_mixing_rules.def`
 
     """
-    htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
-    run_dir = os.path.join(htsohm_dir, run_id)
-    material_dir = os.path.join(run_dir, 'pseudo_materials')
-    file_path = os.path.join(material_dir, "%s.yaml" % uuid)
-    with open(file_path) as material_file:
-        material = yaml.load(material_file)
-
     adsorbate_LJ_atoms = [
             ['N_n2',    36.0,       3.31],
             ['C_co2',   27.0,       2.80],
@@ -400,7 +384,7 @@ def write_mixing_rules(run_id, uuid, simulation_path):
             "# general mixing rule for Lennard-Jones\n" +
             "Lorentz-Berthelot")
 
-def write_pseudo_atoms(run_id, uuid, simulation_path):
+def write_pseudo_atoms(material, simulation_path):
     """Writes .def file for chemical information.
 
     Args:
@@ -422,13 +406,6 @@ def write_pseudo_atoms(run_id, uuid, simulation_path):
 
     """
     temporary_charge = 0.
-
-    htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
-    run_dir = os.path.join(htsohm_dir, run_id)
-    material_dir = os.path.join(run_dir, 'pseudo_materials')
-    file_path = os.path.join(material_dir, "%s.yaml" % uuid)
-    with open(file_path) as material_file:
-        material = yaml.load(material_file)
 
     file_name = os.path.join(simulation_path, 'pseudo_atoms.def')
     with open(file_name, "w") as pseudo_atoms_file:

@@ -98,13 +98,13 @@ def run(run_id, uuid):
     print("Output directory :\t%s" % output_dir)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "SurfaceArea.input")
-    write_raspa_file(filename, uuid)
-    write_cif_file(run_id, uuid, output_dir)
-    write_mixing_rules(run_id, uuid, output_dir)
-    write_pseudo_atoms(run_id, uuid, output_dir)
+    write_raspa_file(filename, material_object.uuid)
+    write_cif_file(material_object, output_dir)
+    write_mixing_rules(material_object, output_dir)
+    write_pseudo_atoms(material_object, output_dir)
     write_force_field(output_dir)
     while True:
-        try:
+        try:G
             print("Date :\t%s" % datetime.now().date().isoformat())
             print("Time :\t%s" % datetime.now().time().isoformat())
             print("Calculating surface area of %s..." % (uuid))

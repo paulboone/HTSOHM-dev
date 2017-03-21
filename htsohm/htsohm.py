@@ -128,7 +128,7 @@ def select_parent(run_id, max_generation, generation_limit):
     potential_parents = [i[0] for i in parent_query]
     return int(np.random.choice(potential_parents))
 
-def run_all_simulations(material):
+def run_all_simulations(material_row, material_object:
     """Simulate helium void fraction, gas loading, and surface area.
 
     Args:
@@ -144,7 +144,7 @@ def run_all_simulations(material):
     ############################################################################
     # run helium void fraction simulation
     if 'helium_void_fraction' in simulations:
-        results = simulation.helium_void_fraction.run(material.run_id, material.uuid)
+        results = simulation.helium_void_fraction.run(material_row.run_id, material.uuid)
         material.update_from_dict(results)
         material.void_fraction_bin = calc_bin(
             material.vf_helium_void_fraction,
@@ -322,7 +322,8 @@ def worker_run_loop(run_id):
         while materials_in_generation(run_id, gen) < size_of_generation:
             if gen == 0:
                 print("writing new seed...")
-                material = write_seed_definition_files(run_id, config['number_of_atom_types'])
+                material_row, material_object = write_seed_definition_files(
+                        run_id, config['number_of_atom_types'])
             else:
                 print("selecting a parent / running retests on parent / mutating / simulating")
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
@@ -343,18 +344,19 @@ def worker_run_loop(run_id):
                     continue
 
                 mutation_strength = mutate(run_id, gen, parent)
-                material = write_child_definition_files(run_id, parent_id, gen, mutation_strength)
+                material_row, material_object = write_child_definition_files(
+                        run_id, parent_id, gen, mutation_strength)
 
-            run_all_simulations(material)
-            session.add(material)
+            run_all_simulations(material_row, material_object)
+            session.add(material_row)
             session.commit()
 
-            material.generation_index = material.calculate_generation_index()
-            if material.generation_index < config['children_per_generation']:
-                session.add(material)
+            material_row.generation_index = material_row.calculate_generation_index()
+            if material_row.generation_index < config['children_per_generation']:
+                session.add(material_row)
             else:
                 # delete excess rows
-                # session.delete(material)
+                # session.delete(material_row)
                 pass
             session.commit()
             sys.stdout.flush()

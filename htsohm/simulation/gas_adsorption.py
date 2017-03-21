@@ -10,7 +10,7 @@ from htsohm import config
 from htsohm.material_files import write_cif_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
 
-def write_raspa_file(filename, run_id, uuid, helium_void_fraction=None):
+def write_raspa_file(filename, uuid, helium_void_fraction=None):
     """Writes RASPA input file for simulating gas adsorption.
 
     Args:
@@ -124,7 +124,7 @@ def parse_output(output_file):
 
     return results
 
-def run(run_id, uuid, helium_void_fraction=None):
+def run(material_object, helium_void_fraction=None):
     """Runs gas loading simulation.
 
     Args:
@@ -149,10 +149,10 @@ def run(run_id, uuid, helium_void_fraction=None):
     print('Output directory :\t%s' % output_dir)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, '%s_loading.input' % adsorbate)
-    write_raspa_file(filename, run_id, uuid, helium_void_fraction)
-    write_cif_file(run_id, uuid, output_dir)
-    write_mixing_rules(run_id, uuid, output_dir)
-    write_pseudo_atoms(run_id, uuid, output_dir)
+    write_raspa_file(filename, material_object.uuid, helium_void_fraction)
+    write_cif_file(material_object, output_dir)
+    write_mixing_rules(material_object, output_dir)
+    write_pseudo_atoms(material_object, output_dir)
     write_force_field(output_dir)
     print("Date :\t%s" % datetime.now().date().isoformat())
     print("Time :\t%s" % datetime.now().time().isoformat())
