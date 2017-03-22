@@ -15,8 +15,9 @@ from htsohm import config
 from htsohm.pseudo_material import PseudoMaterial
 from htsohm.db import session, Material
 
-# static directories
-htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
+def get_pseudo_materials_dir(run_id):
+    htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
+    return os.path.join(htsohm_dir, run_id, 'pseudo_materials')
 
 def random_number_density(number_density_limits, lattice_constants):
     """Produces random number for atom-sites in a unit cell, constrained by
@@ -78,44 +79,43 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
     max_charge              = config["charge_limit"]
     elem_charge             = config["elemental_charge"]
 
-    material_dir = os.path.join(htsohm_dir, config['run_id'], 'pseudo_materials')
-    print(material_dir)
-    if not os.path.exists(material_dir):
-        os.makedirs(material_dir, exist_ok=True)
+    if not os.path.exists(get_pseudo_materials_dir(run_id)):
+        os.makedirs(get_pseudo_materials_dir(run_id), exist_ok=True)
 
     ########################################################################
-    material_row = Material(run_id)
-    material_row.generation = 0
-    material = PseudoMaterial(material_row.uuid)
+    material = Material(run_id)
+    material.generation = 0
+    pseudo_material = PseudoMaterial(material.uuid)
 
-    material.atom_types = []
+    pseudo_material.atom_types = []
     for chemical_id in range(number_of_atomtypes):
-        material.atom_types.append({
+        pseudo_material.atom_types.append({
             "chemical-id" : "A_%s" % chemical_id,
             "charge"      : 0.,    # See NOTE above.
             "epsilon"     : round(uniform(*epsilon_limits), 4),
             "sigma"       : round(uniform(*sigma_limits), 4)
         })
 
-    material.lattice_constants = {}
+    pseudo_material.lattice_constants = {}
     for i in ['a', 'b', 'c']:
-        material.lattice_constants[i] = round(uniform(*lattice_limits), 4)
+        pseudo_material.lattice_constants[i] = round(uniform(*lattice_limits), 4)
 
-    material.number_of_atoms   = random_number_density(
-        number_density_limits, material.lattice_constants)
+    pseudo_material.number_of_atoms   = random_number_density(
+        number_density_limits, pseudo_material.lattice_constants)
 
-    material.atom_sites = []
-    for atom in range(material.number_of_atoms):
-        atom_site = {"chemical-id" : choice(material.atom_types)["chemical-id"]}
+    pseudo_material.atom_sites = []
+    for atom in range(pseudo_material.number_of_atoms):
+        atom_site = {"chemical-id" : choice(pseudo_material.atom_types)["chemical-id"]}
         for i in ['x-frac', 'y-frac', 'z-frac']:
             atom_site[i] = round(random(), 4)
-        material.atom_sites.append(atom_site)
+        pseudo_material.atom_sites.append(atom_site)
 
-    material_file = os.path.join(material_dir, '%s.yaml' % material_row.uuid)
-    with open(material_file, "w") as dump_file:
-        yaml.dump(material, dump_file) 
+    pseudo_material.dump(get_pseudo_materials_dir(run_id))
+#    material_file = os.path.join(material_dir, '%s.yaml' % material_row.uuid)
+#    with open(material_file, "w") as dump_file:
+#        yaml.dump(material, dump_file) 
 
-    return material_row, material
+    return material, pseudo_material
 
 def closest_distance(x, y):
     """Finds closest distance between two points across periodic boundaries.
@@ -164,7 +164,7 @@ def random_position(x_o, x_r, strength):
         xfrac = round(x_o + strength * dx, 4)
     return xfrac
 
-def write_child_definition_files(parent_row, parent_material, mutation_strength, generation):
+def write_child_definition_files(parent_material, parent_pseudo_material, mutation_strength, generation):
     """Modifies a "parent" material's definition files by perturbing each
     parameter by some factor, dictated by the `mutation_strength`.
     
@@ -193,15 +193,15 @@ def write_child_definition_files(parent_row, parent_material, mutation_strength,
 
     ########################################################################
     # create material object
-    child_row = Material(parent_row.run_id)
-    child_row.parent_id = parent_row.id
-    child_row.generation = generation
-    child_material = PseudoMaterial(child_row.uuid)
+    child_material = Material(parent_material.run_id)
+    child_material.parent_id = parent_material.id
+    child_material.generation = generation
+    child_pseudo_material = PseudoMaterial(child_material.uuid)
 
     ########################################################################
     # perturb LJ-parameters
-    child_material.atom_types = []
-    for atom_type in parent_material.atom_types:    
+    child_pseudo_material.atom_types = []
+    for atom_type in parent_pseudo_material.atom_types:    
         new_atom_type = {'chemical-id' : atom_type['chemical-id']}
         new_atom_type['epsilon'] = (round(atom_type['epsilon'] +
                 mutation_strength * (uniform(*epsilon_limits) -
@@ -209,61 +209,58 @@ def write_child_definition_files(parent_row, parent_material, mutation_strength,
         new_atom_type['sigma'] = (round(atom_type['sigma'] +
                 mutation_strength * (uniform(*epsilon_limits) -
                 atom_type['epsilon']), 4))
-        child_material.atom_types.append(new_atom_type)
+        child_pseudo_material.atom_types.append(new_atom_type)
 
     ########################################################################
     # calculate new lattice constants
-    child_material.lattice_constants = {}
+    child_pseudo_material.lattice_constants = {}
     for i in ['a', 'b', 'c']:
-        old_x = parent_material.lattice_constants[i]
+        old_x = parent_pseudo_material.lattice_constants[i]
         random_x = uniform(*lattice_limits)
         new_x = round(old_x + mutation_strength * (random_x - old_x), 4)
-        child_material.lattice_constants[i] = new_x
+        child_pseudo_material.lattice_constants[i] = new_x
 
     ########################################################################
     # calulate new number density, number of atoms
-    old_LCs = parent_material.lattice_constants
+    old_LCs = parent_pseudo_material.lattice_constants
     old_vol = old_LCs['a'] * old_LCs['b'] * old_LCs['c']
-    old_number_density = len(parent_material.atom_sites) / old_vol
+    old_number_density = len(parent_pseudo_material.atom_sites) / old_vol
     random_number_density = uniform(*number_density_limits)
     new_number_density = (old_number_density + mutation_strength * (
             random_number_density - old_number_density))
-    new_LCs = child_material.lattice_constants
+    new_LCs = child_pseudo_material.lattice_constants
     new_vol = new_LCs['a'] * new_LCs['b'] * new_LCs['c']
-    child_material.number_of_atoms = int(new_number_density * new_vol)
+    child_pseudo_material.number_of_atoms = int(new_number_density * new_vol)
 
     ########################################################################
     # remove excess atom-sites, if any
-    if child_material.number_of_atoms < len(parent_material.atom_sites):
-        parent_material.atom_sites = parent_material.atom_sites[
-                :child_material.number_of_atoms]
+    if child_pseudo_material.number_of_atoms < len(parent_pseudo_material.atom_sites):
+        parent_pseudo_material.atom_sites = parent_pseudo_material.atom_sites[
+                :child_pseudo_material.number_of_atoms]
     ########################################################################
     # perturb atom-site positions
-    child_material.atom_sites = []
-    for atom_site in parent_material.atom_sites:
+    child_pseudo_material.atom_sites = []
+    for atom_site in parent_pseudo_material.atom_sites:
         new_atom_site = {'chemical-id' : atom_site['chemical-id']}
         for i in ['x-frac', 'y-frac', 'z-frac']:
             new_atom_site[i] = random_position(
                     atom_site[i], random(), mutation_strength)
-        child_material.atom_sites.append(new_atom_site)
+        child_pseudo_material.atom_sites.append(new_atom_site)
 
     ########################################################################
     # add atom-sites, if needed
-    if child_material.number_of_atoms > len(child_material.atom_sites):
-        for new_sites in range(child_material.number_of_atoms -
-                len(child_material.atom_sites)):
+    if child_pseudo_material.number_of_atoms > len(child_pseudo_material.atom_sites):
+        for new_sites in range(child_pseudo_material.number_of_atoms -
+                len(child_pseudo_material.atom_sites)):
             new_atom_site = {'chemical-id' : choice(
-                child_material.atom_types)['chemical-id']}
+                child_pseudo_material.atom_types)['chemical-id']}
             for i in ['x-frac', 'y-frac', 'z-frac']:
                 new_atom_site[i] = round(random(), 4)
-            child_material.atom_sites.append(new_atom_site)
+            child_pseudo_material.atom_sites.append(new_atom_site)
 
-    material_dir = os.path.join(htsohm_dir, config['run_id'], 'pseudo_materials')
-    material_file = os.path.join(material_dir, '%s.yaml' % child_row.uuid)
-    with open(material_file, "w") as dump_file:
-        yaml.dump(child_material, dump_file) 
+    child_pseudo_material.dump(get_pseudo_materials_dir(run_id))
 
-    return child_row, child_material
+    return child_material, child_pseudo_material
 
 def write_cif_file(material, simulation_path):
     """Writes .cif file for structural information.
