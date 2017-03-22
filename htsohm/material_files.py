@@ -187,8 +187,6 @@ def write_child_definition_files(parent_material, parent_pseudo_material, mutati
     # load boundaries from config-file
     lattice_limits          = config["lattice_constant_limits"]
     number_density_limits   = config["number_density_limits"]
-    epsilon_limits          = config["epsilon_limits"]
-    sigma_limits            = config["sigma_limits"]
 
     ########################################################################
     # create material object
@@ -201,37 +199,30 @@ def write_child_definition_files(parent_material, parent_pseudo_material, mutati
 
     ########################################################################
     # perturb LJ-parameters
-    child_pseudo_material.atom_types = []
-    for atom_type in parent_pseudo_material.atom_types:    
-        new_atom_type = {'chemical-id' : atom_type['chemical-id']}
-        new_atom_type['epsilon'] = (round(atom_type['epsilon'] +
-                mutation_strength * (uniform(*epsilon_limits) -
-                atom_type['epsilon']), 4))
-        new_atom_type['sigma'] = (round(atom_type['sigma'] +
-                mutation_strength * (uniform(*epsilon_limits) -
-                atom_type['epsilon']), 4))
-        child_pseudo_material.atom_types.append(new_atom_type)
+    child_pseudo_material.atom_types = parent_pseudo_material.atom_types.copy()
+    for atom_type in child_pseudo_material.atom_types:    
+        for x in ['epsilon', 'sigma']:
+            old_x = atom_type[x]
+            random_x = uniform(*config["{0}_limits".format(x)])
+            atom_type[x] += mutation_strength * (random_x - old_x)
 
     ########################################################################
     # calculate new lattice constants
-    child_pseudo_material.lattice_constants = {}
+    child_pseudo_material.lattice_constants = parent_pseudo_material.\
+            lattice_constants.copy()
     for i in ['a', 'b', 'c']:
         old_x = parent_pseudo_material.lattice_constants[i]
         random_x = uniform(*lattice_limits)
-        new_x = round(old_x + mutation_strength * (random_x - old_x), 4)
-        child_pseudo_material.lattice_constants[i] = new_x
+        child_pseudo_material.lattice_constants[i] += mutation_strength * (
+                random_x - old_x)
 
     ########################################################################
-    # calulate new number density, number of atoms
-    old_LCs = parent_pseudo_material.lattice_constants
-    old_vol = old_LCs['a'] * old_LCs['b'] * old_LCs['c']
-    old_number_density = len(parent_pseudo_material.atom_sites) / old_vol
-    random_number_density = uniform(*number_density_limits)
-    new_number_density = (old_number_density + mutation_strength * (
-            random_number_density - old_number_density))
-    new_LCs = child_pseudo_material.lattice_constants
-    new_vol = new_LCs['a'] * new_LCs['b'] * new_LCs['c']
-    child_pseudo_material.number_of_atoms = int(new_number_density * new_vol)
+    #perturb number density, calculate number of atoms
+    child_ND = parent_pseudo_material.number_density()
+    random_ND = uniform(*number_density_limits)
+    child_ND += mutation_strength * (random_ND - child_ND)
+    child_pseudo_material.number_of_atoms = (
+            int(child_ND * child_pseudo_material.volume()))
 
     ########################################################################
     # remove excess atom-sites, if any
