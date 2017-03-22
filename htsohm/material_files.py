@@ -94,13 +94,13 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
         pseudo_material.atom_types.append({
             "chemical-id" : "A_%s" % chemical_id,
             "charge"      : 0.,    # See NOTE above.
-            "epsilon"     : round(uniform(*epsilon_limits), 4),
-            "sigma"       : round(uniform(*sigma_limits), 4)
+            "epsilon"     : uniform(*epsilon_limits),
+            "sigma"       : uniform(*sigma_limits)
         })
 
     pseudo_material.lattice_constants = {}
     for i in ['a', 'b', 'c']:
-        pseudo_material.lattice_constants[i] = round(uniform(*lattice_limits), 4)
+        pseudo_material.lattice_constants[i] = uniform(*lattice_limits)
 
     pseudo_material.number_of_atoms   = random_number_density(
         number_density_limits, pseudo_material.lattice_constants)
@@ -109,7 +109,7 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
     for atom in range(pseudo_material.number_of_atoms):
         atom_site = {"chemical-id" : choice(pseudo_material.atom_types)["chemical-id"]}
         for i in ['x-frac', 'y-frac', 'z-frac']:
-            atom_site[i] = round(random(), 4)
+            atom_site[i] = random()
         pseudo_material.atom_sites.append(atom_site)
 
     pseudo_material.dump()
@@ -151,16 +151,16 @@ def random_position(x_o, x_r, strength):
     dx = closest_distance(x_o, x_r)
     if (x_o > x_r
             and (x_o - x_r) > 0.5):
-        xfrac = round((x_o + strength * dx) % 1., 4)
+        xfrac = (x_o + strength * dx) % 1.
     if (x_o < x_r
             and (x_r - x_o) > 0.5):
-        xfrac = round((x_o - strength * dx) % 1., 4)
+        xfrac = (x_o - strength * dx) % 1.
     if (x_o >= x_r
             and (x_o - x_r) < 0.5):
-        xfrac = round(x_o - strength * dx, 4)
+        xfrac = x_o - strength * dx
     if (x_o < x_r
             and (x_r - x_o) < 0.5):
-        xfrac = round(x_o + strength * dx, 4)
+        xfrac = x_o + strength * dx
     return xfrac
 
 def write_child_definition_files(parent_material, parent_pseudo_material, mutation_strength, generation):
@@ -247,7 +247,7 @@ def write_child_definition_files(parent_material, parent_pseudo_material, mutati
             new_atom_site = {'chemical-id' : choice(
                 child_pseudo_material.atom_types)['chemical-id']}
             for i in ['x-frac', 'y-frac', 'z-frac']:
-                new_atom_site[i] = round(random(), 4)
+                new_atom_site[i] = random()
             child_pseudo_material.atom_sites.append(new_atom_site)
 
     child_pseudo_material.dump()
@@ -284,7 +284,8 @@ def write_cif_file(material, simulation_path):
         )
         for i in ['a', 'b', 'c']:
             cif_file.write(
-            "_cell_length_{}    {}\n".format(i, material.lattice_constants[i])
+            "_cell_length_{}    {}\n".format(i, 
+                round(material.lattice_constants[i], 4))
         )
         cif_file.write(
             "_cell_angle_alpha  90.0000\n" +
@@ -301,9 +302,9 @@ def write_cif_file(material, simulation_path):
             cif_file.write(
             "{0:5} C {1:4f} {2:4f} {3:4f}\n".format(
                 atom_site["chemical-id"],
-                atom_site["x-frac"],
-                atom_site["y-frac"],
-                atom_site["z-frac"]
+                round(atom_site["x-frac"], 4),
+                round(atom_site["y-frac"], 4),
+                round(atom_site["z-frac"], 4)
             ))
 
 def write_mixing_rules(material, simulation_path):
@@ -353,8 +354,8 @@ def write_mixing_rules(material, simulation_path):
             mixing_rules_file.write(
                 "{0:12} lennard-jones {1:8f} {2:8f}\n".format(
                     atom_type["chemical-id"],
-                    atom_type["epsilon"],
-                    atom_type["sigma"]
+                    round(atom_type["epsilon"], 4),
+                    round(atom_type["sigma"], 4)
                 )
             )
         for at in adsorbate_LJ_atoms:
