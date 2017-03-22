@@ -61,7 +61,7 @@ def parse_output(output_file):
         print("\nVOID FRACTION :   %s\n" % (results['vf_helium_void_fraction']))
     return results
 
-def run(run_id, uuid):
+def run(run_id, material_object):
     """Runs void fraction simulation.
 
     Args:
@@ -80,22 +80,22 @@ def run(run_id, uuid):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
-    output_dir = os.path.join(path, 'output_%s_%s' % (uuid, uuid4()))
+    output_dir = os.path.join(path, 'output_%s_%s' % (material_object.uuid, uuid4()))
     print("Output directory :\t%s" % output_dir)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "VoidFraction.input")
-    write_raspa_file(filename, uuid)
-    write_cif_file(run_id, uuid, output_dir)
-    write_mixing_rules(run_id, uuid, output_dir)
-    write_pseudo_atoms(run_id, uuid, output_dir)
+    write_raspa_file(filename, material_object.uuid)
+    write_cif_file(material_object, output_dir)
+    write_mixing_rules(material_object, output_dir)
+    write_pseudo_atoms(material_object, output_dir)
     write_force_field(output_dir)
     while True:
         try:
             print("Date :\t%s" % datetime.now().date().isoformat())
             print("Time :\t%s" % datetime.now().time().isoformat())
-            print("Calculating void fraction of %s..." % (uuid))
+            print("Calculating void fraction of %s..." % (material_object.uuid))
             subprocess.run(['simulate', './VoidFraction.input'], check=True, cwd=output_dir)
-            filename = "output_%s_1.1.1_298.000000_0.data" % (uuid)
+            filename = "output_%s_1.1.1_298.000000_0.data" % (material_object.uuid)
             output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
             results = parse_output(output_file)
             shutil.rmtree(output_dir, ignore_errors=True)

@@ -164,7 +164,7 @@ def random_position(x_o, x_r, strength):
         xfrac = round(x_o + strength * dx, 4)
     return xfrac
 
-def write_child_definition_files(run_id, parent_id, generation, mutation_strength):
+def write_child_definition_files(parent_row, parent_material, mutation_strength, generation):
     """Modifies a "parent" material's definition files by perturbing each
     parameter by some factor, dictated by the `mutation_strength`.
     
@@ -191,15 +191,10 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
     epsilon_limits          = config["epsilon_limits"]
     sigma_limits            = config["sigma_limits"]
 
-    parent_row = session.query(Material).get(str(parent_id))
-    parent_yaml = os.path.join(material_dir, '%s.yaml' % parent_row.uuid)
-    with open(parent_yaml) as load_file:
-        parent_material = yaml.load(load_file)
-
     ########################################################################
     # add row to database
-    child_row = Material(run_id)
-    child_row.parent_id = parent_id
+    child_row = Material(parent_row.run_id)
+    child_row.parent_id = parent_row.id
     child_row.generation = generation
     child_material = PseudoMaterial(child_row.uuid)
 
@@ -263,6 +258,7 @@ def write_child_definition_files(run_id, parent_id, generation, mutation_strengt
                 new_atom_site[i] = round(random(), 4)
             child_material.atom_sites.append(new_atom_site)
 
+    material_dir = os.path.join(htsohm_dir, config['run_id'], 'pseudo_materials')
     material_file = os.path.join(material_dir, '%s.yaml' % child_row.uuid)
     with open(material_file, "w") as dump_file:
         yaml.dump(child_material, dump_file) 
@@ -290,7 +286,7 @@ def write_cif_file(material, simulation_path):
         `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`
 
     """
-    file_name = os.path.join(simulation_path, '%s.cif' % uuid)
+    file_name = os.path.join(simulation_path, '%s.cif' % material.uuid)
     with open(file_name, "w") as cif_file:
         cif_file.write(
             "\nloop_\n" +

@@ -124,7 +124,7 @@ def parse_output(output_file):
 
     return results
 
-def run(material_object, helium_void_fraction=None):
+def run(run_id, material_object, helium_void_fraction=None):
     """Runs gas loading simulation.
 
     Args:
@@ -145,7 +145,7 @@ def run(material_object, helium_void_fraction=None):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
-    output_dir = os.path.join(path, 'output_%s_%s' % (uuid, uuid4()))
+    output_dir = os.path.join(path, 'output_%s_%s' % (material_object.uuid, uuid4()))
     print('Output directory :\t%s' % output_dir)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, '%s_loading.input' % adsorbate)
@@ -156,7 +156,7 @@ def run(material_object, helium_void_fraction=None):
     write_force_field(output_dir)
     print("Date :\t%s" % datetime.now().date().isoformat())
     print("Time :\t%s" % datetime.now().time().isoformat())
-    print("Simulating %s loading in %s..." % (adsorbate, uuid))
+    print("Simulating %s loading in %s..." % (adsorbate, material_object.uuid))
     while True:
         try:
             subprocess.run(
@@ -165,7 +165,7 @@ def run(material_object, helium_void_fraction=None):
                 cwd = output_dir
             )
         
-            file_name_part = "output_%s" % (uuid)
+            file_name_part = "output_%s" % (material_object.uuid)
             output_subdir = os.path.join(output_dir, 'Output', 'System_0')
             for file in os.listdir(output_subdir):
                 if file_name_part in file:

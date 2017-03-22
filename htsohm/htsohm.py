@@ -1,3 +1,4 @@
+import os
 import sys
 from math import sqrt
 from datetime import datetime
@@ -6,7 +7,9 @@ import numpy as np
 from sqlalchemy.sql import func, or_
 from sqlalchemy.orm.exc import FlushError
 import sqlalchemy.exc
+import yaml
 
+import htsohm
 from htsohm import config
 from htsohm.db import session, Material, MutationStrength
 from htsohm.material_files import write_seed_definition_files, write_child_definition_files
@@ -128,7 +131,7 @@ def select_parent(run_id, max_generation, generation_limit):
     potential_parents = [i[0] for i in parent_query]
     return int(np.random.choice(potential_parents))
 
-def run_all_simulations(material_row, material_object:
+def run_all_simulations(material_row, material_object):
     """Simulate helium void fraction, gas loading, and surface area.
 
     Args:
@@ -144,44 +147,46 @@ def run_all_simulations(material_row, material_object:
     ############################################################################
     # run helium void fraction simulation
     if 'helium_void_fraction' in simulations:
-        results = simulation.helium_void_fraction.run(material_row.run_id, material.uuid)
-        material.update_from_dict(results)
-        material.void_fraction_bin = calc_bin(
-            material.vf_helium_void_fraction,
+        results = simulation.helium_void_fraction.run(
+            material_row.run_id, material_object)
+        material_row.update_from_dict(results)
+        material_row.void_fraction_bin = calc_bin(
+            material_row.vf_helium_void_fraction,
             *config['helium_void_fraction']['limits'],
             config['number_of_convergence_bins']
         )
     else:
-        material.void_fraction_bin = 0
+        material_row.void_fraction_bin = 0
     ############################################################################
     # run gas loading simulation
     if 'gas_adsorption' in simulations:
-        arguments = [material.run_id, material.uuid]
+        arguments = [material_row.run_id, material_object]
         if 'helium_void_fraction' in simulations:
-            arguments.append(material.vf_helium_void_fraction)
+            arguments.append(material_row.vf_helium_void_fraction)
         results = simulation.gas_adsorption.run(*arguments)
-        material.update_from_dict(results)
-        material.gas_adsorption_bin = calc_bin(
-            material.ga_absolute_volumetric_loading,
+        material_row.update_from_dict(results)
+        material_row.gas_adsorption_bin = calc_bin(
+            material_row.ga_absolute_volumetric_loading,
             *config['gas_adsorption']['limits'],
             config['number_of_convergence_bins']
         )
     else:
-        material.gas_adsorption_bin = 0
+        material_row.gas_adsorption_bin = 0
     ############################################################################
     # run surface area simulation
     if 'surface_area' in simulations:
-        results = simulation.surface_area.run(material.run_id, material.uuid)
-        material.update_from_dict(results)
-        material.surface_area_bin = calc_bin(
-            material.sa_volumetric_surface_area,
+        results = simulation.surface_area.run(
+                material_row.run_id, material_object)
+        material_row.update_from_dict(results)
+        material_row.surface_area_bin = calc_bin(
+            material_row.sa_volumetric_surface_area,
             *config['surface_area']['limits'],
             config['number_of_convergence_bins']
         )
     else:
-        material.surface_area_bin = 0
+        material_row.surface_area_bin = 0
 
-def retest(m_orig, retests, tolerance):
+def retest(m_orig, retests, tolerance, m_object):
     """Reproduce simulations  to prevent statistical errors.
 
     Args:
@@ -195,7 +200,7 @@ def retest(m_orig, retests, tolerance):
 
     """
     m = m_orig.clone()
-    run_all_simulations(m)
+    run_all_simulations(m, m_object)
 
     simulations = config['material_properties']
 
@@ -336,7 +341,16 @@ def worker_run_loop(run_id):
                     print("running retest...")
                     print("Date :\t%s" % datetime.now().date().isoformat())
                     print("Time :\t%s" % datetime.now().time().isoformat())
-                    retest(parent, config['retests']['number'], config['retests']['tolerance'])
+                    parent_object_path = os.path.join(
+                            os.path.dirname(os.path.dirname(htsohm.__file__)),
+                            run_id, 'pseudo_materials', '{0}.yaml'.format(parent.uuid)
+                        )
+                    with open(parent_object_path) as parent_file:
+                        parent_object = yaml.load(parent_file)
+                    retest(
+                            parent, config['retests']['number'],
+                            config['retests']['tolerance'], parent_object
+                        )
                     session.refresh(parent)
 
                 if not parent.retest_passed:
@@ -345,7 +359,7 @@ def worker_run_loop(run_id):
 
                 mutation_strength = mutate(run_id, gen, parent)
                 material_row, material_object = write_child_definition_files(
-                        run_id, parent_id, gen, mutation_strength)
+                        parent, parent_object, mutation_strength, gen)
 
             run_all_simulations(material_row, material_object)
             session.add(material_row)
