@@ -92,3 +92,13 @@ class PseudoMaterial:
                 '{0}.yaml'.format(self.uuid))
         with open(pseudo_material_file, "w") as dump_file:
             yaml.dump(self, dump_file)
+
+    def volume(self):
+        return (
+                self.lattice_constants["a"] *
+                self.lattice_constants["b"] *
+                self.lattice_constants["c"]
+            )
+
+    def number_density(self):
+        return len(self.atom_sites) / self.volume()
