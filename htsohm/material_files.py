@@ -221,28 +221,28 @@ def write_child_definition_files(parent_material, parent_pseudo_material, mutati
     child_ND = parent_pseudo_material.number_density()
     random_ND = uniform(*number_density_limits)
     child_ND += mutation_strength * (random_ND - child_ND)
-    child_pseudo_material.number_of_atoms = (
+    child_number_of_atoms = (
             int(child_ND * child_pseudo_material.volume()))
 
     ########################################################################
     # remove excess atom-sites, if any
-    if child_pseudo_material.number_of_atoms < len(parent_pseudo_material.atom_sites):
-        parent_pseudo_material.atom_sites = parent_pseudo_material.atom_sites[
-                :child_pseudo_material.number_of_atoms]
+    child_pseudo_material.atom_sites = np.random.choice(
+            parent_pseudo_material.atom_sites,
+            min(child_number_of_atoms,
+                len(parent_pseudo_material.atom_sites)),
+            replace=False).tolist()
+    
     ########################################################################
     # perturb atom-site positions
-    child_pseudo_material.atom_sites = []
-    for atom_site in parent_pseudo_material.atom_sites:
-        new_atom_site = {'chemical-id' : atom_site['chemical-id']}
+    for atom_site in child_pseudo_material.atom_sites:
         for i in ['x-frac', 'y-frac', 'z-frac']:
-            new_atom_site[i] = random_position(
+            atom_site[i] = random_position(
                     atom_site[i], random(), mutation_strength)
-        child_pseudo_material.atom_sites.append(new_atom_site)
 
     ########################################################################
     # add atom-sites, if needed
-    if child_pseudo_material.number_of_atoms > len(child_pseudo_material.atom_sites):
-        for new_sites in range(child_pseudo_material.number_of_atoms -
+    if child_number_of_atoms > len(child_pseudo_material.atom_sites):
+        for new_sites in range(child_number_of_atoms -
                 len(child_pseudo_material.atom_sites)):
             new_atom_site = {'chemical-id' : choice(
                 child_pseudo_material.atom_types)['chemical-id']}
