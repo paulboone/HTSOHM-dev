@@ -86,6 +86,8 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
     material = Material(run_id)
     material.generation = 0
     pseudo_material = PseudoMaterial(material.uuid)
+    
+    pseudo_material.run_id = run_id
 
     pseudo_material.atom_types = []
     for chemical_id in range(number_of_atomtypes):
@@ -110,10 +112,7 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
             atom_site[i] = round(random(), 4)
         pseudo_material.atom_sites.append(atom_site)
 
-    pseudo_material.dump(get_pseudo_materials_dir(run_id))
-#    material_file = os.path.join(material_dir, '%s.yaml' % material_row.uuid)
-#    with open(material_file, "w") as dump_file:
-#        yaml.dump(material, dump_file) 
+    pseudo_material.dump()
 
     return material, pseudo_material
 
@@ -198,6 +197,8 @@ def write_child_definition_files(parent_material, parent_pseudo_material, mutati
     child_material.generation = generation
     child_pseudo_material = PseudoMaterial(child_material.uuid)
 
+    child_pseudo_material.run_id = parent_pseudo_material.run_id
+
     ########################################################################
     # perturb LJ-parameters
     child_pseudo_material.atom_types = []
@@ -258,7 +259,7 @@ def write_child_definition_files(parent_material, parent_pseudo_material, mutati
                 new_atom_site[i] = round(random(), 4)
             child_pseudo_material.atom_sites.append(new_atom_site)
 
-    child_pseudo_material.dump(get_pseudo_materials_dir(run_id))
+    child_pseudo_material.dump()
 
     return child_material, child_pseudo_material
 
