@@ -192,7 +192,7 @@ def write_child_definition_files(parent_row, parent_material, mutation_strength,
     sigma_limits            = config["sigma_limits"]
 
     ########################################################################
-    # add row to database
+    # create material object
     child_row = Material(parent_row.run_id)
     child_row.parent_id = parent_row.id
     child_row.generation = generation
