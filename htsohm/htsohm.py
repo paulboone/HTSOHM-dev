@@ -131,7 +131,7 @@ def select_parent(run_id, max_generation, generation_limit):
     potential_parents = [i[0] for i in parent_query]
     return int(np.random.choice(potential_parents))
 
-def run_all_simulations(material_row, material_object):
+def run_all_simulations(material, pseudo_material):
     """Simulate helium void fraction, gas loading, and surface area.
 
     Args:
@@ -148,45 +148,45 @@ def run_all_simulations(material_row, material_object):
     # run helium void fraction simulation
     if 'helium_void_fraction' in simulations:
         results = simulation.helium_void_fraction.run(
-            material_row.run_id, material_object)
-        material_row.update_from_dict(results)
-        material_row.void_fraction_bin = calc_bin(
-            material_row.vf_helium_void_fraction,
+            material.run_id, pseudo_material)
+        material.update_from_dict(results)
+        material.void_fraction_bin = calc_bin(
+            material.vf_helium_void_fraction,
             *config['helium_void_fraction']['limits'],
             config['number_of_convergence_bins']
         )
     else:
-        material_row.void_fraction_bin = 0
+        material.void_fraction_bin = 0
     ############################################################################
     # run gas loading simulation
     if 'gas_adsorption' in simulations:
-        arguments = [material_row.run_id, material_object]
+        arguments = [material.run_id, pseudo_material]
         if 'helium_void_fraction' in simulations:
-            arguments.append(material_row.vf_helium_void_fraction)
+            arguments.append(material.vf_helium_void_fraction)
         results = simulation.gas_adsorption.run(*arguments)
-        material_row.update_from_dict(results)
-        material_row.gas_adsorption_bin = calc_bin(
-            material_row.ga_absolute_volumetric_loading,
+        material.update_from_dict(results)
+        material.gas_adsorption_bin = calc_bin(
+            material.ga_absolute_volumetric_loading,
             *config['gas_adsorption']['limits'],
             config['number_of_convergence_bins']
         )
     else:
-        material_row.gas_adsorption_bin = 0
+        material.gas_adsorption_bin = 0
     ############################################################################
     # run surface area simulation
     if 'surface_area' in simulations:
         results = simulation.surface_area.run(
-                material_row.run_id, material_object)
-        material_row.update_from_dict(results)
-        material_row.surface_area_bin = calc_bin(
-            material_row.sa_volumetric_surface_area,
+                material.run_id, pseudo_material)
+        material.update_from_dict(results)
+        material.surface_area_bin = calc_bin(
+            material.sa_volumetric_surface_area,
             *config['surface_area']['limits'],
             config['number_of_convergence_bins']
         )
     else:
-        material_row.surface_area_bin = 0
+        material.surface_area_bin = 0
 
-def retest(m_orig, retests, tolerance, m_object):
+def retest(m_orig, retests, tolerance, pseudo_material):
     """Reproduce simulations  to prevent statistical errors.
 
     Args:
@@ -200,7 +200,7 @@ def retest(m_orig, retests, tolerance, m_object):
 
     """
     m = m_orig.clone()
-    run_all_simulations(m, m_object)
+    run_all_simulations(m, pseudo_material)
 
     simulations = config['material_properties']
 
@@ -327,50 +327,51 @@ def worker_run_loop(run_id):
         while materials_in_generation(run_id, gen) < size_of_generation:
             if gen == 0:
                 print("writing new seed...")
-                material_row, material_object = write_seed_definition_files(
+                material, pseudo_material = write_seed_definition_files(
                         run_id, config['number_of_atom_types'])
             else:
                 print("selecting a parent / running retests on parent / mutating / simulating")
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
                                                   generation_limit=config['children_per_generation'])
 
-                parent = session.query(Material).get(parent_id)
+                parent_material = session.query(Material).get(parent_id)
 
                 # run retests until we've run enough
-                while parent.retest_passed is None:
+                while parent_material.retest_passed is None:
                     print("running retest...")
                     print("Date :\t%s" % datetime.now().date().isoformat())
                     print("Time :\t%s" % datetime.now().time().isoformat())
-                    parent_object_path = os.path.join(
+                    parent_pseudo_material_path = os.path.join(
                             os.path.dirname(os.path.dirname(htsohm.__file__)),
-                            run_id, 'pseudo_materials', '{0}.yaml'.format(parent.uuid)
+                            run_id, 'pseudo_materials', '{0}.yaml'.format(
+                                parent_material.uuid)
                         )
-                    with open(parent_object_path) as parent_file:
-                        parent_object = yaml.load(parent_file)
+                    with open(parent_pseudo_material_path) as parent_file:
+                        parent_pseudo_material = yaml.load(parent_file)
                     retest(
-                            parent, config['retests']['number'],
-                            config['retests']['tolerance'], parent_object
+                            parent_material, config['retests']['number'],
+                            config['retests']['tolerance'], parent_pseudo_material
                         )
-                    session.refresh(parent)
+                    session.refresh(parent_material)
 
-                if not parent.retest_passed:
+                if not parent_material.retest_passed:
                     print("parent failed retest. restarting with parent selection.")
                     continue
 
-                mutation_strength = mutate(run_id, gen, parent)
-                material_row, material_object = write_child_definition_files(
-                        parent, parent_object, mutation_strength, gen)
+                mutation_strength = mutate(run_id, gen, parent_material)
+                material, pseudo_material = write_child_definition_files(
+                        parent_material, parent_pseudo_material, mutation_strength, gen)
 
-            run_all_simulations(material_row, material_object)
-            session.add(material_row)
+            run_all_simulations(material, pseudo_material)
+            session.add(material)
             session.commit()
 
-            material_row.generation_index = material_row.calculate_generation_index()
-            if material_row.generation_index < config['children_per_generation']:
-                session.add(material_row)
+            material.generation_index = material.calculate_generation_index()
+            if material.generation_index < config['children_per_generation']:
+                session.add(material)
             else:
                 # delete excess rows
-                # session.delete(material_row)
+                # session.delete(material)
                 pass
             session.commit()
             sys.stdout.flush()
