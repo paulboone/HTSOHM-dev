@@ -87,6 +87,8 @@ class PseudoMaterial:
                 htsohm_dir, 
                 self.run_id, 
                 'pseudo_materials')
+        if not os.path.exists(pseudo_materials_dir):
+            os.makedirs(pseudo_materials_dir, exist_ok=True)
         pseudo_material_file = os.path.join(
                 pseudo_materials_dir,
                 '{0}.yaml'.format(self.uuid))

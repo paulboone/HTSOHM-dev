@@ -15,10 +15,6 @@ from htsohm import config
 from htsohm.pseudo_material import PseudoMaterial
 from htsohm.db import session, Material
 
-def get_pseudo_materials_dir(run_id):
-    htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
-    return os.path.join(htsohm_dir, run_id, 'pseudo_materials')
-
 def random_number_density(number_density_limits, lattice_constants):
     """Produces random number for atom-sites in a unit cell, constrained by
     some number density limits.
@@ -78,9 +74,6 @@ def generate_pseudo_material(run_id, number_of_atomtypes):
     sigma_limits            = config["sigma_limits"]
     max_charge              = config["charge_limit"]
     elem_charge             = config["elemental_charge"]
-
-    if not os.path.exists(get_pseudo_materials_dir(run_id)):
-        os.makedirs(get_pseudo_materials_dir(run_id), exist_ok=True)
 
     ########################################################################
     material = Material(run_id)
