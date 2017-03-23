@@ -198,6 +198,7 @@ class Material(Base):
             from materials m
             join materials p on (m.parent_id = p.id)
             where m.generation = :gen
+              and m.run_id = :run_id
               and p.gas_adsorption_bin = :ga_bin
               and p.surface_area_bin = :sa_bin
               and p.void_fraction_bin = :vf_bin
@@ -206,6 +207,7 @@ class Material(Base):
         rows = engine.connect().execute(
             sql,
             gen=self.generation,
+            run_id=self.run_id,
             ga_bin=self.gas_adsorption_bin,
             sa_bin=self.surface_area_bin,
             vf_bin=self.void_fraction_bin
