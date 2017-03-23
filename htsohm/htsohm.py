@@ -1,3 +1,4 @@
+import os
 import sys
 from math import sqrt
 from datetime import datetime
@@ -5,10 +6,13 @@ from datetime import datetime
 import numpy as np
 from sqlalchemy.sql import func, or_
 from sqlalchemy.orm.exc import FlushError
+import sqlalchemy.exc
+import yaml
 
+import htsohm
 from htsohm import config
 from htsohm.db import session, Material, MutationStrength
-from htsohm.material_files import write_seed_definition_files, write_child_definition_files
+from htsohm.material_files import generate_pseudo_material, mutate_pseudo_material
 from htsohm import simulation
 
 def materials_in_generation(run_id, generation):
@@ -127,7 +131,7 @@ def select_parent(run_id, max_generation, generation_limit):
     potential_parents = [i[0] for i in parent_query]
     return int(np.random.choice(potential_parents))
 
-def run_all_simulations(material):
+def run_all_simulations(material, pseudo_material):
     """Simulate helium void fraction, gas loading, and surface area.
 
     Args:
@@ -143,7 +147,8 @@ def run_all_simulations(material):
     ############################################################################
     # run helium void fraction simulation
     if 'helium_void_fraction' in simulations:
-        results = simulation.helium_void_fraction.run(material.run_id, material.uuid)
+        results = simulation.helium_void_fraction.run(
+            material.run_id, pseudo_material)
         material.update_from_dict(results)
         material.void_fraction_bin = calc_bin(
             material.vf_helium_void_fraction,
@@ -155,7 +160,7 @@ def run_all_simulations(material):
     ############################################################################
     # run gas loading simulation
     if 'gas_adsorption' in simulations:
-        arguments = [material.run_id, material.uuid]
+        arguments = [material.run_id, pseudo_material]
         if 'helium_void_fraction' in simulations:
             arguments.append(material.vf_helium_void_fraction)
         results = simulation.gas_adsorption.run(*arguments)
@@ -170,7 +175,8 @@ def run_all_simulations(material):
     ############################################################################
     # run surface area simulation
     if 'surface_area' in simulations:
-        results = simulation.surface_area.run(material.run_id, material.uuid)
+        results = simulation.surface_area.run(
+                material.run_id, pseudo_material)
         material.update_from_dict(results)
         material.surface_area_bin = calc_bin(
             material.sa_volumetric_surface_area,
@@ -180,7 +186,7 @@ def run_all_simulations(material):
     else:
         material.surface_area_bin = 0
 
-def retest(m_orig, retests, tolerance):
+def retest(m_orig, retests, tolerance, pseudo_material):
     """Reproduce simulations  to prevent statistical errors.
 
     Args:
@@ -194,7 +200,7 @@ def retest(m_orig, retests, tolerance):
 
     """
     m = m_orig.clone()
-    run_all_simulations(m)
+    run_all_simulations(m, pseudo_material)
 
     simulations = config['material_properties']
 
@@ -211,7 +217,10 @@ def retest(m_orig, retests, tolerance):
         m_orig.retest_num += 1
 
         if m_orig.retest_num == retests:
-            m_orig.retest_passed = m.calculate_retest_result(tolerance)
+            try:
+                m_orig.retest_passed = m.calculate_retest_result(tolerance)
+            except ZeroDivisionError as e:
+                print('WARNING: ZeroDivisionError - material.calculate_retest_result(tolerance)')
 
     else:
         pass
@@ -259,8 +268,9 @@ def mutate(run_id, generation, parent):
         try:
             session.add(mutation_strength)
             session.commit()
-        except FlushError as e:
+        except (FlushError, sqlalchemy.exc.IntegrityError) as e:
             print("Somebody beat us to saving a row with this generation. That's ok!")
+            session.rollback()
             # it's ok b/c this calculation should always yield the exact same result!
     sys.stdout.flush()
     return mutation_strength.strength
@@ -312,35 +322,55 @@ def worker_run_loop(run_id):
 
     converged = False
     while not converged:
+        print(
+                (
+                    '=======================================================\n'
+                    'GENERATION {0}\n'
+                    '=======================================================\n'
+                ).format(gen)
+            )
         size_of_generation = config['children_per_generation']
 
         while materials_in_generation(run_id, gen) < size_of_generation:
             if gen == 0:
                 print("writing new seed...")
-                material = write_seed_definition_files(run_id, config['number_of_atom_types'])
+                material, pseudo_material = generate_pseudo_material(
+                        run_id, config['number_of_atom_types'])
+                pseudo_material.dump()
             else:
                 print("selecting a parent / running retests on parent / mutating / simulating")
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
                                                   generation_limit=config['children_per_generation'])
 
-                parent = session.query(Material).get(parent_id)
+                parent_material = session.query(Material).get(parent_id)
 
                 # run retests until we've run enough
-                while parent.retest_passed is None:
+                while parent_material.retest_passed is None:
                     print("running retest...")
                     print("Date :\t%s" % datetime.now().date().isoformat())
                     print("Time :\t%s" % datetime.now().time().isoformat())
-                    retest(parent, config['retests']['number'], config['retests']['tolerance'])
-                    session.refresh(parent)
+                    parent_pseudo_material_path = os.path.join(
+                            os.path.dirname(os.path.dirname(htsohm.__file__)),
+                            run_id, 'pseudo_materials', '{0}.yaml'.format(
+                                parent_material.uuid)
+                        )
+                    with open(parent_pseudo_material_path) as parent_file:
+                        parent_pseudo_material = yaml.load(parent_file)
+                    retest(
+                            parent_material, config['retests']['number'],
+                            config['retests']['tolerance'], parent_pseudo_material
+                        )
+                    session.refresh(parent_material)
 
-                if not parent.retest_passed:
+                if not parent_material.retest_passed:
                     print("parent failed retest. restarting with parent selection.")
                     continue
 
-                mutation_strength = mutate(run_id, gen, parent)
-                material = write_child_definition_files(run_id, parent_id, gen, mutation_strength)
-
-            run_all_simulations(material)
+                mutation_strength = mutate(run_id, gen, parent_material)
+                material, pseudo_material = mutate_pseudo_material(
+                        parent_material, parent_pseudo_material, mutation_strength, gen)
+                pseudo_material.dump()
+            run_all_simulations(material, pseudo_material)
             session.add(material)
             session.commit()
 
