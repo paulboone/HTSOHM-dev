@@ -322,6 +322,13 @@ def worker_run_loop(run_id):
 
     converged = False
     while not converged:
+        print(
+                (
+                    '=======================================================\n'
+                    'GENERATION {0}\n'
+                    '=======================================================\n'
+                ).format(gen)
+            )
         size_of_generation = config['children_per_generation']
 
         while materials_in_generation(run_id, gen) < size_of_generation:
