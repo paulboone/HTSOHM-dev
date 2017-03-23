@@ -49,7 +49,7 @@ def random_number_density(number_density_limits, lattice_constants):
     atoms = randrange(min_atoms, max_atoms + 1, 1)
     return atoms
 
-def write_seed_definition_files(run_id, number_of_atomtypes):
+def generate_pseudo_material(run_id, number_of_atomtypes):
     """Write .def and .cif files for a randomly-generated porous material.
 
     Args:
@@ -112,8 +112,6 @@ def write_seed_definition_files(run_id, number_of_atomtypes):
             atom_site[i] = random()
         pseudo_material.atom_sites.append(atom_site)
 
-    pseudo_material.dump()
-
     return material, pseudo_material
 
 def closest_distance(x, y):
@@ -163,7 +161,7 @@ def random_position(x_o, x_r, strength):
         xfrac = x_o + strength * dx
     return xfrac
 
-def write_child_definition_files(parent_material, parent_pseudo_material, mutation_strength, generation):
+def mutate_pseudo_material(parent_material, parent_pseudo_material, mutation_strength, generation):
     """Modifies a "parent" material's definition files by perturbing each
     parameter by some factor, dictated by the `mutation_strength`.
     
@@ -249,8 +247,6 @@ def write_child_definition_files(parent_material, parent_pseudo_material, mutati
             for i in ['x-frac', 'y-frac', 'z-frac']:
                 new_atom_site[i] = random()
             child_pseudo_material.atom_sites.append(new_atom_site)
-
-    child_pseudo_material.dump()
 
     return child_material, child_pseudo_material
 
