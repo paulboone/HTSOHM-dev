@@ -109,7 +109,6 @@ def run(run_id, pseudo_material):
             print("Time :\t%s" % datetime.now().time().isoformat())
             print("Calculating surface area of %s..." % (pseudo_material.uuid))
             subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd=output_dir)
-
             filename = "output_%s_1.1.1_298.000000_0.data" % (pseudo_material.uuid)
             output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
             results = parse_output(output_file)

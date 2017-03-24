@@ -39,14 +39,21 @@ retests:
   number: 3
   tolerance: 0.25
 
-material_properties: ['gas_adsorption', 'surface_area', 'helium_void_fraction']
+material_properties: ['gas_adsorption_0', 'gas_adsorption_1', 'surface_area', 'helium_void_fraction']
 
-gas_adsorption:
+gas_adsorption_0:
   adsorbate: 'methane'
   simulation_cycles: 100
   initialization_cycles: 100
   external_temperature: 298
   external_pressure: 3500000
+  limits: [0, 300]
+gas_adsorption_1:
+  adsorbate: 'methane'
+  simulation_cycles: 100
+  initialization_cycles: 100
+  external_temperature: 298
+  external_pressure: 580000
   limits: [0, 300]
 helium_void_fraction:
   simulation_cycles: 100
