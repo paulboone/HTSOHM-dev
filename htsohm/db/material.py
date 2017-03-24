@@ -198,44 +198,54 @@ class Material(Base):
 
         Args:
             self (class): row in material table.
-            tolerance (float): acceptable deviation as percent of originally-
-                calculated value.
+            tolerance (float): acceptable deviation as percent of parameter
+                bin-width.
 
         Returns:
             (bool) True if material has NOT failed any of all re-tests.
 
         """
         simulations = config['material_properties']
+        number_of_bins = config['number_of_convergence_bins']
 
         if 'gas_adsorption' in simulations:
             ga_o = self.ga_absolute_volumetric_loading    # initally-calculated values
             ga_mean = self.retest_gas_adsorption_sum / self.retest_num
+            ga_limits = config['gas_adsorption']['limits']
+            ga_width = (ga_limits[1] - ga_limits[0]) / number_of_bins
         else:
             ga_o = 0
             ga_mean = 0
+            ga_width = 0
 
         if 'surface_area' in simulations:
             sa_o = self.sa_volumetric_surface_area
             sa_mean = self.retest_surface_area_sum / self.retest_num
+            sa_limits = config['surface_area']['limits']
+            sa_width = (sa_limits[1] - sa_limits[0]) / number_of_bins
         else:
             sa_o = 0
             sa_mean = 0
+            sa_width = 0
 
         if 'helium_void_fraction' in simulations:
             vf_o = self.vf_helium_void_fraction
             vf_mean = self.retest_void_fraction_sum / self.retest_num
+            vf_limits = config['surface_area']['limits']
+            vf_width = (vf_limits[1] - vf_limits[0]) / number_of_bins
         else:
             vf_o = 0
             vf_mean = 0
+            vf_width = 0
 
         print('GL DEV\t%s' % (ga_mean - ga_o))
         print('SA DEV\t%s' % (sa_mean - sa_o))
         print('VF DEV\t%s' % (vf_mean - vf_o))
 
         retest_failed = (
-            abs(ga_mean - ga_o) >= tolerance * ga_o and ga_o != 0 or
-            abs(sa_mean - sa_o) >= tolerance * sa_o and sa_o != 0 or
-            abs(vf_mean - vf_o) >= tolerance * vf_o and vf_o != 0
+            abs(ga_mean - ga_o) >= tolerance * ga_width and ga_o != 0 or
+            abs(sa_mean - sa_o) >= tolerance * sa_width and sa_o != 0 or
+            abs(vf_mean - vf_o) >= tolerance * vf_width and vf_o != 0
         )
 
         return not retest_failed
