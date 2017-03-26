@@ -6,12 +6,13 @@ from datetime import datetime
 import numpy as np
 from sqlalchemy.sql import func, or_
 from sqlalchemy.orm.exc import FlushError
-import sqlalchemy.exc
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql import text
 import yaml
 
 import htsohm
 from htsohm import config
-from htsohm.db import session, Material, MutationStrength
+from htsohm.db import engine, session, Material, MutationStrength
 from htsohm.material_files import generate_pseudo_material, mutate_pseudo_material
 from htsohm import simulation
 
@@ -247,6 +248,11 @@ def retest(m_orig, retests, tolerance, pseudo_material):
 
     session.commit()
 
+def get_all_parent_ids(run_id, generation):
+    return [e[0] for e in session.query(Material.parent_id) \
+            .filter(Material.run_id == run_id, Material.generation == generation) \
+            .distinct() if e[0] != None]
+
 def get_mutation_strength(run_id, generation, parent):
     """Query mutation_strength for bin and adjust as necessary.
 
@@ -287,7 +293,7 @@ def get_mutation_strength(run_id, generation, parent):
         try:
             session.add(mutation_strength)
             session.commit()
-        except (FlushError, sqlalchemy.exc.IntegrityError) as e:
+        except (FlushError, IntegrityError) as e:
             print("Somebody beat us to saving a row with this generation. That's ok!")
             session.rollback()
             # it's ok b/c this calculation should always yield the exact same result!
@@ -385,7 +391,7 @@ def worker_run_loop(run_id):
                     print("parent failed retest. restarting with parent selection.")
                     continue
 
-                mutation_strength = get_mutation_strength(run_id, gen, parent_material)
+                mutation_strength = get_mutation_strength(run_id, gen-1, parent_material)
                 material, pseudo_material = mutate_pseudo_material(
                         parent_material, parent_pseudo_material, mutation_strength, gen)
                 pseudo_material.dump()
@@ -396,6 +402,14 @@ def worker_run_loop(run_id):
             material.generation_index = material.calculate_generation_index()
             if material.generation_index < config['children_per_generation']:
                 session.add(material)
+            if (
+                material.generation_index == config['children_per_generation'] - 1
+                and gen > 0
+                ):
+                parent_ids = get_all_parent_ids(run_id, gen)
+                for parent_id in parent_ids:
+                    parent_material = session.query(Material).get(parent_id)
+                    get_mutation_strength(run_id, gen, parent_material)
             else:
                 # delete excess rows
                 # session.delete(material)
