@@ -253,7 +253,7 @@ def get_all_parent_ids(run_id, generation):
             .filter(Material.run_id == run_id, Material.generation == generation) \
             .distinct() if e[0] != None]
 
-def get_mutation_strength(run_id, generation, parent):
+def calculate_mutation_strength(run_id, generation, parent):
     """Query mutation_strength for bin and adjust as necessary.
 
     Args:
@@ -390,7 +390,9 @@ def worker_run_loop(run_id):
                     print("parent failed retest. restarting with parent selection.")
                     continue
 
-                mutation_strength = get_mutation_strength(run_id, gen-1, parent_material)
+                mutation_strength_key = [run_id, gen] + parent_material.bin
+                mutation_strength = MutationStrength \
+                        .get_prior(*mutation_strength_key).clone().strength
                 material, pseudo_material = mutate_pseudo_material(
                         parent_material, parent_pseudo_material, mutation_strength, gen)
                 pseudo_material.dump()
@@ -409,12 +411,17 @@ def worker_run_loop(run_id):
                 parent_ids = get_all_parent_ids(run_id, gen)
 
                 print_block('CALCULATING MUTATION STRENGTHS')
+                ms_bins = []
                 for parent_id in parent_ids:
-                    print(
-                            'Calculating bin-mutation-strength for parent id : {0}'.format(parent_id)
-                            )
                     parent_material = session.query(Material).get(parent_id)
-                    get_mutation_strength(run_id, gen, parent_material)
+                    if parent_material.bin not in ms_bins:
+                        print(
+                                (
+                                    'Calculating bin-mutation-strength for bin : {0}'
+                                ).format(parent_material.bin)
+                            )
+                        calculate_mutation_strength(run_id, gen + 1, parent_material)
+                    ms_bins.append(parent_material.bin)
             else:
                 # delete excess rows
                 # session.delete(material)
