@@ -235,18 +235,13 @@ def retest(m_orig, retests, tolerance, pseudo_material):
         m_orig.retest_num += 1
         session.commit()        
 
-        if m_orig.retest_num == retests:
-            try:
-                m_orig.retest_passed = m.calculate_retest_result(tolerance)
-                print('\nRETEST_PASSED :\t%s' % m_orig.retest_passed)
-            except ZeroDivisionError as e:
-                print('WARNING: ZeroDivisionError - material.calculate_retest_result(tolerance)')
-
-    else:
-        pass
-        # otherwise our test is extra / redundant and we don't save it
-
-    session.commit()
+    if m_orig.retest_num >= retests:
+        try:
+            m_orig.retest_passed = m.calculate_retest_result(tolerance)
+            print('\nRETEST_PASSED :\t%s' % m_orig.retest_passed)
+            session.commit()
+        except ZeroDivisionError as e:
+            print('WARNING: ZeroDivisionError - material.calculate_retest_result(tolerance)')
 
 def get_all_parent_ids(run_id, generation):
     return [e[0] for e in session.query(Material.parent_id) \
