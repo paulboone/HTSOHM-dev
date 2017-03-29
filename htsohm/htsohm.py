@@ -331,6 +331,17 @@ def evaluate_convergence(run_id, generation):
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
 
+def load_pseudo_material(run_id, material):
+    pseudo_material_path = os.path.join(
+            os.path.dirname(os.path.dirname(htsohm.__file__)),
+            run_id,
+            'pseudo_materials',
+            '{0}.yaml'.format(material.uuid)
+        )
+    with open(pseudo_material_path) as parent_file:
+        parent_pseudo_material = yaml.load(parent_file)
+    return parent_pseudo_material
+
 def worker_run_loop(run_id):
     """
     Args:
@@ -362,19 +373,13 @@ def worker_run_loop(run_id):
                                                   generation_limit=config['children_per_generation'])
 
                 parent_material = session.query(Material).get(parent_id)
+                parent_pseudo_material = load_pseudo_material(run_id, parent_material)
 
                 # run retests until we've run enough
                 while parent_material.retest_passed is None:
                     print("running retest...")
                     print("Date :\t%s" % datetime.now().date().isoformat())
                     print("Time :\t%s" % datetime.now().time().isoformat())
-                    parent_pseudo_material_path = os.path.join(
-                            os.path.dirname(os.path.dirname(htsohm.__file__)),
-                            run_id, 'pseudo_materials', '{0}.yaml'.format(
-                                parent_material.uuid)
-                        )
-                    with open(parent_pseudo_material_path) as parent_file:
-                        parent_pseudo_material = yaml.load(parent_file)
                     retest(
                             parent_material, config['retests']['number'],
                             config['retests']['tolerance'], parent_pseudo_material
