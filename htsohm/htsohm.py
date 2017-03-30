@@ -333,6 +333,9 @@ def evaluate_convergence(run_id, generation):
     sys.stdout.flush()
     return variance <= config['convergence_cutoff_criteria']
 
+def print_block(string):
+    print('{0}\n{1}\n{0}'.format('=' * 80, string))
+
 def worker_run_loop(run_id):
     """
     Args:
@@ -343,17 +346,13 @@ def worker_run_loop(run_id):
     number of generations is reached.
 
     """
+    print('CONFIG\n{0}'.format(config))
+
     gen = last_generation(run_id) or 0
 
     converged = False
     while not converged:
-        print(
-                (
-                    '=======================================================\n'
-                    'GENERATION {0}\n'
-                    '=======================================================\n'
-                ).format(gen)
-            )
+        print_block('GENERATION {}'.format(gen))
         size_of_generation = config['children_per_generation']
 
         while materials_in_generation(run_id, gen) < size_of_generation:
@@ -401,13 +400,19 @@ def worker_run_loop(run_id):
 
             material.generation_index = material.calculate_generation_index()
             if material.generation_index < config['children_per_generation']:
+                print_block('ADDING MATERIAL {}'.format(material.uuid))
                 session.add(material)
             if (
                 material.generation_index == config['children_per_generation'] - 1
                 and gen > 0
                 ):
                 parent_ids = get_all_parent_ids(run_id, gen)
+
+                print_block('CALCULATING MUTATION STRENGTHS')
                 for parent_id in parent_ids:
+                    print(
+                            'Calculating bin-mutation-strength for parent id : {0}'.format(parent_id)
+                            )
                     parent_material = session.query(Material).get(parent_id)
                     get_mutation_strength(run_id, gen, parent_material)
             else:
