@@ -75,7 +75,7 @@ def parse_output(output_file):
         "%s\tm^2/cm^3"   % (results['sa_volumetric_surface_area']))
     return results
 
-def run(run_id, pseudo_material):
+def run(run_id, material):
     """Runs surface area simulation.
 
     Args:
@@ -94,22 +94,22 @@ def run(run_id, pseudo_material):
         path = os.environ['SCRATCH']
     else:
         print('OUTPUT DIRECTORY NOT FOUND.')
-    output_dir = os.path.join(path, 'output_%s_%s' % (pseudo_material.uuid, uuid4()))
+    output_dir = os.path.join(path, 'output_%s_%s' % (material.uuid, uuid4()))
     print("Output directory :\t%s" % output_dir)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "SurfaceArea.input")
-    write_raspa_file(filename, pseudo_material.uuid)
-    write_cif_file(pseudo_material, output_dir)
-    write_mixing_rules(pseudo_material, output_dir)
-    write_pseudo_atoms(pseudo_material, output_dir)
+    write_raspa_file(filename, material.uuid)
+    write_cif_file(material, output_dir)
+    write_mixing_rules(material, output_dir)
+    write_pseudo_atoms(material, output_dir)
     write_force_field(output_dir)
     while True:
         try:
             print("Date :\t%s" % datetime.now().date().isoformat())
             print("Time :\t%s" % datetime.now().time().isoformat())
-            print("Calculating surface area of %s..." % (pseudo_material.uuid))
+            print("Calculating surface area of %s..." % (material.uuid))
             subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd=output_dir)
-            filename = "output_%s_1.1.1_298.000000_0.data" % (pseudo_material.uuid)
+            filename = "output_%s_1.1.1_298.000000_0.data" % (material.uuid)
             output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
             results = parse_output(output_file)
             shutil.rmtree(output_dir, ignore_errors=True)
