@@ -26,7 +26,7 @@ def write_raspa_file(filename, uuid, helium_void_fraction=None):
     external_temperature   = config['gas_adsorption_0']['external_temperature']
     external_pressure      = config['gas_adsorption_0']['external_pressure']
     adsorbate              = config['gas_adsorption_0']['adsorbate']
-       
+      
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(
             "SimulationType                 MonteCarlo\n" +
