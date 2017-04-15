@@ -433,9 +433,15 @@ def worker_run_loop(run_id):
                     print("parent failed retest. restarting with parent selection.")
                     continue
 
-                mutation_strength_key = [run_id, gen] + parent_material.bin
-                mutation_strength = MutationStrength \
-                        .get_prior(*mutation_strength_key).clone().strength
+                # obtain mutation strength
+                if config['mutation_strength_method'] == 'flat':
+                    mutation_strength = config['initial_mutation_strength']
+                else:
+                    mutation_strength_key = [run_id, gen] + parent_material.bin
+                    mutation_strength = MutationStrength \
+                            .get_prior(*mutation_strength_key).clone().strength
+                
+                # mutate material
                 material, pseudo_material = mutate_pseudo_material(
                         parent_material, parent_pseudo_material, mutation_strength, gen)
                 pseudo_material.dump()
@@ -447,21 +453,26 @@ def worker_run_loop(run_id):
             if material.generation_index < config['children_per_generation']:
                 print_block('ADDING MATERIAL {}'.format(material.uuid))
                 session.add(material)
-            if (
-                material.generation_index == config['children_per_generation'] - 1
-                and gen > 0
-                ):
-                parent_ids = get_all_parent_ids(run_id, gen)
 
-                print_block('CALCULATING MUTATION STRENGTHS')
-                ms_bins = []
-                for parent_id in parent_ids:
-                    parent_bin = session.query(Material).get(parent_id).bin
-                    if parent_bin not in ms_bins:
-                        print('Calculating bin-mutation-strength for bin : {0}' \
-                                .format(parent_bin))
-                        calculate_mutation_strength(run_id, gen + 1, parent_bin)
-                    ms_bins.append(parent_bin)
+            if config['mutation_strength_method'] != 'flat':
+                if (
+                    material.generation_index == config['children_per_generation'] - 1
+                    and gen > 0
+                    ):
+                    parent_ids = get_all_parent_ids(run_id, gen)
+    
+                    print_block('CALCULATING MUTATION STRENGTHS')
+                    ms_bins = []
+                    for parent_id in parent_ids:
+                        parent_bin = session.query(Material).get(parent_id).bin
+                        if parent_bin not in ms_bins:
+                            print(
+                                    (
+                                        'Calculating bin-mutation-strength for bin : {0}'
+                                    ).format(parent_bin)
+                                )
+                            calculate_mutation_strength(run_id, gen + 1, parent_bin)
+                        ms_bins.append(parent_bin)
             else:
                 # delete excess rows
                 # session.delete(material)
