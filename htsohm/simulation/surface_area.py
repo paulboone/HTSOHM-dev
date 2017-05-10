@@ -103,6 +103,7 @@ def run(run_id, material):
     write_mixing_rules(material, output_dir)
     write_pseudo_atoms(material, output_dir)
     write_force_field(output_dir)
+
     while True:
         try:
             print("Date :\t%s" % datetime.now().date().isoformat())

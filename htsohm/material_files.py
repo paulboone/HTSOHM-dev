@@ -12,7 +12,6 @@ import yaml
 # local application/library specific imports
 import htsohm
 from htsohm import config
-from htsohm.pseudo_material import PseudoMaterial
 from htsohm.db import session, Material, Structure, LennardJones, AtomSites
 
 def random_number_density(number_density_limits, material_structure): #lattice_constants):

@@ -148,55 +148,100 @@ def run_all_simulations(material):
     ############################################################################
     # run helium void fraction simulation
     if 'helium_void_fraction' in simulations:
-        results = simulation.helium_void_fraction.run(
-            material.run_id, material)
-        material.update_from_dict(results)
-        material.void_fraction_bin = calc_bin(
-            material.vf_helium_void_fraction,
-            *config['helium_void_fraction']['limits'],
-            config['number_of_convergence_bins']
-        )
+        if config['artificial_data'] == 'off':
+            results = simulation.helium_void_fraction.run(
+                material.run_id, material)
+            material.update_from_dict(results)
+            material.void_fraction_bin = calc_bin(
+                material.vf_helium_void_fraction,
+                *config['helium_void_fraction']['limits'],
+                config['number_of_convergence_bins']
+            )
+        else:
+            results = {}
+            results['vf_helium_void_fraction'] = material.artificial_void_fraction()
+            material.update_from_dict(results)
+            material.void_fraction_bin = calc_bin(
+                material.vf_helium_void_fraction,
+                *config['helium_void_fraction']['limits'],
+                config['number_of_convergence_bins']
+            )
+
     else:
         material.void_fraction_bin = 0
     ############################################################################
     # run gas loading simulation
     if 'gas_adsorption_0' in simulations and 'gas_adsorption_1' not in simulations:
-        arguments = [material.run_id, material]
-        if 'helium_void_fraction' in simulations:
-            arguments.append(material.vf_helium_void_fraction)
-        results = simulation.gas_adsorption_0.run(*arguments)
-        material.update_from_dict(results)
-        material.gas_adsorption_bin = calc_bin(
-            material.ga0_absolute_volumetric_loading,
-            *config['gas_adsorption_0']['limits'],
-            config['number_of_convergence_bins']
-        )
+        if config['artificial_data'] == 'off':
+            arguments = [material.run_id, material]
+            if 'helium_void_fraction' in simulations:
+                arguments.append(material.vf_helium_void_fraction)
+            results = simulation.gas_adsorption_0.run(*arguments)
+            material.update_from_dict(results)
+            material.gas_adsorption_bin = calc_bin(
+                material.ga0_absolute_volumetric_loading,
+                *config['gas_adsorption_0']['limits'],
+                config['number_of_convergence_bins']
+            )
+        else:
+            results = {}
+            results['ga0_absolute_volumetric_loading'] = material.artificial_gas_adsorption()
+            material.update_from_dict(results)
+            material.gas_adsorption_bin = calc_bin(
+                material.ga0_absolute_volumetric_loading,
+                *config['gas_adsorption_0']['limits'],
+                config['number_of_convergence_bins']
+            )
+
     elif 'gas_adsorption_0' in simulations and 'gas_adsorption_1' in simulations:
-        arguments = [material.run_id, material]
-        if 'helium_void_fraction' in simulations:
-            arguments.append(material.vf_helium_void_fraction)
-        results = simulation.gas_adsorption_0.run(*arguments)
-        material.update_from_dict(results)
-        results = simulation.gas_adsorption_1.run(*arguments)
-        material.update_from_dict(results)
-        material.gas_adsorption_bin = calc_bin(
-            abs(material.ga0_absolute_volumetric_loading - material.ga1_absolute_volumetric_loading),
-            *config['gas_adsorption_0']['limits'],
-            config['number_of_convergence_bins']
-        )
+        if config['artificial_data'] == 'off':
+            arguments = [material.run_id, material]
+            if 'helium_void_fraction' in simulations:
+                arguments.append(material.vf_helium_void_fraction)
+            results = simulation.gas_adsorption_0.run(*arguments)
+            material.update_from_dict(results)
+            results = simulation.gas_adsorption_1.run(*arguments)
+            material.update_from_dict(results)
+            material.gas_adsorption_bin = calc_bin(
+                abs(material.ga0_absolute_volumetric_loading - material.ga1_absolute_volumetric_loading),
+                *config['gas_adsorption_0']['limits'],
+                config['number_of_convergence_bins']
+            )
+        else:
+            results = {}
+            results['ga0_absolute_volumetric_loading'] = material.artificial_gas_adsorption()
+            results['ga1_absolute_volumetric_loading'] = material.artificial_gas_adsorption()
+            material.update_from_dict(results)
+            material.gas_adsorption_bin = calc_bin(
+                material.ga0_absolute_volumetric_loading,
+                *config['gas_adsorption_0']['limits'],
+                config['number_of_convergence_bins']
+            )
+
     elif 'gas_adsorption_0' not in simulations:
         material.gas_adsorption_bin = 0
     ############################################################################
     # run surface area simulation
     if 'surface_area' in simulations:
-        results = simulation.surface_area.run(
-                material.run_id, material)
-        material.update_from_dict(results)
-        material.surface_area_bin = calc_bin(
-            material.sa_volumetric_surface_area,
-            *config['surface_area']['limits'],
-            config['number_of_convergence_bins']
-        )
+        if config['artificial_data'] == 'off':
+            results = simulation.surface_area.run(
+                    material.run_id, material)
+            material.update_from_dict(results)
+            material.surface_area_bin = calc_bin(
+                material.sa_volumetric_surface_area,
+                *config['surface_area']['limits'],
+                config['number_of_convergence_bins']
+            )
+        else:
+            results = {}
+            results['sa_volumetric_surface_area'] = material.artificial_surface_area()
+            material.update_from_dict(results)
+            material.surface_area_bin = calc_bin(
+                material.sa_volumetric_surface_area,
+                *config['surface_area']['limits'],
+                config['number_of_convergence_bins']
+            )
+
     else:
         material.surface_area_bin = 0
 
