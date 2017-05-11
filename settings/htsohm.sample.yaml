@@ -46,6 +46,7 @@ retests:
 material_properties: ['gas_adsorption_0', 'gas_adsorption_1', 'surface_area', 'helium_void_fraction']
 
 artificial_data: 'off'
+interactive_mode: 'on'
 
 gas_adsorption_0:
   adsorbate: 'methane'

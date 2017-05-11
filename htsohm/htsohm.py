@@ -145,6 +145,12 @@ def run_all_simulations(material):
     """
     simulations = config['material_properties']
 
+    print('\n==============================================|')
+    print('UUID :\t{}  |'.format(material.uuid))
+    print('----------------+---------------+-------------|')
+    print('  PROPERTY\t|  VALUE\t|  BIN\t      |')
+    print('----------------+---------------+-------------|')
+
     ############################################################################
     # run helium void fraction simulation
     if 'helium_void_fraction' in simulations:
@@ -166,6 +172,9 @@ def run_all_simulations(material):
                 *config['helium_void_fraction']['limits'],
                 config['number_of_convergence_bins']
             )
+            print('void fraction\t|  {}\t|  {}\t      |'.format(
+                round(results['vf_helium_void_fraction'], 4),
+                material.void_fraction_bin))
 
     else:
         material.void_fraction_bin = 0
@@ -192,6 +201,9 @@ def run_all_simulations(material):
                 *config['gas_adsorption_0']['limits'],
                 config['number_of_convergence_bins']
             )
+            print('gas adsorption\t|  {}\t|  {}\t      |'.format(
+                round(results['ga0_absolute_volumetric_loading'], 4),
+                material.gas_adsorption_bin))
 
     elif 'gas_adsorption_0' in simulations and 'gas_adsorption_1' in simulations:
         if config['artificial_data'] == 'off':
@@ -217,6 +229,9 @@ def run_all_simulations(material):
                 *config['gas_adsorption_0']['limits'],
                 config['number_of_convergence_bins']
             )
+            print('gas adsorption\t|  {}\t|  {}\t      |'.format(
+                round(results['ga0_absolute_volumetric_loading'], 4),
+                material.gas_adsorption_bin))
 
     elif 'gas_adsorption_0' not in simulations:
         material.gas_adsorption_bin = 0
@@ -241,6 +256,9 @@ def run_all_simulations(material):
                 *config['surface_area']['limits'],
                 config['number_of_convergence_bins']
             )
+            print('surface area\t|  {}\t|  {}\t      |'.format(
+                round(results['sa_volumetric_surface_area'], 4),
+                material.surface_area_bin))
 
     else:
         material.surface_area_bin = 0
@@ -481,6 +499,11 @@ def worker_run_loop(run_id):
             if material.generation_index < config['children_per_generation']:
                 print_block('ADDING MATERIAL {}'.format(material.uuid))
                 session.add(material)
+
+            if config['interactive_mode'] == 'on':
+                print("\n\nGeneration :\t{}\nMat. no. :\t{} / {}".format(gen,
+                    material.generation_index + 1, config['children_per_generation']))
+                input("\nPress Enter to continue...\n")
 
             if config['mutation_strength_method'] != 'flat':
                 if material.generation_index == config['children_per_generation'] - 1 and gen > 0:
