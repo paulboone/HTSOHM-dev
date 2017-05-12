@@ -159,13 +159,29 @@ def mutate_material(parent_material, mutation_strength, generation):
     child_material = Material(parent_material.run_id)
     child_material.generation = generation
     child_material.parent_id = parent_material.id
- 
+
+    print('Parent UUID :\t{}'.format(parent_material.uuid))
+    print('Child UUID :\t{}'.format(child_material.uuid))
+
     # perturb lennard-jones parameters
     for atom_type in parent_material.structure.lennard_jones:
         child_material.structure.lennard_jones.append(LennardJones(
             chemical_id = atom_type.chemical_id,
             sigma = atom_type.sigma + mutation_strength * (uniform(*config['sigma_limits']) - atom_type.sigma),
             epsilon = atom_type.epsilon + mutation_strength * (uniform(*config['epsilon_limits']) - atom_type.epsilon)))
+
+    if config['interactive_mode'] == 'on':
+        print('=========================================================================================')
+        print('LENNARD JONES PARAMETERS')
+        print('=========================================================================================')
+        print('  chemical-id\t|  parent sigma\t|  child sigma\t|  parent epsilon\t| child epsilon')
+        print('----------------+---------------+---------------+-----------------------+----------------')
+        for i in range(len(child_material.structure.lennard_jones)):
+            c_chem = child_material.structure.lennard_jones[i]
+            p_chem = parent_material.structure.lennard_jones[i]
+            print('  {}\t\t|  {}\t|  {}\t|  {}\t\t|  {}'.format(c_chem.chemical_id,
+                round(p_chem.sigma, 4), round(c_chem.sigma, 4),
+                round(p_chem.epsilon, 4), round(c_chem.epsilon, 4)))
 
     # perturb lattice constants
     child_material.structure.lattice_constant_a = parent_material.structure.lattice_constant_a \
@@ -174,6 +190,17 @@ def mutate_material(parent_material, mutation_strength, generation):
             + mutation_strength * (uniform(*lattice_limits) - parent_material.structure.lattice_constant_b)
     child_material.structure.lattice_constant_c = parent_material.structure.lattice_constant_c \
             + mutation_strength * (uniform(*lattice_limits) - parent_material.structure.lattice_constant_c)
+
+    if config['interactive_mode'] == 'on':
+        print('==========================================')
+        print('LATTICE CONSTANTS')
+        print('==========================================')
+        print('  direction\t|  parent \t|  child')
+        print('----------------+---------------+---------')
+        for i in ['a', 'b', 'c']:
+            print('  {}\t\t|  {}\t|  {}'.format(i,
+                round(getattr(parent_material.structure, 'lattice_constant_{}'.format(i)), 4),
+                round(getattr(child_material.structure, 'lattice_constant_{}'.format(i)), 4)))
 
     # perturb number density/number of atom-sites
     parent_ND = len(parent_material.structure.atom_sites) / parent_material.structure.volume
@@ -185,6 +212,15 @@ def mutate_material(parent_material, mutation_strength, generation):
         parent_material.structure.atom_sites,
         min(number_of_atoms, len(parent_material.structure.atom_sites)),
         replace = False).tolist()
+
+    # store original atom-site positions before perturbation in order to compare
+    # parent and child values later
+    if config['interactive_mode'] == 'on':
+        p_x, p_y, p_z = [], [], []
+        for atom_site in child_material.structure.atom_sites:
+            p_x.append(atom_site.x_frac)
+            p_y.append(atom_site.y_frac)
+            p_z.append(atom_site.z_frac)
 
     # perturb atom-site positions
     for atom_site in child_material.structure.atom_sites:
@@ -199,6 +235,27 @@ def mutate_material(parent_material, mutation_strength, generation):
                 chemical_id = 'A_{}'.format(choice(
                     range(len(parent_material.structure.lennard_jones)))),
                 x_frac = random(), y_frac = random(), z_frac = random()))
+
+    if config['interactive_mode'] == 'on':
+        print('===================================================================')
+        print('FIRST 10 ATOM-SITES')
+        print('===================================================================')
+        print('  chemical-id\t|  parent position\t\t|  child position')
+        print('----------------+-------------------------------+------------------')
+        for i in range(min([10, len(p_x)])):
+            c = child_material.structure.atom_sites[i]
+            print('  {}\t\t|  {}\t|  {}'.format(c.chemical_id,
+                (round(p_x[i], 4), round(p_y[i], 4), round(p_z[i], 4)),
+                (round(c.x_frac, 4), round(c.y_frac, 4), round(c.z_frac, 4))))
+
+        print('==========================')
+        print('NUMBER DENSITY')
+        print('==========================')
+        print('  parent\t|  child')
+        print('----------------+---------')
+        print('  {}\t| {}'.format(
+            round(len(parent_material.structure.atom_sites) / parent_material.structure.volume, 6),
+            round(len(child_material.structure.atom_sites) / child_material.structure.volume, 6)))
 
     return child_material
 
