@@ -517,7 +517,7 @@ def worker_run_loop(run_id):
                 print("writing new seed...")
                 material = generate_material(run_id, config['number_of_atom_types'])
             else:
-                print("selecting a parent / running retests on parent / mutating / simulating")
+                print_block('Selecting parent...')
                 
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
                         generation_limit=config['children_per_generation'])
@@ -525,6 +525,7 @@ def worker_run_loop(run_id):
                 parent_material = session.query(Material).get(parent_id)
 
                 # run retests until we've run enough
+                print_block('Running retest...')
                 while parent_material.retest_passed is None:
                     print("running retest...")
                     print("Date :\t%s" % datetime.now().date().isoformat())
@@ -546,6 +547,7 @@ def worker_run_loop(run_id):
                             .get_prior(*mutation_strength_key).clone().strength
                 
                 # mutate material
+                print_block('Mutating pseudomaterial..')
                 material = mutate_material(parent_material, mutation_strength, gen)
             run_all_simulations(material)
             session.add(material)
