@@ -200,7 +200,7 @@ def run_all_simulations(material):
     """
     simulations = config['material_properties']
 
-    print('\n==============================================|')
+    print('\n===============================|')
     print('UUID :\t{}  |'.format(material.uuid))
     print('----------------+---------------+-------------|')
     print('  PROPERTY\t|  VALUE\t|  BIN\t      |')
@@ -408,7 +408,30 @@ def calculate_percent_children_in_bin(run_id, generation, bin_coordinate):
         vf_bin=bin_coordinate[2]
     ).fetchall()
 
+    if (config['interactive_mode'] == 'on' and 
+            len([r for r in rows if r.in_bin]) != 0):
+        print('Number of children in the parent-bin :\t{}' \
+                .format(len([r for r in rows if r.in_bin])))
+        print('Total number of children :\t\t{}'.format(len(rows)))
+
     return len([ r for r in rows if r.in_bin ]) / len(rows)
+
+def double_check():
+    while True:
+        proceed = input('Are you sure? [y/n] :\t')
+        if proceed in ['n', 'N']:
+            return False
+        elif proceed in ['y', 'Y']:
+            return True
+        else:
+            print('Please enter y/n.')
+
+def set_variable(message, variable_name):
+    while True:
+        value = input(message)
+        print('Setting {} to {} ...'.format(variable_name, value))
+        if double_check():
+            return value
 
 def calculate_mutation_strength(run_id, generation, mutation_strength_bin):
     """Query mutation_strength for bin and adjust as necessary.
@@ -436,14 +459,27 @@ def calculate_mutation_strength(run_id, generation, mutation_strength_bin):
     else:
         print("Calculating mutation strength...")
         mutation_strength = MutationStrength.get_prior(*mutation_strength_key).clone()
+        if config['interactive_mode'] == 'on':
+            print('Prior mutation strength :\t{}'.format(mutation_strength.strength))
         mutation_strength.generation = generation
 
         try:
             fraction_in_parent_bin = calculate_percent_children_in_bin(run_id, generation, mutation_strength_bin)
-            if fraction_in_parent_bin < 0.1 and mutation_strength.strength - 0.05 > 0:
-                mutation_strength.strength -= 0.05
-            elif fraction_in_parent_bin > 0.5 and mutation_strength.strength + 0.05 < 1:
-                mutation_strength.strength += 0.05
+
+            if config['interactive_mode'] != 'on':
+                if fraction_in_parent_bin < 0.1 and mutation_strength.strength - 0.05 > 0:
+                    mutation_strength.strength -= 0.05
+                elif fraction_in_parent_bin > 0.5 and mutation_strength.strength + 0.05 < 1:
+                    mutation_strength.strength += 0.05
+
+            elif config['interactive_mode'] == 'on':
+                print('\tFor adaptive mutation strength(s), DECREASE strength \n' +
+                        '\tby 5% if the fraction of children in parent-bin is \n' +
+                        '\tLESS THAN 0.1; INCREASE strength by 5% if the \n' +
+                        '\tfraction of children in parent-bin is GREATER THAN \n' +
+                        '\t0.5.')
+                mutation_strength.strength = set_variable(
+                    'Please Enter new mutation strength :\t', 'mutation_strength.strength')
         except ZeroDivisionError:
             print("No prior generation materials in this bin with children.")
 
@@ -564,40 +600,60 @@ def worker_run_loop(run_id):
                 input("\nPress Enter to continue...\n")
 
             if config['mutation_strength_method'] != 'flat':
-                if material.generation_index == config['children_per_generation'] - 1 and gen > 0:
-                # standard calculation of mutation strengths for all accessed bins
-                    if config['annealing_on'] != 'on' or gen % config['annealing_frequency'] != 0:
+                if config['interactive_mode'] != 'on':
+                    if material.generation_index == config['children_per_generation'] - 1 and gen > 0:
+                    # standard calculation of mutation strengths for all accessed bins
+                        if config['annealing_on'] != 'on' or gen % config['annealing_frequency'] != 0:
+                            parent_ids = get_all_parent_ids(run_id, gen)
+                            print_block('CALCULATING MUTATION STRENGTHS')
+                            ms_bins = []
+                            for parent_id in parent_ids:
+                                parent_bin = session.query(Material).get(parent_id).bin
+                                if parent_bin not in ms_bins:
+                                    print('Calculating bin-mutation-strength for bin : {}' \
+                                            .format(parent_bin))
+                                    calculate_mutation_strength(run_id, gen + 1, parent_bin)
+                                ms_bins.append(parent_material.bin)
+                        # annealing to reset all mutation strengths to initial value
+                        elif config['annealing_on'] == 'on' and gen % config['annealing_frequency'] == 0:
+                            all_accessed_bin_tuples = session \
+                                    .query(
+                                        Material.gas_adsorption_bin,
+                                        Material.surface_area_bin,
+                                        Material.void_fraction_bin) \
+                                    .filter(
+                                        Material.run_id == run_id,
+                                        Material.retest_passed != False,
+                                        Material.generation_index < config['children_per_generation']) \
+                                    .distinct().all()
+                            all_accessed_bins = [ [e[0], e[1], e[2]]
+                                    for e in all_accessed_bin_tuples]
+                            print_block('ANNEALING WITH MUTATION STRENGTH :\t{}' \
+                                    .format(config['initial_mutation_strength']))
+                            for some_bin in all_accessed_bins:
+                                print('Annealing bin :\t{}'.format(some_bin))
+                                mutation_strength = MutationStrength(run_id, gen + 1, *some_bin)
+                                mutation_strength.strength = config['annealing_strength']
+                                session.add(mutation_strength)
+
+                if config['interactive_mode'] == 'on':
+                    if material.generation_index == config['children_per_generation'] - 1 and gen > 0:
                         parent_ids = get_all_parent_ids(run_id, gen)
-                        print_block('CALCULATING MUTATION STRENGTHS')
                         ms_bins = []
                         for parent_id in parent_ids:
                             parent_bin = session.query(Material).get(parent_id).bin
                             if parent_bin not in ms_bins:
-                                print('Calculating bin-mutation-strength for bin : {}' \
-                                        .format(parent_bin))
-                                calculate_mutation_strength(run_id, gen + 1, parent_bin)
-                            ms_bins.append(parent_material.bin)
-                    # annealing to reset all mutation strengths to initial value
-                    elif config['annealing_on'] == 'on' and gen % config['annealing_frequency'] == 0:
-                        all_accessed_bin_tuples = session \
-                                .query(
-                                    Material.gas_adsorption_bin,
-                                    Material.surface_area_bin,
-                                    Material.void_fraction_bin) \
-                                .filter(
-                                    Material.run_id == run_id,
-                                    Material.retest_passed != False,
-                                    Material.generation_index < config['children_per_generation']) \
-                                .distinct().all()
-                        all_accessed_bins = [ [e[0], e[1], e[2]]
-                                for e in all_accessed_bin_tuples]
-                        print_block('ANNEALING WITH MUTATION STRENGTH :\t{}' \
-                                .format(config['initial_mutation_strength']))
-                        for some_bin in all_accessed_bins:
-                            print('Annealing bin :\t{}'.format(some_bin))
-                            mutation_strength = MutationStrength(run_id, gen + 1, *some_bin)
-                            mutation_strength.strength = config['annealing_strength']
-                            session.add(mutation_strength)
+                                ms_bins.append(parent_bin)
+                        print('The following bins contain parents for the preceding generation:')
+                        for some_bin in ms_bins:
+                            print('\t{}'.format(some_bin))
+                        input('Press Enter to begin calculating new mutation strength(s) :')
+                        counter = 1
+                        for some_bin in ms_bins:
+                            print('\nCalculating strength for bin :\t{}'.format(some_bin))
+                            print('Bin {} / {}'.format(counter, len(ms_bins)))
+                            calculate_mutation_strength(run_id, gen + 1, parent_bin)
+                            input('Press Enter to continue :')
             else:
                 # delete excess rows
                 # session.delete(material)
