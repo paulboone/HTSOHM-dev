@@ -334,14 +334,20 @@ def retest(m_orig, retests, tolerance):
     m = m_orig.clone()
 
     run_all_simulations(m)
-    print('\n\nRETEST_NUM :\t%s' % m_orig.retest_num)
-    print('retests :\t%s' % retests)
+    print('Retest {} / {}'.format(m_orig.retest_num + 1, retests))
 
     simulations = config['material_properties']
 
     # requery row from database, in case someone else has changed it, and lock it
     # if the row is presently locked, this method blocks until the row lock is released
     session.refresh(m_orig, lockmode='update')
+
+    if config['interactive_mode'] == 'on':
+        x0 = m_orig.retest_gas_adsorption_0_sum
+        x1 = m_orig.retest_gas_adsorption_1_sum
+        y = m_orig.retest_surface_area_sum
+        z = m_orig.retest_void_fraction_sum
+            
     if m_orig.retest_num < retests:
         if 'gas_adsorption_0' in simulations:
             m_orig.retest_gas_adsorption_0_sum += m.ga0_absolute_volumetric_loading
@@ -354,13 +360,76 @@ def retest(m_orig, retests, tolerance):
         m_orig.retest_num += 1
         session.commit()        
 
+    if config['interactive_mode'] == 'on':
+        print('\n  PROPERTY\t\t|  OLD SUM\t|  NEW VALUE\t|  NEW SUM')
+        print('------------------------+---------------+---------------+-----------')
+        if 'gas_adsorption_0' in config['material_properties']:
+            print('  gas-0 adsorption\t|  {}\t|  {}\t|  {}'.format(
+                round(x0, 4),
+                round(m.ga0_absolute_volumetric_loading, 4),
+                round(m_orig.retest_gas_adsorption_0_sum, 4)))
+        if 'gas_adsorption_1' in config['material_properties']:
+            print('  gas-1 adsorption\t|  {}\t|  {}\t|  {}'.format(
+                round(x1, 4),
+                round(m.ga1_absolute_volumetric_loading, 4),
+                round(m_orig.retest_gas_adsorption_1_sum, 4)))
+        if 'surface_area' in config['material_properties']:
+            print('  surface area\t\t|  {}\t|  {}\t|  {}'.format(
+                round(y, 4),
+                round(m.sa_volumetric_surface_area, 4),
+                round(m_orig.retest_surface_area_sum, 4)))
+        if 'helium_void_fraction' in config['material_properties']:
+            print('  void fraction\t\t|  {}\t|  {}\t|  {}'.format(
+                round(z, 4),
+                round(m.vf_helium_void_fraction, 4),
+                round(m_orig.retest_void_fraction_sum, 4)))
+
+
     if m_orig.retest_num >= retests:
-        try:
-            m_orig.retest_passed = m.calculate_retest_result(tolerance)
-            print('\nRETEST_PASSED :\t%s' % m_orig.retest_passed)
+        if config['interactive_mode'] != 'on':
+            try:
+                m_orig.retest_passed = m.calculate_retest_result(tolerance)
+                print('\nRETEST_PASSED :\t%s' % m_orig.retest_passed)
+                session.commit()
+            except ZeroDivisionError as e:
+                print('WARNING: ZeroDivisionError - material.calculate_retest_result(tolerance)')
+        elif config['interactive_mode'] == 'on':
+            print('\tPlease check, using the values below, that the difference\n' +
+                    '\tbetween the original value and averaged retest values is\n' +
+                    '\tnot greater than the tolerance times bin-width.')
+            print('==============================================================================')
+            print('  TOLERANCE\t|  {}'.format(config['retests']['tolerance']))
+            print('==============================================================================')
+            print('  NUM. TESTS\t|  {}'.format(config['retests']['number']))
+            print('==============================================================================')
+            print('  PROPERTY\t\t| ORIGINAL VALUE\t|  RETEST SUM\t|  BIN-WIDTH')
+            print('------------------------+-----------------------+---------------+-------------')
+
+            if 'gas_adsorption_0' in config['material_properties']:
+                print('  gas-0 adsorption\t|  {}\t\t|  {}\t|  {}'.format(
+                    round(m_orig.ga0_absolute_volumetric_loading, 4),
+                    round(m_orig.retest_gas_adsorption_0_sum, 4),
+                    (config['gas_adsorption_0']['limits'][1] - config['gas_adsorption_0']['limits'][0]) / config['number_of_convergence_bins']))
+            if 'gas_adsorption_1' in config['material_properties']:
+                print('  gas-1 adsorption\t|  {}\t\t|  {}\t|  {}'.format(
+                    round(m_orig.ga1_absolute_volumetric_loading, 4),
+                    round(m_orig.retest_gas_adsorption_1_sum, 4),
+                    (config['gas_adsorption_0']['limits'][1] - config['gas_adsorption_0']['limits'][0]) / config['number_of_convergence_bins']))
+            if 'surface_area' in config['material_properties']:
+                print('  surface area\t\t|  {}\t\t|  {}\t|  {}'.format(
+                    round(m_orig.sa_volumetric_surface_area, 4),
+                    round(m_orig.retest_surface_area_sum, 4),
+                    (config['surface_area']['limits'][1] - config['surface_area']['limits'][0]) / config['number_of_convergence_bins']))
+            if 'helium_void_fraction' in config['material_properties']:
+                print('  void fraction\t\t|  {}\t\t|  {}\t|  {}'.format(
+                    round(m_orig.vf_helium_void_fraction, 4),
+                    round(m_orig.retest_void_fraction_sum, 4),
+                    (config['helium_void_fraction']['limits'][1] - config['helium_void_fraction']['limits'][0]) / config['number_of_convergence_bins']))
+
+            m_orig.retest_passed = set_variable(
+                    'Does {} pass the retest? (True/False) :\t'.format(m_orig.uuid),
+                    'm_orig.retest_passed')
             session.commit()
-        except ZeroDivisionError as e:
-            print('WARNING: ZeroDivisionError - material.calculate_retest_result(tolerance)')
 
 def get_all_parent_ids(run_id, generation):
     return [e[0] for e in session.query(Material.parent_id) \
