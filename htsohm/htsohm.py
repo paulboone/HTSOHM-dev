@@ -86,7 +86,7 @@ def select_parent(run_id, max_generation, generation_limit):
     """
     simulations = config['material_properties']
     queries = []
-    if 'gas_adsorption' in simulations:
+    if 'gas_adsorption_0' in simulations or 'gas_adsorption_1' in simulations:
         queries.append( getattr(Material, 'gas_adsorption_bin') )
     if 'surface_area' in simulations:
         queries.append( getattr(Material, 'surface_area_bin') )
