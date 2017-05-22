@@ -471,23 +471,23 @@ def worker_run_loop(run_id):
                     # annealing to reset all mutation strengths to initial value
                     else:
                         all_accessed_bin_tuples = session \
-                                .query(func.distinct(
+                                .query(
                                     Material.gas_adsorption_bin,
                                     Material.surface_area_bin,
-                                    Material.void_fraction_bin)) \
+                                    Material.void_fraction_bin) \
                                 .filter(
                                     Material.run_id == run_id,
                                     Material.retest_passed != False,
                                     Material.generation_index < config['children_per_generation']) \
-                                .all()
-                        all_accessed_bins = [[int(e[0][1]), int(e[0][3]), int(e[0][5])] 
-                            for e in all_accessed_bin_tuples]
+                                .distinct().all()
+                        all_accessed_bins = [ [e[0], e[1], e[2]]
+                                for e in all_accessed_bin_tuples]
                         print_block('ANNEALING WITH MUTATION STRENGTH :\t{}' \
                                 .format(config['initial_mutation_strength']))
                         for some_bin in all_accessed_bins:
                             print('Annealing bin :\t{}'.format(some_bin))
                             mutation_strength = MutationStrength(run_id, gen + 1, *some_bin)
-                            mutation_strength.strength = config['initial_mutation_strength']
+                            mutation_strength.strength = config['annealing_strength']
                             session.add(mutation_strength)
             else:
                 # delete excess rows
