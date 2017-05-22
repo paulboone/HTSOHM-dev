@@ -21,11 +21,11 @@ def write_raspa_file(filename, uuid, helium_void_fraction=None):
     Writes RASPA input-file.
 
     """
-    simulation_cycles      = config['gas_adsorption_0']['simulation_cycles']
-    initialization_cycles  = config['gas_adsorption_0']['initialization_cycles']
-    external_temperature   = config['gas_adsorption_0']['external_temperature']
-    external_pressure      = config['gas_adsorption_0']['external_pressure']
-    adsorbate              = config['gas_adsorption_0']['adsorbate']
+    simulation_cycles      = config['gas_adsorption_1']['simulation_cycles']
+    initialization_cycles  = config['gas_adsorption_1']['initialization_cycles']
+    external_temperature   = config['gas_adsorption_1']['external_temperature']
+    external_pressure      = config['gas_adsorption_1']['external_pressure']
+    adsorbate              = config['gas_adsorption_1']['adsorbate']
       
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(
@@ -110,7 +110,7 @@ def parse_output(output_file):
                 results['ga1_host_adsorbate_cou'] = float(line.split()[7])
             line_counter += 1
 
-    adsorbate = config['gas_adsorption_0']['adsorbate']
+    adsorbate = config['gas_adsorption_1']['adsorbate']
     print(
         "\n%s ADSORPTION\tabsolute\texcess\n" % adsorbate +
         "mol/kg\t\t\t%s\t%s\n" % (results['ga1_absolute_molar_loading'], results['ga1_excess_molar_loading']) +
@@ -136,7 +136,7 @@ def run(run_id, pseudo_material, helium_void_fraction=None):
         results (dict): gas loading simulation results.
 
     """
-    adsorbate             = config['gas_adsorption_0']['adsorbate']
+    adsorbate             = config['gas_adsorption_1']['adsorbate']
     simulation_directory  = config['simulations_directory']
     if simulation_directory == 'HTSOHM':
         htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
