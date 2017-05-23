@@ -457,7 +457,7 @@ def worker_run_loop(run_id):
             if config['mutation_strength_method'] != 'flat':
                 if material.generation_index == config['children_per_generation'] - 1 and gen > 0:
                 # standard calculation of mutation strengths for all accessed bins
-                    if gen % config['annealing_frequency'] != 0:
+                    if config['annealing_on'] != 'on' or gen % config['annealing_frequency'] != 0:
                         parent_ids = get_all_parent_ids(run_id, gen)
                         print_block('CALCULATING MUTATION STRENGTHS')
                         ms_bins = []
@@ -469,7 +469,7 @@ def worker_run_loop(run_id):
                                 calculate_mutation_strength(run_id, gen + 1, parent_bin)
                             ms_bins.append(parent_material.bin)
                     # annealing to reset all mutation strengths to initial value
-                    else:
+                    elif config['annealing_on'] == 'on' and gen % config['annealing_frequency'] == 0:
                         all_accessed_bin_tuples = session \
                                 .query(
                                     Material.gas_adsorption_bin,
