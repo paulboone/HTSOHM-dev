@@ -43,6 +43,16 @@ class Structure(Base):
         self.atom_sites = atom_sites
         self.lennard_jones = lennard_jones
 
+    def clone(self):
+        copy = super(Structure, self).clone()
+        if self.atom_sites:
+            for atom_site in self.atom_sites:
+                copy.atom_sites.append(atom_site)
+        if self.lennard_jones:
+            for atom_type in self.lennard_jones:
+                copy.lennard_jones.append(atom_type)
+        return copy
+
     @property
     def volume(self):
         """   """

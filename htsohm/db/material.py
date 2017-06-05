@@ -146,6 +146,12 @@ class Material(Base):
         self.run_id = run_id
         self.structure = Structure()
 
+    def clone(self):
+        copy = super(Material, self).clone()
+        if self.structure:
+            copy.structure = self.structure.clone()
+        return copy
+
     @property
     def bin(self):
         """Determine material's structure-property bin.

@@ -16,18 +16,6 @@ from htsohm.db import engine, session, Material, MutationStrength, Structure
 from htsohm.material_files import generate_material, mutate_material
 from htsohm import simulation
 
-def clone_material(material):
-    copy = material.clone()
-    if material.structure:
-        copy.structure = material.structure.clone()
-        if material.structure.atom_sites:
-            for atom_site in material.structure.atom_sites:
-                copy.structure.atom_sites.append(atom_site)
-        if material.structure.lennard_jones:
-            for atom_type in material.structure.lennard_jones:
-                copy.structure.lennard_jones.append(atom_type)
-    return copy
-
 def materials_in_generation(run_id, generation):
     """Count number of materials in a generation.
 
@@ -225,7 +213,7 @@ def retest(m_orig, retests, tolerance):
     Updates row in database with total number of retests and results.
 
     """
-    m = clone_material(m_orig)
+    m = m_orig.clone()
 
     run_all_simulations(m)
     print('\n\nRETEST_NUM :\t%s' % m_orig.retest_num)
