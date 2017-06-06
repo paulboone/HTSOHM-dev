@@ -6,6 +6,7 @@ from distutils.dir_util import copy_tree
 import click
 import yaml
 import RASPA2
+from sqlalchemy import or_
 
 import htsohm
 from htsohm.files import load_config_file
@@ -77,7 +78,8 @@ def append(old_run_id, generation, config_path):
 
     print('Copying data from run : '.format(old_run_id))
 
-    query_filter = [Material.run_id==old_run_id, Material.generation<=generation]
+    query_filter = [Material.run_id==old_run_id, Material.generation<=generation,
+            or_(Material.retest_passed==True, Material.retest_passed==None)]
     id_tuples = session.query(Material.id).filter(*query_filter).all()
     ids = [e[0] for e in id_tuples]
 
@@ -87,9 +89,9 @@ def append(old_run_id, generation, config_path):
     for some_id in ids:
         old_material = session.query(Material).get(some_id)
         new_material = old_material.clone()
-        new_material.id = None
         new_material.run_id = run_id
-
+        new_material.id = None
+        new_material.structure.id = None
         if 'gas_adsorption_0' in properties and 'gas_adsorption_1' not in properties:
             new_material.gas_adsorption_bin = calc_bin(
                     new_material.ga0_absolute_volumetric_loading,
@@ -116,18 +118,6 @@ def append(old_run_id, generation, config_path):
         
         session.add(new_material)
     session.commit()
-
-    # copy structure-data files, updating with new run_id
-    old_pseudo_materials_dir = os.path.join(old_run_id, 'pseudo_materials')
-
-    uuid_tuples = session.query(Material.uuid).filter(*query_filter).all()
-    uuids = [e[0] for e in uuid_tuples]
-    for uuid in uuids:
-        file_path = os.path.join(old_pseudo_materials_dir, '{}.yaml'.format(uuid))
-        with open(file_path) as structure_file:
-            pseudo_material = yaml.load(structure_file)
-        pseudo_material.run_id = run_id
-        pseudo_material.dump()
 
     print('...copy complete!')
 

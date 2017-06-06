@@ -13,9 +13,9 @@ import yaml
 import htsohm
 from htsohm import config
 from htsohm.pseudo_material import PseudoMaterial
-from htsohm.db import session, Material
+from htsohm.db import session, Material, Structure, LennardJones, AtomSites
 
-def random_number_density(number_density_limits, lattice_constants):
+def random_number_density(number_density_limits, material_structure): #lattice_constants):
     """Produces random number for atom-sites in a unit cell, constrained by
     some number density limits.
 
@@ -37,7 +37,7 @@ def random_number_density(number_density_limits, lattice_constants):
     """
     min_ND = number_density_limits[0]
     max_ND = number_density_limits[1]
-    v = lattice_constants["a"] * lattice_constants["b"] * lattice_constants["c"]
+    v = material_structure.volume
     min_atoms = int(min_ND * v)
     max_atoms = int(max_ND * v)
     if min_atoms < 2:
@@ -45,8 +45,8 @@ def random_number_density(number_density_limits, lattice_constants):
     atoms = randrange(min_atoms, max_atoms + 1, 1)
     return atoms
 
-def generate_pseudo_material(run_id, number_of_atomtypes):
-    """Write .def and .cif files for a randomly-generated porous material.
+def generate_material(run_id, number_of_atomtypes):
+    """Create records for pseudomaterial simulation and structure data."
 
     Args:
         run_id (str): identification string for run.
@@ -58,15 +58,6 @@ def generate_pseudo_material(run_id, number_of_atomtypes):
             simulation data specific to the material. See
             `htsohm/db/material.py` for more information.
 
-    Atom-sites and unit-cell dimensions are stored in a .cif-file within RASPA's
-    structures library: `$(raspa-dir)/structures/cif`. Force field parameters
-    are stored within that material's directory in the RASPA library: 
-    `$(raspa-dir)/forcefield/(run_id)-(uuid)`. Partial charges, atomic radii,
-    and more define each chemical species in `pseudo_atoms.def`. Lennard-Jones
-    type interactions (sigma, epsilon-values) are defined in 
-    `force_field_mixing_rules.def`. These interactions can be overwritten in 
-    `force_field.def`, but by default no interactions are overwritten in this file.
- 
     """
     lattice_limits          = config["lattice_constant_limits"]
     number_density_limits   = config["number_density_limits"]
@@ -78,34 +69,25 @@ def generate_pseudo_material(run_id, number_of_atomtypes):
     ########################################################################
     material = Material(run_id)
     material.generation = 0
-    pseudo_material = PseudoMaterial(material.uuid)
-    
-    pseudo_material.run_id = run_id
 
-    pseudo_material.atom_types = []
+    structure = material.structure
+    structure.lattice_constant_a = uniform(*lattice_limits)
+    structure.lattice_constant_b = uniform(*lattice_limits)
+    structure.lattice_constant_c = uniform(*lattice_limits)
+
     for chemical_id in range(number_of_atomtypes):
-        pseudo_material.atom_types.append({
-            "chemical-id" : "A_%s" % chemical_id,
-            "charge"      : 0.,    # See NOTE above.
-            "epsilon"     : uniform(*epsilon_limits),
-            "sigma"       : uniform(*sigma_limits)
-        })
+        structure.lennard_jones.append(LennardJones(
+                    chemical_id = 'A_{}'.format(chemical_id),
+                    sigma = uniform(*sigma_limits),
+                    epsilon = uniform(*epsilon_limits)))
 
-    pseudo_material.lattice_constants = {}
-    for i in ['a', 'b', 'c']:
-        pseudo_material.lattice_constants[i] = uniform(*lattice_limits)
+    atom_sites = structure.atom_sites
+    for i in range(random_number_density(number_density_limits, structure)):
+        atom_sites.append(AtomSites(
+            chemical_id = 'A_{}'.format(choice(range(number_of_atomtypes))),
+            x_frac = random(), y_frac = random(), z_frac = random()))
 
-    pseudo_material.number_of_atoms   = random_number_density(
-        number_density_limits, pseudo_material.lattice_constants)
-
-    pseudo_material.atom_sites = []
-    for atom in range(pseudo_material.number_of_atoms):
-        atom_site = {"chemical-id" : choice(pseudo_material.atom_types)["chemical-id"]}
-        for i in ['x-frac', 'y-frac', 'z-frac']:
-            atom_site[i] = random()
-        pseudo_material.atom_sites.append(atom_site)
-
-    return material, pseudo_material
+    return material
 
 def closest_distance(x, y):
     """Finds closest distance between two points across periodic boundaries.
@@ -154,20 +136,16 @@ def random_position(x_o, x_r, strength):
         xfrac = x_o + strength * dx
     return xfrac
 
-def mutate_pseudo_material(parent_material, parent_pseudo_material, mutation_strength, generation):
-    """Modifies a "parent" material's definition files by perturbing each
+def mutate_material(parent_material, mutation_strength, generation):
+    """Modifies a "parent" pseudomaterial structure by perturbing each
     parameter by some factor, dictated by the `mutation_strength`.
     
     Args:
-        run_id (str): identification string for run.
-        parent_id (str): uuid, identifying parent material in database.
-        generation (int): iteration count for overall bin-mutate-simulate routine.
+        parent_material : record for parent pseudomaterial in 'materials' table.
         mutation_strength (float): perturbation factor [0, 1].
+        generation (int): iteration count for overall bin-mutate-simulate routine.
 
     Returns:
-        new_material (sqlalchemy.orm.query.Query): database row for storing 
-            simulation data specific to the material. See
-            `htsohm/db/material.py` for more information.
 
     Todo:
         * Add methods for assigning and mutating charges.
@@ -179,89 +157,57 @@ def mutate_pseudo_material(parent_material, parent_pseudo_material, mutation_str
     lattice_limits          = config["lattice_constant_limits"]
     number_density_limits   = config["number_density_limits"]
 
-    ########################################################################
-    # create material object
     child_material = Material(parent_material.run_id)
-    child_material.parent_id = parent_material.id
     child_material.generation = generation
-    child_pseudo_material = PseudoMaterial(child_material.uuid)
+    child_material.parent_id = parent_material.id
+ 
+    # perturb lennard-jones parameters
+    for atom_type in parent_material.structure.lennard_jones:
+        child_material.structure.lennard_jones.append(LennardJones(
+            chemical_id = atom_type.chemical_id,
+            sigma = atom_type.sigma + mutation_strength * (uniform(*config['sigma_limits']) - atom_type.sigma),
+            epsilon = atom_type.epsilon + mutation_strength * (uniform(*config['epsilon_limits']) - atom_type.epsilon)))
 
-    child_pseudo_material.run_id = parent_pseudo_material.run_id
+    # perturb lattice constants
+    child_material.structure.lattice_constant_a = parent_material.structure.lattice_constant_a \
+            + mutation_strength * (uniform(*lattice_limits) - parent_material.structure.lattice_constant_a)
+    child_material.structure.lattice_constant_b = parent_material.structure.lattice_constant_b \
+            + mutation_strength * (uniform(*lattice_limits) - parent_material.structure.lattice_constant_b)
+    child_material.structure.lattice_constant_c = parent_material.structure.lattice_constant_c \
+            + mutation_strength * (uniform(*lattice_limits) - parent_material.structure.lattice_constant_c)
 
-    ########################################################################
-    # perturb LJ-parameters
-    child_pseudo_material.atom_types = parent_pseudo_material.atom_types.copy()
-    for atom_type in child_pseudo_material.atom_types:    
-        for x in ['epsilon', 'sigma']:
-            old_x = atom_type[x]
-            random_x = uniform(*config["{0}_limits".format(x)])
-            atom_type[x] += mutation_strength * (random_x - old_x)
+    # perturb number density/number of atom-sites
+    parent_ND = len(parent_material.structure.atom_sites) / parent_material.structure.volume
+    child_ND = parent_ND + mutation_strength * (uniform(*number_density_limits) - parent_ND)
+    number_of_atoms = int(child_ND * child_material.structure.volume)
 
-    ########################################################################
-    # calculate new lattice constants
-    child_pseudo_material.lattice_constants = parent_pseudo_material.\
-            lattice_constants.copy()
-    for i in ['a', 'b', 'c']:
-        old_x = parent_pseudo_material.lattice_constants[i]
-        random_x = uniform(*lattice_limits)
-        child_pseudo_material.lattice_constants[i] += mutation_strength * (
-                random_x - old_x)
+    # remove atom-sites, if necessary
+    child_material.structure.atom_sites = np.random.choice(
+        parent_material.structure.atom_sites,
+        min(number_of_atoms, len(parent_material.structure.atom_sites)),
+        replace = False).tolist()
 
-    ########################################################################
-    #perturb number density, calculate number of atoms
-    child_ND = parent_pseudo_material.number_density()
-    random_ND = uniform(*number_density_limits)
-    child_ND += mutation_strength * (random_ND - child_ND)
-    child_number_of_atoms = (
-            int(child_ND * child_pseudo_material.volume()))
-
-    ########################################################################
-    # remove excess atom-sites, if any
-    child_pseudo_material.atom_sites = np.random.choice(
-            parent_pseudo_material.atom_sites,
-            min(child_number_of_atoms,
-                len(parent_pseudo_material.atom_sites)),
-            replace=False).tolist()
-    
-    ########################################################################
     # perturb atom-site positions
-    for atom_site in child_pseudo_material.atom_sites:
-        for i in ['x-frac', 'y-frac', 'z-frac']:
-            atom_site[i] = random_position(
-                    atom_site[i], random(), mutation_strength)
+    for atom_site in child_material.structure.atom_sites:
+        atom_site.x_frac = random_position(atom_site.x_frac, random(), mutation_strength)
+        atom_site.y_frac = random_position(atom_site.y_frac, random(), mutation_strength)
+        atom_site.z_frac = random_position(atom_site.z_frac, random(), mutation_strength)
 
-    ########################################################################
     # add atom-sites, if needed
-    if child_number_of_atoms > len(child_pseudo_material.atom_sites):
-        for new_sites in range(child_number_of_atoms -
-                len(child_pseudo_material.atom_sites)):
-            new_atom_site = {'chemical-id' : choice(
-                child_pseudo_material.atom_types)['chemical-id']}
-            for i in ['x-frac', 'y-frac', 'z-frac']:
-                new_atom_site[i] = random()
-            child_pseudo_material.atom_sites.append(new_atom_site)
+    if number_of_atoms > len(parent_material.structure.atom_sites):
+        for new_sites in range(number_of_atoms - len(parent_material.structure.atom_sites)):
+            parent_material.structure.atom_sites.append(AtomSites(
+                chemical_id = 'A_{}'.format(choice(
+                    range(len(parent_material.structure.lennard_jones)))),
+                x_frac = random(), y_frac = random(), z_frac = random()))
 
-    return child_material, child_pseudo_material
+    return child_material
 
 def write_cif_file(material, simulation_path):
     """Writes .cif file for structural information.
 
     Args:
-        file_name (str): path to .cif-file, for example:
-            `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`.
-        lattice_constants (dict): crystal lattice constants, for example:
-            {"a" : (float),
-             "b" : (float),
-             "c" : (float)}
-        atom_sites (list): dictionaries for each atom-site describing position
-            and chemical species, for example:
-            {"chemical-id" : chemical_id,
-             "x-frac"      : x,
-             "y-frac"      : y,
-             "z-frac"      : z}
 
-    Writes .cif file in RASPA's library:
-        `$(raspa-dir)/structures/cif/(run_id)-(uuid).cif`
 
     """
     file_name = os.path.join(simulation_path, '%s.cif' % material.uuid)
@@ -269,14 +215,10 @@ def write_cif_file(material, simulation_path):
         cif_file.write(
             "\nloop_\n" +
             "_symmetry_equiv_pos_as_xyz\n" +
-            "  x,y,z\n"
-        )
-        for i in ['a', 'b', 'c']:
-            cif_file.write(
-            "_cell_length_{}    {}\n".format(i, 
-                round(material.lattice_constants[i], 4))
-        )
-        cif_file.write(
+            "  x,y,z\n" +
+            "_cell_length_a\t{}\n".format(round(material.structure.lattice_constant_a)) +
+            "_cell_length_b\t{}\n".format(round(material.structure.lattice_constant_b)) +
+            "_cell_length_c\t{}\n".format(round(material.structure.lattice_constant_c)) +
             "_cell_angle_alpha  90.0000\n" +
             "_cell_angle_beta   90.0000\n" +
             "_cell_angle_gamma  90.0000\n" +
@@ -287,30 +229,17 @@ def write_cif_file(material, simulation_path):
             "_atom_site_fract_y\n" +
             "_atom_site_fract_z\n"
         )
-        for atom_site in material.atom_sites:
+        for atom_site in material.structure.atom_sites:
             cif_file.write(
             "{0:5} C {1:4f} {2:4f} {3:4f}\n".format(
-                atom_site["chemical-id"],
-                round(atom_site["x-frac"], 4),
-                round(atom_site["y-frac"], 4),
-                round(atom_site["z-frac"], 4)
+                atom_site.chemical_id,
+                round(atom_site.x_frac, 4),
+                round(atom_site.y_frac, 4),
+                round(atom_site.z_frac, 4)
             ))
 
 def write_mixing_rules(material, simulation_path):
     """Writes .def file for forcefield information.
-
-    Args:
-        file_name (str): path to mixing-rules file, for example:
-            `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field_mixing_rules.def`
-        atom_types (list): dictionaries for each atom-type describing LJ-type
-            interactions, for example:
-            {"chemical-id" : chemical_ids[i],
-             "charge"      : 0.,
-             "epsilon"     : epsilon,
-             "sigma"       : sigma}
-
-    Writes file within RASPA's library:
-        `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field_mixing_rules.def`
 
     """
     adsorbate_LJ_atoms = [
@@ -334,17 +263,17 @@ def write_mixing_rules(material, simulation_path):
             "# general rule tailcorrections\n" +
             "no\n" +
             "# number of defined interactions\n" +
-            "{}\n".format(len(material.atom_types) + 10) +
+            "{}\n".format(len(material.structure.lennard_jones) + 10) +
             "# type interaction, parameters.    " +
             "IMPORTANT: define shortest matches first, so" +
             " that more specific ones overwrites these\n"
         )
-        for atom_type in material.atom_types:
+        for lennard_jones in material.structure.lennard_jones:
             mixing_rules_file.write(
                 "{0:12} lennard-jones {1:8f} {2:8f}\n".format(
-                    atom_type["chemical-id"],
-                    round(atom_type["epsilon"], 4),
-                    round(atom_type["sigma"], 4)
+                    lennard_jones.chemical_id,
+                    round(lennard_jones.epsilon, 4),
+                    round(lennard_jones.sigma, 4)
                 )
             )
         for at in adsorbate_LJ_atoms:
@@ -386,13 +315,13 @@ def write_pseudo_atoms(material, simulation_path):
     with open(file_name, "w") as pseudo_atoms_file:
         pseudo_atoms_file.write(
             "#number of pseudo atoms\n" +
-            "%s\n" % (len(material.atom_types) + 10) +
+            "%s\n" % (len(material.structure.lennard_jones) + 10) +
             "#type  print   as  chem    oxidation   mass    charge  polarization    B-factor    radii   " +
                  "connectivity  anisotropic anisotrop-type  tinker-type\n")
-        for atom_type in material.atom_types:
+        for atom_type in material.structure.lennard_jones:
             pseudo_atoms_file.write(
                 "{0:7}  yes  C   C   0   12.0       {0:8}  0.0  1.0  1.0    0  0  absolute  0\n".format(
-                    atom_type['chemical-id'], 0.0
+                    atom_type.chemical_id, 0.0
                 )
             )
         pseudo_atoms_file.write(
