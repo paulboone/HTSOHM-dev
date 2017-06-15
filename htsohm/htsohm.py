@@ -431,6 +431,17 @@ def retest(m_orig, retests, tolerance):
                     'm_orig.retest_passed')
             session.commit()
 
+def retest_loop(parent_material):
+    # run retests until we've run enough
+    print_block('Running retest...')
+    while parent_material.retest_passed is None:
+        print("running retest...")
+        print("Date :\t%s" % datetime.now().date().isoformat())
+        print("Time :\t%s" % datetime.now().time().isoformat())
+        retest(parent_material, config['retests']['number'],
+                config['retests']['tolerance'])
+        session.refresh(parent_material)
+
 def get_all_parent_ids(run_id, generation):
     return [e[0] for e in session.query(Material.parent_id) \
             .filter(Material.run_id == run_id, Material.generation == generation) \
@@ -668,6 +679,15 @@ def calculate_all_mutation_strengths(config, gen):
                 session.add(mutation_strength)
     print('Done calculating mutation strengths!')
 
+def determine_mutation_strength(run_id, gen, parent_material): 
+    if config['mutation_strength_method'] == 'flat':
+        mutation_strength = config['initial_mutation_strength']
+    else:
+        mutation_strength_key = [run_id, gen] + parent_material.bin
+        mutation_strength = MutationStrength \
+                .get_prior(*mutation_strength_key).clone().strength
+    return mutation_strength
+ 
 def worker_run_loop(run_id):
     """
     Args:
@@ -688,57 +708,53 @@ def worker_run_loop(run_id):
         size_of_generation = config['children_per_generation']
 
         while materials_in_generation(run_id, gen) < size_of_generation:
+
+            # generate seed material - first iteration only
             if gen == 0:
                 print("writing new seed...")
                 material = generate_material(run_id, config['number_of_atom_types'])
+
+            # select parent, retest, and mutate to create new material
             else:
                 print_block('Selecting parent...')
                 
+                # select parent material
                 parent_id = select_parent(run_id, max_generation=(gen - 1),
                         generation_limit=config['children_per_generation'])
-
                 parent_material = session.query(Material).get(parent_id)
-
-                # run retests until we've run enough
-                print_block('Running retest...')
-                while parent_material.retest_passed is None:
-                    print("running retest...")
-                    print("Date :\t%s" % datetime.now().date().isoformat())
-                    print("Time :\t%s" % datetime.now().time().isoformat())
-                    retest(parent_material, config['retests']['number'], 
-                            config['retests']['tolerance'])
-                    session.refresh(parent_material)
-
+                
+                # run retests
+                retest_loop(parent_material)
                 if not parent_material.retest_passed:
                     print("parent failed retest. restarting with parent selection.")
                     continue
 
-                # obtain mutation strength
-                if config['mutation_strength_method'] == 'flat':
-                    mutation_strength = config['initial_mutation_strength']
-                else:
-                    mutation_strength_key = [run_id, gen] + parent_material.bin
-                    mutation_strength = MutationStrength \
-                            .get_prior(*mutation_strength_key).clone().strength
+                # determine mutation strength
+                mutation_strength = determine_mutation_strength(run_id, gen, parent_material)
                 
                 # mutate material
                 print_block('Mutating pseudomaterial..')
                 material = mutate_material(parent_material, mutation_strength, gen)
+
+            # simulate material properties
             run_all_simulations(material)
             session.add(material)
             session.commit()
 
+            # add material to database, as needed
             material.generation_index = material.calculate_generation_index()
             if material.generation_index < config['children_per_generation']:
                 print_block('ADDING MATERIAL {}'.format(material.uuid))
                 session.add(material)
 
+            # pause after adding material for interactive mode
             if config['interactive_mode'] == 'on':
                 print("\n\nGeneration :\t{}\nMat. no. :\t{} / {}".format(gen,
                     material.generation_index + 1, config['children_per_generation']))
                 input("\nPress Enter to continue...\n")
 
-            # make sure worker just finished thev last material in its generation
+            # if this is the last worker in a generation, calculate mutation
+            # strengths for all accessed bins
             if material.generation_index == config['children_per_generation'] - 1 and gen > 0:
                 if config['mutation_strength_method'] != 'flat':
                     calculate_all_mutation_strengths(config, gen)
