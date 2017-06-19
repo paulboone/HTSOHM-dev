@@ -1,4 +1,3 @@
-
 import sys
 import uuid
 
@@ -9,6 +8,8 @@ from sqlalchemy.orm import relationship
 from htsohm import config
 from htsohm.db import Base, session, engine
 from htsohm.db.structure import Structure
+from htsohm.pseudo_simulation import pseudo_void_fraction, pseudo_surface_area
+from htsohm.pseudo_simulation import pseudo_gas_adsorption
 
 class Material(Base):
     """Declarative class mapping to table storing material/simulation data.
@@ -289,3 +290,19 @@ class Material(Base):
         )
 
         return not retest_failed
+
+    def artificial_void_fraction(self):
+        return pseudo_void_fraction(
+                config, self.structure.number_density(),
+                self.structure.average_sigma())
+
+    def artificial_surface_area(self):
+        return pseudo_surface_area(
+                self.artificial_void_fraction(),
+                self.structure.average_sigma())
+
+    def artificial_gas_adsorption(self):
+        return pseudo_gas_adsorption(
+                config, self.artificial_void_fraction(),
+                self.artificial_surface_area(),
+                self.structure.average_epsilon())

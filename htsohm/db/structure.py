@@ -55,5 +55,21 @@ class Structure(Base):
 
     @property
     def volume(self):
-        """   """
+        """Calculates unit cell volume by mutliplying lattice constants.
+        """
         return self.lattice_constant_a * self.lattice_constant_b * self.lattice_constant_c
+
+    def number_density(self):
+        return len(self.atom_sites) / self.volume
+
+    def average_sigma(self):
+        sigmas = []
+        for atom_type in self.lennard_jones:
+            sigmas.append(atom_type.sigma)
+        return sum(sigmas) / max(len(sigmas), 1)
+
+    def average_epsilon(self):
+        epsilons = []
+        for atom_type in self.lennard_jones:
+            epsilons.append(atom_type.epsilon)
+        return sum(epsilons) / max(len(epsilons), 1)
