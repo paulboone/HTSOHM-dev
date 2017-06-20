@@ -9,8 +9,9 @@ import htsohm
 from htsohm import config
 from htsohm.material_files import write_cif_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
+from htsohm.simulation.calculate_bin import calc_bin
 
-def write_raspa_file(filename, uuid):
+def write_raspa_file(filename, uuid, simulation_config):
     """Writes RASPA input file for calculating helium void fraction.
 
     Args:
@@ -21,7 +22,7 @@ def write_raspa_file(filename, uuid):
     Writes RASPA input-file.
 
     """
-    simulation_cycles = config['helium_void_fraction']['simulation_cycles']
+    simulation_cycles = simulation_config['simulation_cycles']
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(
             "SimulationType         MonteCarlo\n" +
@@ -42,7 +43,7 @@ def write_raspa_file(filename, uuid):
             "            WidomProbability           1.0\n" +
             "            CreateNumberOfMolecules    0\n")
 
-def parse_output(output_file):
+def parse_output(output_file, simulation_config):
     """Parse output file for void fraction data.
 
     Args:
@@ -59,14 +60,20 @@ def parse_output(output_file):
                 continue
             results['vf_helium_void_fraction'] = float(line.split()[4])
         print("\nVOID FRACTION :   %s\n" % (results['vf_helium_void_fraction']))
+
+    # calculate bin
+    results['void_fraction_bin'] = calc_bin(
+                results['vf_helium_void_fraction'],
+                *simulation_config['limits'],
+                config['number_of_convergence_bins'])
+
     return results
 
-def run(run_id, material):
+def run(material, simulation_config):
     """Runs void fraction simulation.
 
     Args:
-        run_id (str): identification string for run.
-        material_id (str): unique identifier for material.
+        material (Material): material record.
 
     Returns:
         results (dict): void fraction simulation results.
@@ -75,7 +82,7 @@ def run(run_id, material):
     simulation_directory  = config['simulations_directory']
     if simulation_directory == 'HTSOHM':
         htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
-        path = os.path.join(htsohm_dir, run_id)
+        path = os.path.join(htsohm_dir, material.run_id)
     elif simulation_directory == 'SCRATCH':
         path = os.environ['SCRATCH']
     else:
@@ -84,7 +91,7 @@ def run(run_id, material):
     print("Output directory :\t%s" % output_dir)
     os.makedirs(output_dir, exist_ok=True)
     filename = os.path.join(output_dir, "VoidFraction.input")
-    write_raspa_file(filename, material.uuid)
+    write_raspa_file(filename, material.uuid, simulation_config)
     write_cif_file(material, output_dir)
     write_mixing_rules(material, output_dir)
     write_pseudo_atoms(material, output_dir)
@@ -97,7 +104,7 @@ def run(run_id, material):
             subprocess.run(['simulate', './VoidFraction.input'], check=True, cwd=output_dir)
             filename = "output_%s_1.1.1_298.000000_0.data" % (material.uuid)
             output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
-            results = parse_output(output_file)
+            results = parse_output(output_file, simulation_config)
             shutil.rmtree(output_dir, ignore_errors=True)
             sys.stdout.flush()
         except (FileNotFoundError, IndexError, KeyError) as err:

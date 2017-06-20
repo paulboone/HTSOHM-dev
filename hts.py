@@ -10,8 +10,9 @@ from sqlalchemy import or_
 
 import htsohm
 from htsohm.files import load_config_file
-from htsohm.htsohm import worker_run_loop, calc_bin
+from htsohm.htsohm import worker_run_loop
 from htsohm.db import session, Material
+from htsohm.simulation.calculate_bin import calc_bin
 
 @click.group()
 def hts():

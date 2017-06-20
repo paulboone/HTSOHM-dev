@@ -8,8 +8,6 @@ from sqlalchemy.orm import relationship
 from htsohm import config
 from htsohm.db import Base, session, engine
 from htsohm.db.structure import Structure
-from htsohm.pseudo_simulation import pseudo_void_fraction, pseudo_surface_area
-from htsohm.pseudo_simulation import pseudo_gas_adsorption
 
 class Material(Base):
     """Declarative class mapping to table storing material/simulation data.
@@ -239,43 +237,50 @@ class Material(Base):
             (bool) True if material has NOT failed any of all re-tests.
 
         """
-        simulations = config['material_properties']
+        simulations = config['simulations']
         number_of_bins = config['number_of_convergence_bins']
 
-        if 'gas_adsorption_0' in simulations:
+        if 'gas_adsorption' in simulations or 'artificial_gas_adsorption' in simulations:
             ga0_o = self.ga0_absolute_volumetric_loading    # initally-calculated values
             ga0_mean = self.retest_gas_adsorption_0_sum / self.retest_num
-            ga0_limits = config['gas_adsorption_0']['limits']
-            ga0_width = (ga0_limits[1] - ga0_limits[0]) / number_of_bins
+            if 'gas_adsorption' in simulations:
+                ga_limits = simulations['gas_adsorption']['limits']
+                if isinstance(simulations['gas_adsorption']['external_pressure'], list):
+                    ga1_o = self.ga1_absolute_volumetric_loading    # initally-calculated values
+                    ga1_mean = self.retest_gas_adsorption_1_sum / self.retest_num
+                else:
+                    ga1_o = 0
+                    ga1_mean = 0
+            elif 'artificial_gas_adsorption' in simulations:
+                ga_limits = simulations['artificial_gas_adsorption']['limits']
+                ga1_o = 0
+                ga1_mean = 0
+            ga_width = (ga_limits[1] - ga_limits[0]) / number_of_bins
         else:
             ga0_o = 0
             ga0_mean = 0
-            ga0_width = 0
+            ga_width = 0
 
-        if 'gas_adsorption_1' in simulations:
-            ga1_o = self.ga1_absolute_volumetric_loading    # initally-calculated values
-            ga1_mean = self.retest_gas_adsorption_1_sum / self.retest_num
-            ga1_limits = config['gas_adsorption_1']['limits']
-            ga1_width = (ga1_limits[1] - ga1_limits[0]) / number_of_bins
-        else:
-            ga1_o = 0
-            ga1_mean = 0
-            ga1_width = 0
-
-        if 'surface_area' in simulations:
+        if 'surface_area' in simulations or 'artificial_surface_area' in simulations:
             sa_o = self.sa_volumetric_surface_area
             sa_mean = self.retest_surface_area_sum / self.retest_num
-            sa_limits = config['surface_area']['limits']
+            if 'surface_area' in simulations:
+                sa_limits = simulations['surface_area']['limits']
+            if 'artificial_surface_area' in simulations:
+                sa_limits = simulations['artificial_surface_area']['limits']
             sa_width = (sa_limits[1] - sa_limits[0]) / number_of_bins
         else:
             sa_o = 0
             sa_mean = 0
             sa_width = 0
 
-        if 'helium_void_fraction' in simulations:
+        if 'helium_void_fraction' in simulations or 'artificial_void_fraction' in simulations:
             vf_o = self.vf_helium_void_fraction
             vf_mean = self.retest_void_fraction_sum / self.retest_num
-            vf_limits = config['surface_area']['limits']
+            if 'helium_void_fraction' in simulations:
+                vf_limits = simulations['helium_void_fraction']['limits']
+            if 'artificial_void_fraction' in simulations:
+                vf_limits = simulations['artificial_void_fraction']['limits']
             vf_width = (vf_limits[1] - vf_limits[0]) / number_of_bins
         else:
             vf_o = 0
@@ -283,26 +288,10 @@ class Material(Base):
             vf_width = 0
 
         retest_failed = (
-            abs(ga0_mean - ga0_o) >= tolerance * ga0_width and ga0_o != 0 or
-            abs(ga1_mean - ga1_o) >= tolerance * ga1_width and ga1_o != 0 or
+            abs(ga0_mean - ga0_o) >= tolerance * ga_width and ga0_o != 0 or
+            abs(ga1_mean - ga1_o) >= tolerance * ga_width and ga1_o != 0 or
             abs(sa_mean - sa_o) >= tolerance * sa_width and sa_o != 0 or
             abs(vf_mean - vf_o) >= tolerance * vf_width and vf_o != 0
         )
 
         return not retest_failed
-
-    def artificial_void_fraction(self):
-        return pseudo_void_fraction(
-                config, self.structure.number_density(),
-                self.structure.average_sigma())
-
-    def artificial_surface_area(self):
-        return pseudo_surface_area(
-                self.artificial_void_fraction(),
-                self.structure.average_sigma())
-
-    def artificial_gas_adsorption(self):
-        return pseudo_gas_adsorption(
-                config, self.artificial_void_fraction(),
-                self.artificial_surface_area(),
-                self.structure.average_epsilon())
