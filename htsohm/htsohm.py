@@ -195,15 +195,9 @@ def run_all_simulations(material):
     corresponding bins to row in database corresponding to the input-material.
         
     """
-    print('\n===============================|')
-    print('UUID :\t{}  |'.format(material.uuid))
-    print('----------------+---------------+-------------|')
-    print('  PROPERTY\t|  VALUE\t|  BIN\t      |')
-    print('----------------+---------------+-------------|')
-
-    simulation_types = config['simulations']
-    for simulation_type in simulation_types:
-        results = get_simulation(simulation_type).run(material, simulation_types[simulation_type])
+    simulation_config = config['simulations']
+    for simulation_type in simulation_config:
+        results = get_simulation(simulation_type).run(material, simulation_config[simulation_type])
         material.update_from_dict(results)
 
 def retest(m_orig, retests, tolerance):
