@@ -122,6 +122,11 @@ class Material(Base):
     sa_gravimetric_surface_area = Column(Float)               # m^2 / g
     #   void fraction
     vf_helium_void_fraction = Column(Float)                   # dimm.
+    #   additional properties
+    ap_unit_cell_volume = Column(Float)
+    ap_number_density = Column(Float)
+    ap_average_epsilon = Column(Float)
+    ap_average_sigma = Column(Float)
 
     # bins
     gas_adsorption_bin = Column(Integer)                     # dimm.

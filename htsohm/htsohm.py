@@ -313,9 +313,31 @@ def worker_run_loop(run_id):
             # select parent, retest, and mutate to create new material
             else:
                 material = pseudomaterial_generator.mutate.new_material(run_id, gen)
+            session.commit()
+
+            print("AFTER GENERATE/MUTATE NEW MATERIAL")
+            ids = [e[0] for e in session.query(Material.id).filter(Material.run_id==run_id).all()]
+            for some_id in ids:
+                mat = session.query(Material).get(some_id)
+                print("{}\t{}".format(mat.uuid, len(mat.structure.atom_sites)))
+
+
 
             # simulate material properties
             run_all_simulations(material)
+            material.ap_unit_cell_volume = float(material.structure.volume)
+            material.ap_number_density = float(material.structure.number_density())
+            material.ap_average_epsilon = float(material.structure.average_epsilon())
+            material.ap_average_sigma = float(material.structure.average_sigma())
+
+            print("AFTER RUNALL SIMULATION")
+            ids = [e[0] for e in session.query(Material.id).filter(Material.run_id==run_id).all()]
+            for some_id in ids:
+                mat = session.query(Material).get(some_id)
+                print("{}\t{}".format(mat.uuid, len(mat.structure.atom_sites)))
+
+
+
             session.add(material)
             session.commit()
 
@@ -324,6 +346,13 @@ def worker_run_loop(run_id):
             if material.generation_index < config['children_per_generation']:
                 print_block('ADDING MATERIAL {}'.format(material.uuid))
                 session.add(material)
+
+            # debugging
+            print("AFTER ADDING NEW MATERIAL TO DATABASE")
+            ids = [e[0] for e in session.query(Material.id).filter(Material.run_id==run_id).all()]
+            for some_id in ids:
+                mat = session.query(Material).get(some_id)
+                print("{}\t{}".format(mat.uuid, len(mat.structure.atom_sites)))
 
             # pause after adding material for interactive mode
             if config['interactive_mode'] == 'on':

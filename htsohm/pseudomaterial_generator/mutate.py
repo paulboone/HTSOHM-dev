@@ -128,6 +128,10 @@ def select_parent(run_id, max_generation, generation_limit):
     # Randomly-select parent-pseudomaterial (non-interactive mode)
         parent_id = int(np.random.choice(potential_parents))
 
+    ###
+    mat = session.query(Material).get(parent_id)
+    print("after selection (in-function) : {}".format(len(mat.structure.atom_sites)))
+
     return parent_id
 
 def retest(m_orig, retests, tolerance):
@@ -324,7 +328,6 @@ def mutate_material(parent_material, mutation_strength, generation):
         * Add methods for assigning and mutating charges.
 
     """
-    
     ########################################################################
     # load boundaries from config-file
     lattice_limits          = config["lattice_constant_limits"]
@@ -333,9 +336,6 @@ def mutate_material(parent_material, mutation_strength, generation):
     child_material = Material(parent_material.run_id)
     child_material.generation = generation
     child_material.parent_id = parent_material.id
-
-    print('Parent UUID :\t{}'.format(parent_material.uuid))
-    print('Child UUID :\t{}'.format(child_material.uuid))
 
     # perturb lennard-jones parameters
     for atom_type in parent_material.structure.lennard_jones:
@@ -381,26 +381,32 @@ def mutate_material(parent_material, mutation_strength, generation):
     child_ND = parent_ND + mutation_strength * (uniform(*number_density_limits) - parent_ND)
     number_of_atoms = int(child_ND * child_material.structure.volume)
 
+    # copy parent atom-sites and perturb positions
+    temporary_atom_sites = []
+    for atom_site in parent_material.structure.atom_sites:
+        temporary_atom_sites.append(AtomSites(
+            chemical_id = atom_site.chemical_id,
+            x_frac = random_position(atom_site.x_frac, random(), mutation_strength),
+            y_frac = random_position(atom_site.y_frac, random(), mutation_strength),
+            z_frac = random_position(atom_site.z_frac, random(), mutation_strength),
+            charge = atom_site.charge))
+
     # remove atom-sites, if necessary
     child_material.structure.atom_sites = np.random.choice(
-        parent_material.structure.atom_sites,
-        min(number_of_atoms, len(parent_material.structure.atom_sites)),
+        temporary_atom_sites,
+        min(number_of_atoms, len(temporary_atom_sites)),
         replace = False).tolist()
+
+    print("CHILD ATOM-SITES SELECTED")
 
     # store original atom-site positions before perturbation in order to compare
     # parent and child values later
     if config['interactive_mode'] == 'on':
         p_x, p_y, p_z = [], [], []
-        for atom_site in child_material.structure.atom_sites:
+        for atom_site in parent_material.structure.atom_sites:
             p_x.append(atom_site.x_frac)
             p_y.append(atom_site.y_frac)
             p_z.append(atom_site.z_frac)
-
-    # perturb atom-site positions
-    for atom_site in child_material.structure.atom_sites:
-        atom_site.x_frac = random_position(atom_site.x_frac, random(), mutation_strength)
-        atom_site.y_frac = random_position(atom_site.y_frac, random(), mutation_strength)
-        atom_site.z_frac = random_position(atom_site.z_frac, random(), mutation_strength)
 
     # add atom-sites, if needed
     if number_of_atoms > len(parent_material.structure.atom_sites):
@@ -409,6 +415,7 @@ def mutate_material(parent_material, mutation_strength, generation):
                 chemical_id = 'A_{}'.format(choice(
                     range(len(parent_material.structure.lennard_jones)))),
                 x_frac = random(), y_frac = random(), z_frac = random()))
+
 
     ##########################
     # mutate charges
@@ -423,7 +430,7 @@ def mutate_material(parent_material, mutation_strength, generation):
 
     # adjust charges to account for new number of atom sites
     total_charge = sum(child_charges)
-    remaining_charge = total_charge
+    remaining_charge = abs(total_charge)
     while not math.isclose(0., total_charge, abs_tol=1e-9):
         # chose a random atom site
         i = np.random.choice(range(number_of_atoms))
@@ -433,11 +440,11 @@ def mutate_material(parent_material, mutation_strength, generation):
             delta_charge = uniform(0., min(negative, remaining_charge))
             child_charges[i] -= delta_charge
         else:
-            delta_charge = random.uniform(0., min(positive, remaining_charge))
+            delta_charge = uniform(0., min(positive, remaining_charge))
             child_charges[i] += delta_charge
         total_charge = sum(child_charges)
         remaining_charge -= delta_charge
-    
+   
     # randomize any new atom sites
     if number_of_atoms > len(parent_charges):
         for i in range(number_of_atoms - len(parent_charges), number_of_atoms):
@@ -461,6 +468,7 @@ def mutate_material(parent_material, mutation_strength, generation):
 
     for i in range(number_of_atoms):
         child_material.structure.atom_sites[i].charge = child_charges[i]
+        print("{}\t{}".format(i, child_material.structure.atom_sites[i].charge))
 
     if config['interactive_mode'] == 'on':
         print('===================================================================')
@@ -483,15 +491,13 @@ def mutate_material(parent_material, mutation_strength, generation):
             round(len(parent_material.structure.atom_sites) / parent_material.structure.volume, 6),
             round(len(child_material.structure.atom_sites) / child_material.structure.volume, 6)))
 
-    
-
     return child_material
 
 def new_material(run_id, gen):
     retest_passed = False
     while retest_passed != True:
         # select parent 
-        parent_id = select_parent(run_id, gen, config['children_per_generation'])
+        parent_id = select_parent(run_id, gen - 1, config['children_per_generation'])
         parent_material = session.query(Material).get(parent_id)
 
         # retest results
