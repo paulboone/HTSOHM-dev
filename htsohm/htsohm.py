@@ -151,10 +151,10 @@ def calculate_mutation_strength(run_id, generation, mutation_strength_bin):
             fraction_in_parent_bin = calculate_percent_children_in_bin(run_id, generation, mutation_strength_bin)
 
             if config['interactive_mode'] != 'on':
-                if fraction_in_parent_bin < 0.1 and mutation_strength.strength - 0.05 > 0:
-                    mutation_strength.strength -= 0.05
-                elif fraction_in_parent_bin > 0.5 and mutation_strength.strength + 0.05 < 1:
-                    mutation_strength.strength += 0.05
+                if fraction_in_parent_bin < 0.1 and mutation_strength.strength * 0.9 > 0:
+                    mutation_strength.strength *= 0.9
+                elif fraction_in_parent_bin > 0.5 and mutation_strength.strength * 1.1 < 1:
+                    mutation_strength.strength *= 1.1
 
             elif config['interactive_mode'] == 'on':
                 print('\tFor adaptive mutation strength(s), DECREASE strength \n' +
