@@ -2,8 +2,10 @@ from htsohm import config
 from htsohm import simulation
 
 def get_simulation(simulation_type):
-    if simulation_type == 'gas_adsorption':
-        return simulation.gas_adsorption
+    if  simulation_type == 'gas_adsorption_0':
+        return simulation.gas_adsorption_0
+    elif  simulation_type == 'gas_adsorption_1':
+        return simulation.gas_adsorption_1
     elif simulation_type == 'surface_area':
         return simulation.surface_area
     elif simulation_type == 'helium_void_fraction':

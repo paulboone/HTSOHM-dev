@@ -77,45 +77,80 @@ class Material(Base):
 
     # retest columns
     retest_num = Column(Integer, default=0)
-    retest_gas_adsorption_0_sum = Column(Float, default=0)
-    retest_gas_adsorption_1_sum = Column(Float, default=0)
+    retest_gas_adsorption_00_sum = Column(Float, default=0)
+    retest_gas_adsorption_01_sum = Column(Float, default=0)
+    retest_gas_adsorption_10_sum = Column(Float, default=0)
+    retest_gas_adsorption_11_sum = Column(Float, default=0)
+    retest_surface_area_sum = Column(Float, default=0)
     retest_surface_area_sum = Column(Float, default=0)
     retest_void_fraction_sum = Column(Float, default=0)
     retest_passed = Column(Boolean)                        # will be NULL if retest hasn't been run
 
     # data collected
-    #   gas adsorption 0
-    ga0_absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
-    ga0_absolute_gravimetric_loading = Column(Float)           # cm^3 / g
-    ga0_absolute_molar_loading = Column(Float)                 # mol / kg
-    ga0_excess_volumetric_loading = Column(Float)              # cm^3 / cm^3
-    ga0_excess_gravimetric_loading = Column(Float)             # cm^3 / g
-    ga0_excess_molar_loading = Column(Float)                   # mol /kg
-    ga0_host_host_avg = Column(Float)                          # K
-    ga0_host_host_vdw = Column(Float)                          # K
-    ga0_host_host_cou = Column(Float)                          # K
-    ga0_adsorbate_adsorbate_avg = Column(Float)                # K
-    ga0_adsorbate_adsorbate_vdw = Column(Float)                # K
-    ga0_adsorbate_adsorbate_cou = Column(Float)                # K
-    ga0_host_adsorbate_avg = Column(Float)                     # K
-    ga0_host_adsorbate_vdw = Column(Float)                     # K
-    ga0_host_adsorbate_cou = Column(Float)                     # K
-    #   gas adsorption 1
-    ga1_absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
-    ga1_absolute_gravimetric_loading = Column(Float)           # cm^3 / g
-    ga1_absolute_molar_loading = Column(Float)                 # mol / kg
-    ga1_excess_volumetric_loading = Column(Float)              # cm^3 / cm^3
-    ga1_excess_gravimetric_loading = Column(Float)             # cm^3 / g
-    ga1_excess_molar_loading = Column(Float)                   # mol /kg
-    ga1_host_host_avg = Column(Float)                          # K
-    ga1_host_host_vdw = Column(Float)                          # K
-    ga1_host_host_cou = Column(Float)                          # K
-    ga1_adsorbate_adsorbate_avg = Column(Float)                # K
-    ga1_adsorbate_adsorbate_vdw = Column(Float)                # K
-    ga1_adsorbate_adsorbate_cou = Column(Float)                # K
-    ga1_host_adsorbate_avg = Column(Float)                     # K
-    ga1_host_adsorbate_vdw = Column(Float)                     # K
-    ga1_host_adsorbate_cou = Column(Float)                     # K
+    #   gas 0 pressure 0
+    ga00_absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
+    ga00_absolute_gravimetric_loading = Column(Float)           # cm^3 / g
+    ga00_absolute_molar_loading = Column(Float)                 # mol / kg
+    ga00_excess_volumetric_loading = Column(Float)              # cm^3 / cm^3
+    ga00_excess_gravimetric_loading = Column(Float)             # cm^3 / g
+    ga00_excess_molar_loading = Column(Float)                   # mol /kg
+    ga00_host_host_avg = Column(Float)                          # K
+    ga00_host_host_vdw = Column(Float)                          # K
+    ga00_host_host_cou = Column(Float)                          # K
+    ga00_adsorbate_adsorbate_avg = Column(Float)                # K
+    ga00_adsorbate_adsorbate_vdw = Column(Float)                # K
+    ga00_adsorbate_adsorbate_cou = Column(Float)                # K
+    ga00_host_adsorbate_avg = Column(Float)                     # K
+    ga00_host_adsorbate_vdw = Column(Float)                     # K
+    ga00_host_adsorbate_cou = Column(Float)                     # K
+    #   gas 0 pressure 1
+    ga01_absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
+    ga01_absolute_gravimetric_loading = Column(Float)           # cm^3 / g
+    ga01_absolute_molar_loading = Column(Float)                 # mol / kg
+    ga01_excess_volumetric_loading = Column(Float)              # cm^3 / cm^3
+    ga01_excess_gravimetric_loading = Column(Float)             # cm^3 / g
+    ga01_excess_molar_loading = Column(Float)                   # mol /kg
+    ga01_host_host_avg = Column(Float)                          # K
+    ga01_host_host_vdw = Column(Float)                          # K
+    ga01_host_host_cou = Column(Float)                          # K
+    ga01_adsorbate_adsorbate_avg = Column(Float)                # K
+    ga01_adsorbate_adsorbate_vdw = Column(Float)                # K
+    ga01_adsorbate_adsorbate_cou = Column(Float)                # K
+    ga01_host_adsorbate_avg = Column(Float)                     # K
+    ga01_host_adsorbate_vdw = Column(Float)                     # K
+    ga01_host_adsorbate_cou = Column(Float)                     # K
+    #   gas 1 pressure 0
+    ga10_absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
+    ga10_absolute_gravimetric_loading = Column(Float)           # cm^3 / g
+    ga10_absolute_molar_loading = Column(Float)                 # mol / kg
+    ga10_excess_volumetric_loading = Column(Float)              # cm^3 / cm^3
+    ga10_excess_gravimetric_loading = Column(Float)             # cm^3 / g
+    ga10_excess_molar_loading = Column(Float)                   # mol /kg
+    ga10_host_host_avg = Column(Float)                          # K
+    ga10_host_host_vdw = Column(Float)                          # K
+    ga10_host_host_cou = Column(Float)                          # K
+    ga10_adsorbate_adsorbate_avg = Column(Float)                # K
+    ga10_adsorbate_adsorbate_vdw = Column(Float)                # K
+    ga10_adsorbate_adsorbate_cou = Column(Float)                # K
+    ga10_host_adsorbate_avg = Column(Float)                     # K
+    ga10_host_adsorbate_vdw = Column(Float)                     # K
+    ga10_host_adsorbate_cou = Column(Float)                     # K
+    #   gas 1 pressure 1
+    ga11_absolute_volumetric_loading = Column(Float)            # cm^3 / cm^3
+    ga11_absolute_gravimetric_loading = Column(Float)           # cm^3 / g
+    ga11_absolute_molar_loading = Column(Float)                 # mol / kg
+    ga11_excess_volumetric_loading = Column(Float)              # cm^3 / cm^3
+    ga11_excess_gravimetric_loading = Column(Float)             # cm^3 / g
+    ga11_excess_molar_loading = Column(Float)                   # mol /kg
+    ga11_host_host_avg = Column(Float)                          # K
+    ga11_host_host_vdw = Column(Float)                          # K
+    ga11_host_host_cou = Column(Float)                          # K
+    ga11_adsorbate_adsorbate_avg = Column(Float)                # K
+    ga11_adsorbate_adsorbate_vdw = Column(Float)                # K
+    ga11_adsorbate_adsorbate_cou = Column(Float)                # K
+    ga11_host_adsorbate_avg = Column(Float)                     # K
+    ga11_host_adsorbate_vdw = Column(Float)                     # K
+    ga11_host_adsorbate_cou = Column(Float)                     # K
     #   surface area
     sa_unit_cell_surface_area = Column(Float)                 # angstroms ^ 2
     sa_volumetric_surface_area = Column(Float)                # m^2 / cm^3
@@ -129,7 +164,8 @@ class Material(Base):
     ap_average_sigma = Column(Float)
 
     # bins
-    gas_adsorption_bin = Column(Integer)                     # dimm.
+    gas_adsorption_0_bin = Column(Integer)                     # dimm.
+    gas_adsorption_1_bin = Column(Integer)                     # dimm.
     surface_area_bin = Column(Integer)                        # dimm.
     void_fraction_bin = Column(Integer)                       # dimm.
 
@@ -169,7 +205,7 @@ class Material(Base):
             dimension parameter-space.
 
         """
-        return [self.gas_adsorption_bin, self.surface_area_bin, self.void_fraction_bin]
+        return [self.gas_adsorption_0_bin, self.gas_adsorption_1_bin, self.surface_area_bin, self.void_fraction_bin]
 
     def calculate_generation_index(self):
         """Determine material's generation-index.
@@ -245,26 +281,58 @@ class Material(Base):
         simulations = config['simulations']
         number_of_bins = config['number_of_convergence_bins']
 
-        if 'gas_adsorption' in simulations or 'artificial_gas_adsorption' in simulations:
-            ga0_o = self.ga0_absolute_volumetric_loading    # initally-calculated values
-            ga0_mean = self.retest_gas_adsorption_0_sum / self.retest_num
-            if 'gas_adsorption' in simulations:
-                ga_limits = simulations['gas_adsorption']['limits']
-                if isinstance(simulations['gas_adsorption']['external_pressure'], list):
-                    ga1_o = self.ga1_absolute_volumetric_loading    # initally-calculated values
-                    ga1_mean = self.retest_gas_adsorption_1_sum / self.retest_num
-                else:
-                    ga1_o = 0
-                    ga1_mean = 0
-            elif 'artificial_gas_adsorption' in simulations:
-                ga_limits = simulations['artificial_gas_adsorption']['limits']
-                ga1_o = 0
-                ga1_mean = 0
-            ga_width = (ga_limits[1] - ga_limits[0]) / number_of_bins
+#        if 'gas_adsorption' in simulations or 'artificial_gas_adsorption' in simulations:
+#            ga0_o = self.ga0_absolute_volumetric_loading    # initally-calculated values
+#            ga0_mean = self.retest_gas_adsorption_0_sum / self.retest_num
+#            if 'gas_adsorption' in simulations:
+#                ga_limits = simulations['gas_adsorption']['limits']
+#                if isinstance(simulations['gas_adsorption']['external_pressure'], list):
+#                    ga1_o = self.ga1_absolute_volumetric_loading    # initally-calculated values
+#                    ga1_mean = self.retest_gas_adsorption_1_sum / self.retest_num
+#                else:
+#                    ga1_o = 0
+#                    ga1_mean = 0
+#            elif 'artificial_gas_adsorption' in simulations:
+#                ga_limits = simulations['artificial_gas_adsorption']['limits']
+#                ga1_o = 0
+#                ga1_mean = 0
+#            ga_width = (ga_limits[1] - ga_limits[0]) / number_of_bins
+#        else:
+#            ga0_o = 0
+#            ga0_mean = 0
+#            ga_width = 0
+
+        if 'gas_adsorption_0' in simulations:
+            ga00_o = self.ga00_absolute_volumetric_loading    # initally-calculated values
+            ga00_mean = self.retest_gas_adsorption_00_sum / self.retest_num
+            ga0_limits = simulations['gas_adsorption_0']['limits']
+            if isinstance(simulations['gas_adsorption_0']['external_pressure'], list):
+                ga01_o = self.ga01_absolute_volumetric_loading    # initally-calculated values
+                ga01_mean = self.retest_gas_adsorption_01_sum / self.retest_num
+            else:
+                ga01_o = 0
+                ga01_mean = 0
+            ga0_width = (ga0_limits[1] - ga0_limits[0]) / number_of_bins
         else:
-            ga0_o = 0
-            ga0_mean = 0
-            ga_width = 0
+            ga00_o = 0
+            ga00_mean = 0
+            ga0_width = 0
+
+        if 'gas_adsorption_1' in simulations:
+            ga10_o = self.ga10_absolute_volumetric_loading    # initally-calculated values
+            ga10_mean = self.retest_gas_adsorption_10_sum / self.retest_num
+            ga1_limits = simulations['gas_adsorption_1']['limits']
+            if isinstance(simulations['gas_adsorption_1']['external_pressure'], list):
+                ga11_o = self.ga11_absolute_volumetric_loading    # initally-calculated values
+                ga11_mean = self.retest_gas_adsorption_11_sum / self.retest_num
+            else:
+                ga11_o = 0
+                ga11_mean = 0
+            ga1_width = (ga1_limits[1] - ga1_limits[0]) / number_of_bins
+        else:
+            ga10_o = 0
+            ga10_mean = 0
+            ga1_width = 0
 
         if 'surface_area' in simulations or 'artificial_surface_area' in simulations:
             sa_o = self.sa_volumetric_surface_area
@@ -293,8 +361,10 @@ class Material(Base):
             vf_width = 0
 
         retest_failed = (
-            abs(ga0_mean - ga0_o) >= tolerance * ga_width and ga0_o != 0 or
-            abs(ga1_mean - ga1_o) >= tolerance * ga_width and ga1_o != 0 or
+            abs(ga00_mean - ga00_o) >= tolerance * ga0_width and ga00_o != 0 or
+            abs(ga01_mean - ga01_o) >= tolerance * ga0_width and ga01_o != 0 or
+            abs(ga10_mean - ga10_o) >= tolerance * ga1_width and ga10_o != 0 or
+            abs(ga11_mean - ga11_o) >= tolerance * ga1_width and ga11_o != 0 or
             abs(sa_mean - sa_o) >= tolerance * sa_width and sa_o != 0 or
             abs(vf_mean - vf_o) >= tolerance * vf_width and vf_o != 0
         )

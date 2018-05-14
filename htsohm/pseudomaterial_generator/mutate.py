@@ -30,8 +30,10 @@ def select_parent(run_id, max_generation, generation_limit):
     # Determine which dimensions are being binned
     simulations = config['simulations']
     queries = []
-    if 'gas_adsorption' in simulations or 'artificial_gas_adsorption' in simulations:
-        queries.append( getattr(Material, 'gas_adsorption_bin') )
+    if 'gas_adsorption_0' in simulations or 'artificial_gas_adsorption' in simulations:
+        queries.append( getattr(Material, 'gas_adsorption_0_bin') )
+    if 'gas_adsorption_1' in simulations:
+        queries.append( getattr(Material, 'gas_adsorption_1_bin') )
     if 'surface_area' in simulations or 'artificial_surface_area' in simulations:
         queries.append( getattr(Material, 'surface_area_bin') )
     if 'helium_void_fraction' in simulations or 'artificial_void_fraction' in simulations:
@@ -159,17 +161,23 @@ def retest(m_orig, retests, tolerance):
     session.refresh(m_orig, lockmode='update')
 
     if config['interactive_mode'] == 'on':
-        x0 = m_orig.retest_gas_adsorption_0_sum
-        x1 = m_orig.retest_gas_adsorption_1_sum
+        x00 = m_orig.retest_gas_adsorption_00_sum
+        x01 = m_orig.retest_gas_adsorption_01_sum
+        x10 = m_orig.retest_gas_adsorption_10_sum
+        x11 = m_orig.retest_gas_adsorption_11_sum
         y = m_orig.retest_surface_area_sum
         z = m_orig.retest_void_fraction_sum
             
     if m_orig.retest_num < retests:
-        if 'gas_adsorption' in simulations or 'artificial_gas_adsorption' in simulations:
-            m_orig.retest_gas_adsorption_0_sum += m.ga0_absolute_volumetric_loading
-            if 'gas_adsorption' in simulations:
-                if isinstance(config['simulations']['gas_adsorption']['external_pressure'], list):
-                    m_orig.retest_gas_adsorption_1_sum += m.ga1_absolute_volumetric_loading
+        if 'gas_adsorption_0' in simulations or 'artificial_gas_adsorption' in simulations:
+            m_orig.retest_gas_adsorption_00_sum += m.ga00_absolute_volumetric_loading
+            if 'gas_adsorption_0' in simulations:
+                if isinstance(config['simulations']['gas_adsorption_0']['external_pressure'], list):
+                    m_orig.retest_gas_adsorption_01_sum += m.ga01_absolute_volumetric_loading
+        if 'gas_adsorption_1' in simulations:
+            m_orig.retest_gas_adsorption_10_sum += m.ga10_absolute_volumetric_loading
+            if isinstance(config['simulations']['gas_adsorption_1']['external_pressure'], list):
+                m_orig.retest_gas_adsorption_11_sum += m.ga11_absolute_volumetric_loading
         if 'surface_area' in simulations or 'artificial_surface_area' in simulations:
             m_orig.retest_surface_area_sum += m.sa_volumetric_surface_area
         if 'helium_void_fraction' in simulations or 'artificial_void_fraction' in simulations:

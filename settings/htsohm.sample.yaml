@@ -52,8 +52,16 @@ simulations:
     simulation_cycles: 100
     limits: [0, 1]
     bins: 10
-  gas_adsorption:
-    adsorbate: 'methane'
+  gas_adsorption_0:
+    adsorbate: 'CO2'
+    external_pressure: [580000, 3500000]
+    external_temperature: 298
+    initialization_cycles: 100
+    simulation_cycles: 100
+    limits: [0, 300]
+    bins: 10
+  gas_adsorption_1:
+    adsorbate: 'N2'
     external_pressure: [580000, 3500000]
     external_temperature: 298
     initialization_cycles: 100

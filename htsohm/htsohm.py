@@ -66,11 +66,13 @@ def calculate_percent_children_in_bin(run_id, generation, bin_coordinate):
     """
     sql = text("""
         select
-            m.gas_adsorption_bin,
+            m.gas_adsorption_0_bin,
+            m.gas_adsorption_1_bin,
             m.surface_area_bin,
             m.void_fraction_bin,
             (
-                m.gas_adsorption_bin = p.gas_adsorption_bin and
+                m.gas_adsorption_0_bin = p.gas_adsorption_0_bin and
+                m.gas_adsorption_1_bin = p.gas_adsorption_1_bin and
                 m.surface_area_bin = p.surface_area_bin and
                 m.void_fraction_bin = p.void_fraction_bin
             ) as in_bin
@@ -78,7 +80,8 @@ def calculate_percent_children_in_bin(run_id, generation, bin_coordinate):
         join materials p on (m.parent_id = p.id)
         where m.generation = :gen
             and m.run_id = :run_id
-            and p.gas_adsorption_bin = :ga_bin
+            and p.gas_adsorption_0_bin = :ga0_bin
+            and p.gas_adsorption_1_bin = :ga1_bin
             and p.surface_area_bin = :sa_bin
             and p.void_fraction_bin = :vf_bin
         """)
@@ -87,9 +90,10 @@ def calculate_percent_children_in_bin(run_id, generation, bin_coordinate):
         sql,
         gen=generation,
         run_id=run_id,
-        ga_bin=bin_coordinate[0],
-        sa_bin=bin_coordinate[1],
-        vf_bin=bin_coordinate[2]
+        ga0_bin=bin_coordinate[0],
+        ga1_bin=bin_coordinate[1],
+        sa_bin=bin_coordinate[2],
+        vf_bin=bin_coordinate[3]
     ).fetchall()
 
     if (config['interactive_mode'] == 'on' and 
@@ -151,8 +155,8 @@ def calculate_mutation_strength(run_id, generation, mutation_strength_bin):
             fraction_in_parent_bin = calculate_percent_children_in_bin(run_id, generation, mutation_strength_bin)
 
             if config['interactive_mode'] != 'on':
-                if fraction_in_parent_bin < 0.1 and mutation_strength.strength * 0.9 > 0:
-                    mutation_strength.strength *= 0.9
+                if fraction_in_parent_bin < 0.1 and mutation_strength.strength / 1.1 > 0:
+                    mutation_strength.strength /= 1.1
                 elif fraction_in_parent_bin > 0.5 and mutation_strength.strength * 1.1 < 1:
                     mutation_strength.strength *= 1.1
 

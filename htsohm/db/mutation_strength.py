@@ -26,26 +26,30 @@ class MutationStrength(Base):
     # COLUMN                                                 UNITS
     run_id = Column(String(50))                            # dimm.
     generation = Column(Integer)                           # generation#
-    gas_adsorption_bin = Column(Integer)                  # dimm.
+    gas_adsorption_0_bin = Column(Integer)                  # dimm.
+    gas_adsorption_1_bin = Column(Integer)                  # dimm.
     surface_area_bin = Column(Integer)                     # dimm.
     void_fraction_bin = Column(Integer)                    # dimm.
     strength = Column(Float)
 
     __table_args__ = (
-        PrimaryKeyConstraint('run_id', 'generation', 'gas_adsorption_bin', 'surface_area_bin', 'void_fraction_bin'),
+        PrimaryKeyConstraint('run_id', 'generation', 'gas_adsorption_0_bin', 'gas_adsorption_1_bin',
+                             'surface_area_bin', 'void_fraction_bin'),
     )
 
-    def __init__(self, run_id=None, generation=None, gas_adsorption_bin=None,
-                 surface_area_bin=None, void_fraction_bin=None, strength=None):
+    def __init__(self, run_id=None, generation=None, gas_adsorption_0_bin=None,
+                 gas_adsorption_1_bin=None, surface_area_bin=None,
+                 void_fraction_bin=None, strength=None):
         self.run_id = run_id
         self.generation = generation
-        self.gas_adsorption_bin = gas_adsorption_bin
+        self.gas_adsorption_0_bin = gas_adsorption_0_bin
+        self.gas_adsorption_1_bin = gas_adsorption_1_bin
         self.surface_area_bin = surface_area_bin
         self.void_fraction_bin = void_fraction_bin
         self.strength = strength
 
     @classmethod
-    def get_prior(cls, run_id, generation, gas_adsorption_bin, surface_area_bin, void_fraction_bin):
+    def get_prior(cls, run_id, generation, gas_adsorption_0_bin, gas_adsorption_1_bin, surface_area_bin, void_fraction_bin):
         """
         Looks for the most recent mutation_strength row. If a row doesn't exist
         for this bin, the default value is used from the configuration file.
@@ -70,7 +74,8 @@ class MutationStrength(Base):
         ms = session.query(MutationStrength) \
                 .filter(
                     MutationStrength.run_id == run_id,
-                    MutationStrength.gas_adsorption_bin == gas_adsorption_bin,
+                    MutationStrength.gas_adsorption_0_bin == gas_adsorption_0_bin,
+                    MutationStrength.gas_adsorption_1_bin == gas_adsorption_1_bin,
                     MutationStrength.surface_area_bin == surface_area_bin,
                     MutationStrength.void_fraction_bin == void_fraction_bin,
                     MutationStrength.generation <= generation) \
@@ -80,5 +85,6 @@ class MutationStrength(Base):
         if ms:
             return ms
         else:
-            return MutationStrength(run_id, generation, gas_adsorption_bin, surface_area_bin,
-                                    void_fraction_bin, config['initial_mutation_strength'])
+            return MutationStrength(run_id, generation, gas_adsorption_0_bin, gas_adsorption_1_bin,
+                                    surface_area_bin, void_fraction_bin,
+                                    config['initial_mutation_strength'])
