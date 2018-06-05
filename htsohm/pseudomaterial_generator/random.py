@@ -87,6 +87,5 @@ def generate_material(run_id, gen, number_of_atomtypes):
 
     return material
 
-
 def new_material(run_id, gen):
     return generate_material(run_id, gen, config['number_of_atom_types'])
