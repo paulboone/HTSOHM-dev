@@ -38,8 +38,6 @@ retests:
   number: 3
   tolerance: 0.25
 
-interactive_mode: 'on'
-
 simulations:
   helium_void_fraction:
     simulation_cycles: 100

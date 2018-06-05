@@ -46,23 +46,6 @@ def last_generation(run_id):
         Material.run_id == run_id,
     )[0][0]
 
-def double_check():
-    while True:
-        proceed = input('Are you sure? [y/n] :\t')
-        if proceed in ['n', 'N']:
-            return False
-        elif proceed in ['y', 'Y']:
-            return True
-        else:
-            print('Please enter y/n.')
-
-def set_variable(message, variable_name):
-    while True:
-        value = input(message)
-        print('Setting {} to {} ...'.format(variable_name, value))
-        if double_check():
-            return value
-
 def evaluate_convergence(run_id, generation):
     '''Determines convergence by calculating variance of bin-counts.
     
@@ -137,12 +120,6 @@ def worker_run_loop(run_id):
             if material.generation_index < config['children_per_generation']:
                 print_block('ADDING MATERIAL {}'.format(material.uuid))
                 session.add(material)
-
-            # pause after adding material for interactive mode
-            if config['interactive_mode'] == 'on':
-                print("\n\nGeneration :\t{}\nMat. no. :\t{} / {}".format(gen,
-                    material.generation_index + 1, config['children_per_generation']))
-                input("\nPress Enter to continue...\n")
 
             else:
                 # delete excess rows
