@@ -66,18 +66,13 @@ def evaluate_convergence(run_id, generation):
     if 'helium_void_fraction' in simulations:
         query_group.append( getattr(Material, 'void_fraction_bin') )
 
-    bin_counts = session \
-        .query(func.count(Material.id)) \
-        .filter(
-            Material.run_id == run_id, Material.generation < generation,
-            Material.generation_index < config['children_per_generation']
-        ) \
-        .group_by(*query_group).all()
-    bin_counts = [i[0] for i in bin_counts]    # convert SQLAlchemy result to list
-    variance = sqrt( sum([(i - (sum(bin_counts) / len(bin_counts)))**2 for i in bin_counts]) / len(bin_counts))
-    print('\nCONVERGENCE:\t%s\n' % variance)
-    sys.stdout.flush()
-    return variance <= config['convergence_cutoff_criteria']
+    number_of_occupied_bins = session \
+        .query(*query_group).distinct() \
+        .filter(Material.run_id == run_id, Material.generation < generation,
+                Material.generation_index < config['children_per_generation']) \
+        .group_by(*query_group).count()
+    total_number_of_bins = config['number_of_convergence_bins'] ** len(query_group)
+    return (total_number_of_bins - number_of_occupied_bins) / total_number_of_bins <= config['convergence_cutoff_criteria']
 
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
