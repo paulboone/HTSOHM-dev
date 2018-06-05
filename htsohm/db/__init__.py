@@ -22,7 +22,6 @@ session = sessionmaker(bind=engine)()
 # Import all models
 from htsohm.db.base import Base
 from htsohm.db.material import Material
-from htsohm.db.mutation_strength import MutationStrength
 from htsohm.db.structure import Structure
 from htsohm.db.atom_sites import AtomSites
 from htsohm.db.lennard_jones import LennardJones

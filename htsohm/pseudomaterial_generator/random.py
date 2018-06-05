@@ -85,12 +85,6 @@ def generate_material(run_id, gen, number_of_atomtypes):
         atom_sites[i].charge += dq
         atom_sites[j].charge -= dq
 
-    charges = []
-    for i in range(len(atom_sites)):
-        charges.append(atom_sites[i].charge)
-        print("{}\t{}".format(i, atom_sites[i].charge))
-    print("NET CHARGE : {}".format(sum(charges)))
-
     return material
 
 

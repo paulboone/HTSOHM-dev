@@ -24,14 +24,8 @@ simulation_directory: 'HTSOHM'
 children_per_generation: 5
 maximum_number_of_generations: 50
 number_of_atom_types: 4
-initial_mutation_strength: 0.2
 number_of_convergence_bins: 10
 convergence_cutoff_criteria: -0.05
-mutation_strength_method: 'adaptive'
-annealing_on: 'on'
-annealing_frequency: 10
-annealing_strength: 0.5
-pseudomaterial_generator: 'mutate'
 
 charge_limit: 0.0
 elemental_charge: 0.0001
@@ -45,7 +39,6 @@ retests:
   tolerance: 0.25
 
 interactive_mode: 'on'
-selection_mode: 'manual'
 
 simulations:
   helium_void_fraction:
