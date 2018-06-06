@@ -69,9 +69,8 @@ def worker_run_loop(run_id):
     Args:
         run_id (str): identification string for run.
 
-    Writes seed generation and simulates properties, then manages overall
-    bin-mutate-simualte routine until convergence cutt-off or maximum
-    number of generations is reached.
+    Manages overall routine for generating pseudomaterials and simulating their properties.
+    Method runs until convergence cutoff or maximum number of generations is reached.
 
     """
     print('CONFIG\n{0}'.format(config))
