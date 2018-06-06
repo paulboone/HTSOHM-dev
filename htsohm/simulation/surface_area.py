@@ -30,7 +30,7 @@ def write_raspa_file(filename, uuid, simulation_config):
             'FrameworkName'                 : uuid}
 
     # Load template and replace values
-    input_data = load_and_subs_template('surface_area.input', values)
+    input_data = load_and_subs_template('input_file_templates/surface_area.input', values)
 
     # Write simulation input-file
     with open(filename, "w") as raspa_input_file:

@@ -45,7 +45,7 @@ def write_raspa_file(filename, material, simulation_config):
         values.update({'ExternalPressure'   : simulation_config['external_pressure']})
 
     # Load template and replace values
-    input_data = load_and_subs_template('gas_adsorption.input', values)
+    input_data = load_and_subs_template('input_file_templates/gas_adsorption.input', values)
 
     # Write simulation input-file
     with open(filename, "w") as raspa_input_file:
