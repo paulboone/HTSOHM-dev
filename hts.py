@@ -11,8 +11,6 @@ from sqlalchemy import or_
 import htsohm
 from htsohm.files import load_config_file
 from htsohm.htsohm import worker_run_loop
-from htsohm.db import session, Material
-from htsohm.simulation.calculate_bin import calc_bin
 
 @click.group()
 def hts():
@@ -41,7 +39,7 @@ def start(config_path):
     file_name = os.path.join(run_dir, 'config.yaml')
     with open(file_name, 'w') as config_file:
         yaml.dump(config, config_file, default_flow_style=False)
-    print('Run created with id: %s' % run_id)
+    print('Run created with ID : {}'.format(run_id))
 
 @hts.command()
 @click.argument('run_id')
