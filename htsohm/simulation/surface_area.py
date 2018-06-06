@@ -6,7 +6,6 @@ from datetime import datetime
 from uuid import uuid4
 from string import Template
 
-import htsohm
 from htsohm import config
 from htsohm.material_files import write_cif_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
@@ -85,7 +84,7 @@ def run(material, structure, simulation_config):
     # Determine where to write simulation input/output files, create directory
     simulation_directory  = config['simulation_directory']
     if simulation_directory == 'HTSOHM':
-        htsohm_dir = os.path.dirname(os.path.dirname(htsohm.__file__))
+        htsohm_dir = config["htsohm_dir"]
         path = os.path.join(htsohm_dir, material.run_id)
     elif simulation_directory == 'SCRATCH':
         path = os.environ['SCRATCH']
