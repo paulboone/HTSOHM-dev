@@ -1,7 +1,5 @@
-# from htsohm.db.runDB_declarative import *
-
-# standard library imports
 import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
