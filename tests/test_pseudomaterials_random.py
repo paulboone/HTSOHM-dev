@@ -6,7 +6,7 @@ from htsohm.structure import Structure
 
 @pytest.fixture
 def LCs():
-    structure = Structure('test')
+    structure = Structure()
     structure.lattice_constants["a"] = 1
     structure.lattice_constants["b"] = 1
     structure.lattice_constants["c"] = 1
