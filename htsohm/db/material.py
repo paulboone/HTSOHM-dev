@@ -208,27 +208,6 @@ class Material(Base):
         simulations = config['simulations']
         number_of_bins = config['number_of_convergence_bins']
 
-#        if 'gas_adsorption' in simulations or 'artificial_gas_adsorption' in simulations:
-#            ga0_o = self.ga0_absolute_volumetric_loading    # initally-calculated values
-#            ga0_mean = self.retest_gas_adsorption_0_sum / self.retest_num
-#            if 'gas_adsorption' in simulations:
-#                ga_limits = simulations['gas_adsorption']['limits']
-#                if isinstance(simulations['gas_adsorption']['external_pressure'], list):
-#                    ga1_o = self.ga1_absolute_volumetric_loading    # initally-calculated values
-#                    ga1_mean = self.retest_gas_adsorption_1_sum / self.retest_num
-#                else:
-#                    ga1_o = 0
-#                    ga1_mean = 0
-#            elif 'artificial_gas_adsorption' in simulations:
-#                ga_limits = simulations['artificial_gas_adsorption']['limits']
-#                ga1_o = 0
-#                ga1_mean = 0
-#            ga_width = (ga_limits[1] - ga_limits[0]) / number_of_bins
-#        else:
-#            ga0_o = 0
-#            ga0_mean = 0
-#            ga_width = 0
-
         if 'gas_adsorption_0' in simulations:
             ga00_o = self.ga00_absolute_volumetric_loading    # initally-calculated values
             ga00_mean = self.retest_gas_adsorption_00_sum / self.retest_num
