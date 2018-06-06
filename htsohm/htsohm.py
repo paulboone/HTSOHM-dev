@@ -1,17 +1,9 @@
-import os
 import sys
-from math import sqrt
-from datetime import datetime
 
 from sqlalchemy.sql import func
-from sqlalchemy.orm.exc import FlushError
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.sql import text
-import yaml
 
-import htsohm
 from htsohm import config
-from htsohm.db import engine, session, Material
+from htsohm.db import session, Material
 from htsohm import pseudomaterial_generator
 from htsohm.simulation.run_all import run_all_simulations
 
@@ -27,10 +19,9 @@ def materials_in_generation(run_id, generation):
         the database (the final step in bin-mutate-simulate routine).
 
     """
-    return session.query(Material).filter(
-        Material.run_id == run_id,
-        Material.generation == generation
-    ).count()
+    return session.query(Material) \
+            .filter(Material.run_id == run_id,
+                    Material.generation == generation).count()
 
 def last_generation(run_id):
     """Finds latest generation present in database.
@@ -42,9 +33,8 @@ def last_generation(run_id):
         Last generation(int) to be included in database.
 
     """
-    return session.query(func.max(Material.generation)).filter(
-        Material.run_id == run_id,
-    )[0][0]
+    return session.query(func.max(Material.generation)) \
+            .filter(Material.run_id == run_id,)[0][0]
 
 def evaluate_convergence(run_id, generation):
     '''Determines convergence by calculating variance of bin-counts.
