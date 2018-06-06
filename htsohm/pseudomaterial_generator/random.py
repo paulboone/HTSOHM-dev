@@ -1,10 +1,8 @@
 from random import random
 
-import numpy as np
 from Crypto.Hash import SHA256
 from zlib import crc32
 
-from htsohm import config
 from htsohm.db import Material
 from htsohm.structure import Structure
 

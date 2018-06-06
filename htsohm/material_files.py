@@ -1,17 +1,4 @@
-# standard library imports
-import sys
 import os
-from random import choice, random, randrange, uniform
-import shutil
-from uuid import uuid4
-
-# related third party imports
-import numpy as np
-import yaml
-
-# local application/library specific imports
-import htsohm
-from htsohm import config
 
 def write_cif_file(material, structure, simulation_path):
     """Writes .cif file for structural information.

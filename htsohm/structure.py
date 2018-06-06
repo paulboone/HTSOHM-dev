@@ -1,7 +1,3 @@
-import os
-
-import htsohm
-
 class Structure:
     """Class for storing pseudomaterial structural data.
     Attributes:
