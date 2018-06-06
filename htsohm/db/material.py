@@ -15,10 +15,6 @@ class Material(Base):
         run_id (str): identification string for run.
         uuid (str): unique identification string for material.
         parent_id (int): uuid of parent mutated to create material.
-        generation (int): iteration in overall bin-mutate-simulate routine.
-        generation_index (int): order material was created in generation (used
-            to determine when all materials appear in database for a particular
-            generation).
         retest_num (int): iteration in re-test routine for statistical errors.
         retest_methane_loading_sum (float): sum of all absolute volumetric
             methane loadings calculated in re-test routine.
@@ -70,9 +66,6 @@ class Material(Base):
     run_id = Column(String(50))                            # dimm.
     uuid = Column(String(40))
     seed = Column(Float)
-    parent_id = Column(Integer)                            # dimm.
-    generation = Column(Integer)                           # generation#
-    generation_index = Column(Integer)                     # index order of row in generation
 
     # retest columns
     retest_num = Column(Integer, default=0)
@@ -199,65 +192,6 @@ class Material(Base):
 
         """
         return [self.gas_adsorption_0_bin, self.gas_adsorption_1_bin, self.surface_area_bin, self.void_fraction_bin]
-
-    def calculate_generation_index(self):
-        """Determine material's generation-index.
-
-        Args:
-            self (class): row in material table.
-
-        Returns:
-            The generation-index is used to count the number of materials
-            present in the database (that is to have all definition-files in
-            the RASPA library and simulation data in the materials datatable).
-            This attribute is used to determine when to stop adding new
-            materials to one generation and start another.
-
-        """
-        return session.query(Material).filter(
-                Material.run_id==self.run_id,
-                Material.generation==self.generation,
-                Material.id < self.id,
-            ).count()
-
-    def calculate_percent_children_in_bin(self):
-        """Determine number of children in the same bin as their parent.
-
-        Args:
-            self (class): row in material table.
-
-        Returns:
-            Fraction of children in the same bin as parent (self).
-        """
-        sql = text("""
-            select
-                m.gas_adsorption_bin,
-                m.surface_area_bin,
-                m.void_fraction_bin,
-                (
-                    m.gas_adsorption_bin = p.gas_adsorption_bin and
-                    m.surface_area_bin = p.surface_area_bin and
-                    m.void_fraction_bin = p.void_fraction_bin
-                ) as in_bin
-            from materials m
-            join materials p on (m.parent_id = p.id)
-            where m.generation = :gen
-              and m.run_id = :run_id
-              and p.gas_adsorption_bin = :ga_bin
-              and p.surface_area_bin = :sa_bin
-              and p.void_fraction_bin = :vf_bin
-        """)
-
-        rows = engine.connect().execute(
-            sql,
-            gen=self.generation,
-            run_id=self.run_id,
-            ga_bin=self.gas_adsorption_bin,
-            sa_bin=self.surface_area_bin,
-            vf_bin=self.void_fraction_bin
-        ).fetchall()
-
-        return len([ r for r in rows if r.in_bin ]) / len(rows)
 
     def calculate_retest_result(self, tolerance):
         """Determine if material has passed re-testing routine.

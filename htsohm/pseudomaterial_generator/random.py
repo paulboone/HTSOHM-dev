@@ -53,7 +53,7 @@ def random_number_density(number_density_limits, structure, r): #lattice_constan
         min_atoms = int(2)
     return int(uniform_selection(min_atoms, max_atoms, r))
 
-def generate_material(run_id, gen, seed, config):
+def generate_material(run_id, seed, config):
     """Create records for pseudomaterial simulation and structure data."
 
     Args:
@@ -77,7 +77,6 @@ def generate_material(run_id, gen, seed, config):
     ########################################################################
     # create database row
     material = Material(run_id)
-    material.generation = gen
     material.seed = seed
 
     # initialize incrementable value for random number generation
@@ -140,6 +139,6 @@ def generate_material(run_id, gen, seed, config):
 
     return material, structure
 
-def new_material(run_id, gen, config):
+def new_material(run_id, config):
     seed = random()
-    return generate_material(run_id, gen, seed, config)
+    return generate_material(run_id, seed, config)

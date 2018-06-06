@@ -21,8 +21,6 @@
 #   'surface_area_simulation_cycles'        int             0 - inf
 
 simulation_directory: 'HTSOHM'
-children_per_generation: 5
-maximum_number_of_generations: 50
 number_of_convergence_bins: 10
 convergence_cutoff_criteria: -0.05
 
