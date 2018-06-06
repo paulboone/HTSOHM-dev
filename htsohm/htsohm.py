@@ -37,32 +37,29 @@ def last_generation(run_id):
             .filter(Material.run_id == run_id,)[0][0]
 
 def evaluate_convergence(run_id, generation):
-    '''Determines convergence by calculating variance of bin-counts.
+    '''Determines convergence by calculating fraction of empty bins remaining.
     
     Args:
         run_id (str): identification string for run.
-        generation (int): iteration in bin-mutate-simulate routine.
+        generation (int): iteration in overall routine.
 
     Returns:
-        bool: True if variance is less than or equal to cutt-off criteria (so
-            method will continue running).
+        bool: True if fraction of empty bins is less-than-or-equal-to the convergence cutoff
+            specified in the configuration file.
     '''
-    simulations = config['simulations']
+    # query number of occupied bins for considering each of the simulation-types being run
     query_group = []
-    if 'gas_adsorption' in simulations:
-        query_group.append( getattr(Material, 'gas_adsorption_bin') )
-    if 'surface_area' in simulations:
-        query_group.append( getattr(Material, 'surface_area_bin') )
-    if 'helium_void_fraction' in simulations:
-        query_group.append( getattr(Material, 'void_fraction_bin') )
-
-    number_of_occupied_bins = session \
-        .query(*query_group).distinct() \
+    for simulation in config["simulations"]:
+        query_group.append(getattr(Material, '{}_bin'.format(simulation)))
+    occupied_bins = session.query(*query_group).distinct() \
         .filter(Material.run_id == run_id, Material.generation < generation,
                 Material.generation_index < config['children_per_generation']) \
         .group_by(*query_group).count()
-    total_number_of_bins = config['number_of_convergence_bins'] ** len(query_group)
-    return (total_number_of_bins - number_of_occupied_bins) / total_number_of_bins <= config['convergence_cutoff_criteria']
+
+    # calculate fraction of empty bins remaining, compare to convergence cutoff
+    total_bins = config['number_of_convergence_bins'] ** len(query_group)
+    fraction_empty_bins = (total_bins - occupied_bins) / total_bins
+    return fraction_empty_bins <= config['convergence_cutoff_criteria']
 
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))

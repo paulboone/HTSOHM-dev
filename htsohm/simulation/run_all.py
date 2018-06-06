@@ -8,8 +8,8 @@ def get_simulation(simulation_type):
         return simulation.gas_adsorption_1
     elif simulation_type == 'surface_area':
         return simulation.surface_area
-    elif simulation_type == 'helium_void_fraction':
-        return simulation.helium_void_fraction
+    elif simulation_type == 'void_fraction':
+        return simulation.void_fraction
     elif simulation_type == 'artificial_gas_adsorption':
         return simulation.artificial_gas_adsorption
     elif simulation_type == 'artificial_surface_area':

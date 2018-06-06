@@ -39,7 +39,7 @@ retests:
   tolerance: 0.25
 
 simulations:
-  helium_void_fraction:
+  void_fraction:
     simulation_cycles: 100
     limits: [0, 1]
     bins: 10
