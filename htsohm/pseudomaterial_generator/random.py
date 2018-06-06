@@ -4,7 +4,7 @@ from Crypto.Hash import SHA256
 from zlib import crc32
 
 from htsohm.db import Material
-from htsohm.structure import Structure
+from htsohm.structure import Structure, LatticeConstants, AtomSite, AtomType
 
 # random number generator
 def bytes_to_float(b):
@@ -78,18 +78,17 @@ def generate_material(run_id, seed, config):
     material.seed = seed
 
     # initialize incrementable value for random number generation
-    r = material.seed
+    seed
 
     # create structure object
-    structure = Structure(material.uuid)
+    structure = Structure()
 
     # assign lattice constants
-    structure.lattice_constants['a'] = uniform_selection(*lattice_limits, random_number(r))
-    r += 1      # increment value to generate a different, reproducible random number
-    structure.lattice_constants['b'] = uniform_selection(*lattice_limits, random_number(r))
-    r += 1
-    structure.lattice_constants['c'] = uniform_selection(*lattice_limits, random_number(r))
-    r += 1
+    structure.lattice_constants = LatticeConstants(
+            uniform_selection(*lattice_limits, random_number(seed)),
+            uniform_selection(*lattice_limits, random_number(seed + 1)),
+            uniform_selection(*lattice_limits, random_number(seed + 2)))
+    seed += 3
 
     # store unit cell volume to row
     material.ap_unit_cell_volume = structure.volume()
@@ -97,14 +96,14 @@ def generate_material(run_id, seed, config):
     # assign Lennard-Jones parameters
     for chemical_id in range(number_of_atom_types):
         structure.atom_types.append(
-                {"chemical-id" : "A_{}".format(chemical_id),
-                 "sigma"       : uniform_selection(*sigma_limits, random_number(r)),
-                 "epsilon"     : uniform_selection(*epsilon_limits, random_number(r + 1))})
-        r += 2
+                AtomType("A_{}".format(chemical_id),
+                    uniform_selection(*sigma_limits, random_number(seed)),
+                    uniform_selection(*epsilon_limits, random_number(seed + 1))))
+        seed += 2
     
     # calculate random number of atom-sites
-    number_of_atoms = random_number_density(number_density_limits, structure, random_number(r))
-    r += 1
+    number_of_atoms = random_number_density(number_density_limits, structure, random_number(seed))
+    seed += 1
 
     # store number density to row
     material.ap_number_density = number_of_atoms / structure.volume()
@@ -112,28 +111,25 @@ def generate_material(run_id, seed, config):
     # assign atom-site positions and calculate avg. sigma/epsilon values
     sigma_sum, epsilon_sum = 0, 0
     for i in range(number_of_atoms):
-        chemical_id = int(uniform_selection(0, number_of_atom_types - 1, random_number(r)))
-        sigma_sum += structure.atom_types[chemical_id]["sigma"]
-        epsilon_sum += structure.atom_types[chemical_id]["epsilon"]
+        chemical_id = int(uniform_selection(0, number_of_atom_types - 1, random_number(seed)))
+        sigma_sum += structure.atom_types[chemical_id].sigma
+        epsilon_sum += structure.atom_types[chemical_id].epsilon
         structure.atom_sites.append(
-                {"chemical-id" : "A_{}".format(chemical_id),
-                 "x-frac" : random_number(r + 1),
-                 "y-frac" : random_number(r + 2),
-                 "z-frac" : random_number(r + 3),
-                 "charge" : 0.0})
-        r += 4
-    material.ap_average_sigma = sigma_sum / number_of_atoms
-    material.ap_average_epsilon = epsilon_sum / number_of_atoms
+                AtomSite("A_{}".format(chemical_id), random_number(seed), random_number(seed + 1),
+                    random_number(seed + 2)))
+        seed += 3
+    material.ap_average_sigma = sigma_sum / structure.n()
+    material.ap_average_epsilon = epsilon_sum / structure.n()
     
     # assign atom-site partial charges
-    for i in range(len(structure.atom_sites)):
-        a0 = max_charge - abs(structure.atom_sites[i]["charge"])
-        j = int(uniform_selection(0, len(structure.atom_sites) - 1, random_number(r)))
-        a1 = max_charge - abs(structure.atom_sites[j]["charge"])
-        dq = uniform_selection(0, min([a0, a1]), random_number(r + 1))
-        structure.atom_sites[i]["charge"] += dq
-        structure.atom_sites[j]["charge"] -= dq
-        r += 2
+    for i in range(structure.n()):
+        a0 = max_charge - abs(structure.atom_sites[i].q)
+        j = int(uniform_selection(0, structure.n() - 1, random_number(seed)))
+        a1 = max_charge - abs(structure.atom_sites[j].q)
+        dq = uniform_selection(0, min([a0, a1]), random_number(seed+ 1))
+        structure.atom_sites[i].q += dq
+        structure.atom_sites[j].q -= dq
+        seed += 2
 
     return material, structure
 
