@@ -23,16 +23,16 @@
 simulation_directory: 'HTSOHM'
 children_per_generation: 5
 maximum_number_of_generations: 50
-number_of_atom_types: 4
 number_of_convergence_bins: 10
 convergence_cutoff_criteria: -0.05
 
-charge_limit: 0.0
-elemental_charge: 0.0001
-epsilon_limits: [1.258, 513.264]
-lattice_constant_limits: [25.6, 51.2]
-number_density_limits: [1.49e-05, 0.02122]
-sigma_limits: [1.052, 6.549]
+structure_parameters:
+  number_of_atom_types: 4
+  charge_limit: 0.0
+  epsilon_limits: [1.258, 513.264]
+  lattice_constant_limits: [25.6, 51.2]
+  number_density_limits: [1.49e-05, 0.02122]
+  sigma_limits: [1.052, 6.549]
 
 retests:
   number: 3

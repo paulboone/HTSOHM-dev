@@ -62,7 +62,7 @@ def parse_output(output_file, simulation_config):
 
     return results
 
-def run(material, simulation_config):
+def run(material, structure, simulation_config):
     """Runs void fraction simulation.
 
     Args:
@@ -90,11 +90,11 @@ def run(material, simulation_config):
     filename = os.path.join(output_dir, "VoidFraction.input")
     write_raspa_file(filename, material.uuid, simulation_config)
     # Pseudomaterial cif-file
-    write_cif_file(material, output_dir)
+    write_cif_file(material, structure, output_dir)
     # Lennard-Jones parameters, force_field_mixing_rules.def
-    write_mixing_rules(material, output_dir)
+    write_mixing_rules(structure, output_dir)
     # Pseudoatom definitions, pseudo_atoms.def (placeholder values)
-    write_pseudo_atoms(material, output_dir)
+    write_pseudo_atoms(structure, output_dir)
     # Overwritten interactions, force_field.def (none overwritten by default)
     write_force_field(output_dir)
 

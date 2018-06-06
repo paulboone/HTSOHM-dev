@@ -19,7 +19,7 @@ def get_simulation(simulation_type):
     else:
         raise Exception('Simulation-type not found!')
 
-def run_all_simulations(material):
+def run_all_simulations(material, structure):
     """Simulate helium void fraction, gas loading, and surface area.
 
     Args:
@@ -32,7 +32,7 @@ def run_all_simulations(material):
     """
     simulation_config = config['simulations']
     for simulation_type in simulation_config:
-        results = get_simulation(simulation_type).run(material, simulation_config[simulation_type])
+        results = get_simulation(simulation_type).run(material, structure, simulation_config[simulation_type])
         material.update_from_dict(results)
 
 

@@ -98,15 +98,11 @@ def worker_run_loop(run_id):
 
         while materials_in_generation(run_id, gen) < size_of_generation:
 
-            material = pseudomaterial_generator.random.new_material(run_id, gen)
+            material, structure = pseudomaterial_generator.random.new_material(run_id, gen, config["structure_parameters"])
 
             # simulate material properties
-            run_all_simulations(material)
-            material.ap_unit_cell_volume = float(material.structure.volume)
-            material.ap_number_density = float(material.structure.number_density())
-            material.ap_average_epsilon = float(material.structure.average_epsilon())
-            material.ap_average_sigma = float(material.structure.average_sigma())
-
+            run_all_simulations(material, structure)
+            
             session.add(material)
             session.commit()
 

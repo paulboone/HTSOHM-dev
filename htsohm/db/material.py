@@ -3,11 +3,9 @@ import uuid
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean
 from sqlalchemy.sql import text
-from sqlalchemy.orm import relationship
 
 from htsohm import config
 from htsohm.db import Base, session, engine
-from htsohm.db.structure import Structure
 
 class Material(Base):
     """Declarative class mapping to table storing material/simulation data.
@@ -71,6 +69,7 @@ class Material(Base):
     id = Column(Integer, primary_key=True)                 # dimm.
     run_id = Column(String(50))                            # dimm.
     uuid = Column(String(40))
+    seed = Column(Float)
     parent_id = Column(Integer)                            # dimm.
     generation = Column(Integer)                           # generation#
     generation_index = Column(Integer)                     # index order of row in generation
@@ -169,9 +168,6 @@ class Material(Base):
     surface_area_bin = Column(Integer)                        # dimm.
     void_fraction_bin = Column(Integer)                       # dimm.
 
-    # relationships
-    structure = relationship("Structure", uselist=False, back_populates="material")
-
     def __init__(self, run_id=None, ):
         """Init material-row.
 
@@ -184,12 +180,9 @@ class Material(Base):
         """
         self.uuid = str(uuid.uuid4())
         self.run_id = run_id
-        self.structure = Structure()
 
     def clone(self):
         copy = super(Material, self).clone()
-        if self.structure:
-            copy.structure = self.structure.clone()
         return copy
 
     @property
