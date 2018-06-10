@@ -32,41 +32,35 @@ structure_parameters:
   number_density_limits: [1.49e-05, 0.02122]
   sigma_limits: [1.052, 6.549]
 
-retests:
-  number: 3
-  tolerance: 0.25
-
 simulations:
-  void_fraction:
+  1:
+    type: 'void_fraction'
+    adsorbate: 'helium'
+    temperature: 298
     simulation_cycles: 100
     limits: [0, 1]
     bins: 10
-  gas_adsorption_0:
-    adsorbate: 'CO2'
-    external_pressure: [580000, 3500000]
-    external_temperature: 298
+  2:
+    type: 'gas_loading'
+    adsorbate: 'methane'
+    pressure: 3500000
+    temperature: 298
     initialization_cycles: 100
     simulation_cycles: 100
     limits: [0, 300]
     bins: 10
-  gas_adsorption_1:
+  3:
+    type : 'gas_loading'
+    adsorbate: 'methane'
+    pressure: 580000
+    temperature: 298
+    initialization_cycles: 100
+    simulation_cycles: 100
+    limits: [0, 300]
+    bins: 10
+  4:
+    type: 'surface_area'
     adsorbate: 'N2'
-    external_pressure: [580000, 3500000]
-    external_temperature: 298
-    initialization_cycles: 100
-    simulation_cycles: 100
-    limits: [0, 300]
-    bins: 10
-  surface_area:
     simulation_cycles: 10
     limits: [0, 4500]
     bins: 10
-#
-#  ADDITIONAL SIMULATION TYPES
-#    - ARTIFICIAL DATA:
-#      artificial_gas_adsorption:
-#        limits: [0, 300]
-#      artificial_surface_area:
-#        limits: [0, 4500]
-#      artificial_void_fraction:
-#        limits: [0, 1]

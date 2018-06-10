@@ -11,6 +11,7 @@ from htsohm.material_files import write_cif_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
 from htsohm.simulation.files import load_and_subs_template
 from htsohm.simulation.calculate_bin import calc_bin
+from htsohm.db import VoidFraction
 
 def write_raspa_file(filename, uuid, simulation_config):
     """Writes RASPA input file for calculating helium void fraction.
@@ -25,17 +26,19 @@ def write_raspa_file(filename, uuid, simulation_config):
     """
     # Load simulation parameters from config
     values = {
-            'NumberOfCycles'                : simulation_config['simulation_cycles'],
-            'FrameworkName'                 : uuid}
+            "NumberOfCycles"         : simulation_config["simulation_cycles"],
+            "FrameworkName"          : uuid,
+            "ExternalTemperature"    : simulation_config["temperature"],
+            "MoleculeName"           : simulation_config["adsorbate"]}
 
     # Load template and replace values
-    input_data = load_and_subs_template('input_file_templates/void_fraction.input', values)
+    input_data = load_and_subs_template("input_file_templates/void_fraction.input", values)
 
     # Write simulation input-file
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(input_data)
 
-def parse_output(output_file, simulation_config):
+def parse_output(output_file, material, simulation_config):
     """Parse output file for void fraction data.
 
     Args:
@@ -45,21 +48,21 @@ def parse_output(output_file, simulation_config):
         results (dict): average Widom Rosenbluth-weight.
 
     """
-    results = {}
+    void_fraction = VoidFraction()
     with open(output_file) as origin:
         for line in origin:
             if not "Average Widom Rosenbluth-weight:" in line:
                 continue
-            results['vf_helium_void_fraction'] = float(line.split()[4])
-        print("\nVOID FRACTION :   %s\n" % (results['vf_helium_void_fraction']))
+            void_fraction.void_fraction = float(line.split()[4])
+        print("\nVOID FRACTION : {}\n".format(void_fraction.void_fraction))
 
     # calculate bin
-    results['void_fraction_bin'] = calc_bin(
-                results['vf_helium_void_fraction'],
-                *simulation_config['limits'],
-                simulation_config['bins'])
+    void_fraction.bin_value = calc_bin(
+                void_fraction.void_fraction,
+                *simulation_config["limits"],
+                simulation_config["bins"])
 
-    return results
+    material.void_fraction.append(void_fraction)
 
 def run(material, structure, simulation_config):
     """Runs void fraction simulation.
@@ -72,16 +75,16 @@ def run(material, structure, simulation_config):
 
     """
     # Determine where to write simulation input/output files, create directory
-    simulation_directory  = config['simulation_directory']
-    if simulation_directory == 'HTSOHM':
+    simulation_directory  = config["simulation_directory"]
+    if simulation_directory == "HTSOHM":
         htsohm_dir = config["htsohm_dir"]
         path = os.path.join(htsohm_dir, material.run_id)
-    elif simulation_directory == 'SCRATCH':
-        path = os.environ['SCRATCH']
+    elif simulation_directory == "SCRATCH":
+        path = os.environ["SCRATCH"]
     else:
-        print('OUTPUT DIRECTORY NOT FOUND.')
-    output_dir = os.path.join(path, 'output_%s_%s' % (material.uuid, uuid4()))
-    print("Output directory :\t%s" % output_dir)
+        print("OUTPUT DIRECTORY NOT FOUND.")
+    output_dir = os.path.join(path, "output_{}_{}".format(material.uuid, uuid4()))
+    print("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
     # Write simulation input-files
@@ -100,15 +103,17 @@ def run(material, structure, simulation_config):
     # Run simulations
     while True:
         try:
-            print("Date :\t%s" % datetime.now().date().isoformat())
-            print("Time :\t%s" % datetime.now().time().isoformat())
-            print("Calculating void fraction of %s..." % (material.uuid))
-            subprocess.run(['simulate', './VoidFraction.input'], check=True, cwd=output_dir)
-            filename = "output_%s_2.2.2_298.000000_0.data" % (material.uuid)
-            output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
+            print("Date             : {}".format(datetime.now().date().isoformat()))
+            print("Time             : {}".format(datetime.now().time().isoformat()))
+            print("Simulation type  : {}".format(simulation_config["type"]))
+            print("Probe            : {}".format(simulation_config["adsorbate"]))
+            print("Temperature      : {}".format(simulation_config["temperature"]))
+            subprocess.run(["simulate", "./VoidFraction.input"], check=True, cwd=output_dir)
+            filename = "output_{}_2.2.2_298.000000_0.data".format(material.uuid)
+            output_file = os.path.join(output_dir, "Output", "System_0", filename)
 
             # Parse output
-            results = parse_output(output_file, simulation_config)
+            parse_output(output_file, material, simulation_config)
             shutil.rmtree(output_dir, ignore_errors=True)
             sys.stdout.flush()
         except (FileNotFoundError, IndexError, KeyError) as err:
@@ -116,5 +121,3 @@ def run(material, structure, simulation_config):
             print(err.args)
             continue
         break
-
-    return results

@@ -24,9 +24,9 @@ def run_all_simulations(material, structure):
     corresponding bins to row in database corresponding to the input-material.
         
     """
-    simulation_config = config['simulations']
-    for simulation_type in simulation_config:
-        results = get_simulation(simulation_type).run(material, structure, simulation_config[simulation_type])
-        material.update_from_dict(results)
+    for simulation_number in config["simulations"]:
+        simulation_config = config["simulations"][simulation_number]
+        getattr(simulation, simulation_config["type"]).run(material, structure, simulation_config)
+        #material.update_from_dict(results)
 
 

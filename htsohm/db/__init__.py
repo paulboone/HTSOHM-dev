@@ -19,6 +19,9 @@ session = sessionmaker(bind=engine)()
 
 # Import all models
 from htsohm.db.base import Base
+from htsohm.db.gas_loading import GasLoading
+from htsohm.db.surface_area import SurfaceArea
+from htsohm.db.void_fraction import VoidFraction
 from htsohm.db.material import Material
 
 # Create tables in the engine, if they don't exist already.

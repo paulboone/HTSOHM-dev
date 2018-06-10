@@ -57,7 +57,7 @@ def write_mixing_rules(structure, simulation_path):
             "# general rule tailcorrections\n" +
             "no\n" +
             "# number of defined interactions\n" +
-            "{}\n".format(structure.n() + 10) +
+            "{}\n".format(len(structure.atom_types) + 10) +
             "# type interaction, parameters.    " +
             "IMPORTANT: define shortest matches first, so" +
             " that more specific ones overwrites these\n"
@@ -105,7 +105,7 @@ def write_pseudo_atoms(structure, simulation_path):
     with open(file_name, "w") as pseudo_atoms_file:
         pseudo_atoms_file.write(
             "#number of pseudo atoms\n" +
-            "%s\n" % (structure.n() + 10) +
+            "%s\n" % (len(structure.atom_types) + 10) +
             "#type  print   as  chem    oxidation   mass    charge  polarization    B-factor    radii   " +
                  "connectivity  anisotropic anisotrop-type  tinker-type\n")
         for a in structure.atom_types:

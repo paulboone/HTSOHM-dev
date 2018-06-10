@@ -1,4 +1,3 @@
-import htsohm.simulation.void_fraction
-import htsohm.simulation.gas_adsorption_0
-import htsohm.simulation.gas_adsorption_1
+import htsohm.simulation.gas_loading
 import htsohm.simulation.surface_area
+import htsohm.simulation.void_fraction

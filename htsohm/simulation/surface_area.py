@@ -11,6 +11,7 @@ from htsohm.material_files import write_cif_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
 from htsohm.simulation.files import load_and_subs_template
 from htsohm.simulation.calculate_bin import calc_bin
+from htsohm.db import SurfaceArea
 
 def write_raspa_file(filename, uuid, simulation_config):
     """Writes RASPA input file for calculating surface area.
@@ -25,17 +26,18 @@ def write_raspa_file(filename, uuid, simulation_config):
     """
     # Load simulation parameters from config
     values = {
-            'NumberOfCycles'                : simulation_config['simulation_cycles'],
-            'FrameworkName'                 : uuid}
+            "NumberOfCycles"    : simulation_config["simulation_cycles"],
+            "FrameworkName"     : uuid,
+            "MoleculeName"      : simulation_config["adsorbate"]}
 
     # Load template and replace values
-    input_data = load_and_subs_template('input_file_templates/surface_area.input', values)
+    input_data = load_and_subs_template("input_file_templates/surface_area.input", values)
 
     # Write simulation input-file
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(input_data)
 
-def parse_output(output_file, simulation_config):
+def parse_output(output_file, material, simulation_config):
     """Parse output file for void fraction data.
 
     Args:
@@ -46,30 +48,26 @@ def parse_output(output_file, simulation_config):
             areas.
 
     """
-    results = {}
+    surface_area = SurfaceArea()
     with open(output_file) as origin:
         count = 0
         for line in origin:
             if "Surface area" in line:
                 if count == 0:
-                    results['sa_unit_cell_surface_area'] = float(line.split()[2])
+                    surface_area.unit_cell_surface_area = float(line.split()[2])
                     count = count + 1
                 elif count == 1:
-                    results['sa_gravimetric_surface_area'] = float(line.split()[2])
+                    surface_area.gravimetric_surface_area = float(line.split()[2])
                     count = count + 1
                 elif count == 2:
-                    results['sa_volumetric_surface_area'] = float(line.split()[2])
+                    surface_area.volumetric_surface_area = float(line.split()[2])
 
-    print(
-        "\nSURFACE AREA\n" +
-        "%s\tA^2\n"      % (results['sa_unit_cell_surface_area']) +
-        "%s\tm^2/g\n"    % (results['sa_gravimetric_surface_area']) +
-        "%s\tm^2/cm^3"   % (results['sa_volumetric_surface_area']))
+    print("\nSURFACE AREA : {} m^2/cm^3\n".format(surface_area.volumetric_surface_area))
 
-    results['surface_area_bin'] = calc_bin(results['sa_volumetric_surface_area'],
-            *simulation_config['limits'], simulation_config['bins'])
+    surface_area.bin_value = calc_bin(surface_area.volumetric_surface_area,
+            *simulation_config["limits"], simulation_config["bins"])
 
-    return results
+    material.surface_area.append(surface_area)
 
 def run(material, structure, simulation_config):
     """Runs surface area simulation.
@@ -82,16 +80,16 @@ def run(material, structure, simulation_config):
 
     """
     # Determine where to write simulation input/output files, create directory
-    simulation_directory  = config['simulation_directory']
-    if simulation_directory == 'HTSOHM':
+    simulation_directory  = config["simulation_directory"]
+    if simulation_directory == "HTSOHM":
         htsohm_dir = config["htsohm_dir"]
         path = os.path.join(htsohm_dir, material.run_id)
-    elif simulation_directory == 'SCRATCH':
-        path = os.environ['SCRATCH']
+    elif simulation_directory == "SCRATCH":
+        path = os.environ["SCRATCH"]
     else:
-        print('OUTPUT DIRECTORY NOT FOUND.')
-    output_dir = os.path.join(path, 'output_%s_%s' % (material.uuid, uuid4()))
-    print("Output directory :\t%s" % output_dir)
+        print("OUTPUT DIRECTORY NOT FOUND.")
+    output_dir = os.path.join(path, "output_{}_{}".format(material.uuid, uuid4()))
+    print("Output directory :\t{}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
     # Write simulation input-files
@@ -110,15 +108,16 @@ def run(material, structure, simulation_config):
     # Run simulations
     while True:
         try:
-            print("Date :\t%s" % datetime.now().date().isoformat())
-            print("Time :\t%s" % datetime.now().time().isoformat())
-            print("Calculating surface area of %s..." % (material.uuid))
-            subprocess.run(['simulate', './SurfaceArea.input'], check=True, cwd=output_dir)
-            filename = "output_%s_2.2.2_298.000000_0.data" % (material.uuid)
-            output_file = os.path.join(output_dir, 'Output', 'System_0', filename)
+            print("Date             : {}".format(datetime.now().date().isoformat()))
+            print("Time             : {}".format(datetime.now().time().isoformat()))
+            print("Simulation type  : {}".format(simulation_config["type"]))
+            print("Probe            : {}".format(simulation_config["adsorbate"]))
+            subprocess.run(["simulate", "./SurfaceArea.input"], check=True, cwd=output_dir)
+            filename = "output_{}_2.2.2_298.000000_0.data".format(material.uuid)
+            output_file = os.path.join(output_dir, "Output", "System_0", filename)
 
             # Parse output
-            results = parse_output(output_file, simulation_config)
+            parse_output(output_file, material, simulation_config)
             shutil.rmtree(output_dir, ignore_errors=True)
             sys.stdout.flush()
         except (FileNotFoundError, KeyError) as err:
@@ -126,5 +125,3 @@ def run(material, structure, simulation_config):
             print(err.args)
             continue
         break
-
-    return results
