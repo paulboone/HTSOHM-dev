@@ -5,6 +5,7 @@ import shutil
 from datetime import datetime
 from uuid import uuid4
 from string import Template
+from pathlib import Path
 
 from htsohm import config
 from htsohm.material_files import write_cif_file, write_mixing_rules
@@ -49,6 +50,8 @@ def parse_output(output_file, material, simulation_config):
 
     """
     surface_area = SurfaceArea()
+    surface_area.adsorbate = simulation_config["adsorbate"]
+
     with open(output_file) as origin:
         count = 0
         for line in origin:
@@ -112,9 +115,12 @@ def run(material, structure, simulation_config):
             print("Time             : {}".format(datetime.now().time().isoformat()))
             print("Simulation type  : {}".format(simulation_config["type"]))
             print("Probe            : {}".format(simulation_config["adsorbate"]))
-            subprocess.run(["simulate", "./SurfaceArea.input"], check=True, cwd=output_dir)
             filename = "output_{}_2.2.2_298.000000_0.data".format(material.uuid)
             output_file = os.path.join(output_dir, "Output", "System_0", filename)
+
+            while not Path(output_file).exists():
+                subprocess.run(["simulate", "./SurfaceArea.input"], check=True,
+                        cwd=output_dir)
 
             # Parse output
             parse_output(output_file, material, simulation_config)

@@ -5,6 +5,7 @@ import shutil
 from uuid import uuid4
 from datetime import datetime
 from string import Template
+from pathlib import Path
 
 from htsohm import config
 from htsohm.material_files import write_cif_file, write_mixing_rules
@@ -114,6 +115,12 @@ def parse_output(output_file, material, simulation_config):
 
     material.gas_loading.append(gas_loading)
 
+def pressure_string(p):
+    if p >= 10 ** 6:
+        return "{:.1e}".format(p)
+    else:
+        return str(p)
+
 def run(material, structure, simulation_config):
     """Runs gas loading simulation.
 
@@ -160,17 +167,20 @@ def run(material, structure, simulation_config):
     print("Temperature      : {}".format(simulation_config["temperature"]))
     while True:
         try:
-            subprocess.run(
-                ["simulate", "./{}_loading.input".format(adsorbate)],
-                check = True,
-                cwd = output_dir
-            )
+            #output_file = os.listdir(os.path.join(output_dir, "Output", "System_0"))[0]
+            output_file = "output_{}_2.2.2_{:.6f}_{}.data".format(material.uuid,
+                    float(simulation_config["temperature"]),
+                    pressure_string(simulation_config["pressure"]))
+            output_path = os.path.join(output_dir, "Output", "System_0", output_file)
+            #output_path = os.path.join(output_dir, "Output", "System_0", "*.data")
+
+            while not Path(output_path).exists():
+                subprocess.run(["simulate", "./{}_loading.input".format(adsorbate)],
+                    check = True, cwd = output_dir)
         
             print("Output directory : {}".format(output_dir))
 
             # Parse output
-            output_file = os.listdir(os.path.join(output_dir, "Output", "System_0"))[0]
-            output_path = os.path.join(output_dir, "Output", "System_0", output_file)
             parse_output(output_path, material, simulation_config)
             shutil.rmtree(output_dir, ignore_errors=True)
             sys.stdout.flush()

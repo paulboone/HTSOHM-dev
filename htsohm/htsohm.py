@@ -7,9 +7,45 @@ from htsohm.db import engine, session, Material
 from htsohm import pseudomaterial_generator
 from htsohm.simulation.run_all import run_all_simulations
 
-def add_subquery(query_string, number_of_queries, subquery_string):
-    for i in range(number_of_queries):
-        query_string += subquery_string.format(i)
+def add_columns(query_string, count, flag):
+    for i in range(count):
+        query_string += """
+        , {}{}.bin_value""".format(flag, i)
+    return query_string
+
+def get_table(flag):
+    if flag == "g":
+        return "gas_loadings"
+    elif flag == "s":
+        return "surface_areas"
+    elif flag == "v":
+        return "void_fractions"
+    else:
+        print("WARNING : UNEXPECTED OUTPUT TABLE FLAG")
+
+def add_joins(query_string, count, flag):
+    for i in range(count):
+        query_string += """
+        join {0} {1}{2} on m.id={1}{2}.material_id""".format(get_table(flag),
+                flag, i)
+    return query_string
+
+def add_filters(query_string, simulation_config, simulation_type, flag):
+    count = 0
+    for simulation_id in simulation_config:
+        simulation_details = simulation_config[simulation_id]
+        if simulation_type == simulation_details["type"]:
+            filter_line = """
+            and {}{}.adsorbate='{}'""".format(flag, count,
+                    simulation_details["adsorbate"])
+            if "pressure" in simulation_details:
+                filter_line += """ and {}{}.pressure={}""".format(flag, count,
+                        simulation_details["pressure"])
+            if "temperature" in simulation_details:
+                filter_line += """ and {}{}.temperature={}""".format(flag, count,
+                        simulation_details["temperature"])
+            query_string += filter_line
+            count += 1
     return query_string
 
 def evaluate_convergence(run_id):
@@ -33,64 +69,48 @@ def evaluate_convergence(run_id):
             void_fraction_count += 1
         else:
             print("WARNING : UNEXPECTED SIMULATION TYPE.")
-    
+    bin_dimension = gas_loading_count + surface_area_count + void_fraction_count
+
     query_string = """
-    select m.id
-    """
-    
-    gas_loading_subquery = """
-       , (select g{0}.bin_value from gas_loadings g{0}
-           where g{0}.material_id = m.id
-           order by g{0}.adsorbate, g{0}.temperature, g{0}.pressure
-           limit 1 offset {0}
-         ) as g_bin_value_{0}
-    """       
-    if gas_loading_count > 0:
-        query_string = add_subquery(query_string, gas_loading_count,
-                                   gas_loading_subquery)
-    
-    surface_area_subquery = """
-       , (select s{0}.bin_value from surface_areas s{0}
-           where s{0}.material_id = m.id
-           order by s{0}.adsorbate
-           limit 1 offset {0}
-         ) as s_bin_value_{0}
-    """
-    if surface_area_count > 0:
-        query_string = add_subquery(query_string, surface_area_count,
-                                   surface_area_subquery)
-    
-    void_fraction_subquery = """
-       , (select v{0}.bin_value from void_fractions v{0}
-           where v{0}.material_id = m.id
-           order by v{0}.adsorbate, v{0}.temperature
-           limit 1 offset {0}
-         ) as v_bin_value_{0}
-    """
-    if void_fraction_count > 0:
-        query_string = add_subquery(query_string, void_fraction_count,
-                                   void_fraction_subquery)
-    
+    select count(bins) from
+      (select distinct m.run_id"""
+
+    # add columns for each bin-dimension
+    query_string = add_columns(query_string, gas_loading_count, "g")
+    query_string = add_columns(query_string, surface_area_count, "s")
+    query_string = add_columns(query_string, void_fraction_count, "v")
+
     query_string += """
-      from materials m
-    order by m.id;
-    """
-    
+       from materials m"""
+
+    query_string = add_joins(query_string, gas_loading_count, "g")
+    query_string = add_joins(query_string, surface_area_count, "s")
+    query_string = add_joins(query_string, void_fraction_count, "v")
+
+    # filter by run_id
+    query_string += """
+       where m.run_id=:run_id"""
+
+    if gas_loading_count > 0:
+        query_string = add_filters(query_string, config["simulations"], "gas_loading", "g")
+    if surface_area_count > 0:
+        query_string = add_filters(query_string, config["simulations"], "surface_area", "s")
+    if void_fraction_count > 0:
+        query_string = add_filters(query_string, config["simulations"], "void_fraction", "v")
+
+    query_string += """
+       ) as bins;"""
+
     print(query_string)
-    
+
     sql = text(query_string) 
     rows = engine.connect().execute(
         sql,
         run_id = run_id).fetchall()
-    bins = []
-    for row in rows:
-        bin_ = [row[1:]]
-        if bin_ not in bins:
-            bins.append(bin_)
-    occupied_bins = len(bins)
+    occupied_bins = rows[0][0]
 
     # calculate fraction of empty bins remaining, compare to convergence cutoff
-    total_bins = config['number_of_convergence_bins'] ** (gas_loading_count + surface_area_count + void_fraction_count)
+    total_bins = config['number_of_convergence_bins'] ** bin_dimension
     fraction_empty_bins = (total_bins - occupied_bins) / total_bins
 
     print("{0}\nFRACTION OF EMPTY BINS REMAINING : {1}\n{0}".format("=" * 80, fraction_empty_bins))

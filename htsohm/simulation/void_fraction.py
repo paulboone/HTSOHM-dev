@@ -5,6 +5,7 @@ import shutil
 from datetime import datetime
 from uuid import uuid4
 from string import Template
+from pathlib import Path
 
 from htsohm import config
 from htsohm.material_files import write_cif_file, write_mixing_rules
@@ -49,6 +50,9 @@ def parse_output(output_file, material, simulation_config):
 
     """
     void_fraction = VoidFraction()
+    void_fraction.adsorbate = simulation_config["adsorbate"]
+    void_fraction.temperature = simulation_config["temperature"]
+
     with open(output_file) as origin:
         for line in origin:
             if not "Average Widom Rosenbluth-weight:" in line:
@@ -108,9 +112,10 @@ def run(material, structure, simulation_config):
             print("Simulation type  : {}".format(simulation_config["type"]))
             print("Probe            : {}".format(simulation_config["adsorbate"]))
             print("Temperature      : {}".format(simulation_config["temperature"]))
-            subprocess.run(["simulate", "./VoidFraction.input"], check=True, cwd=output_dir)
             filename = "output_{}_2.2.2_298.000000_0.data".format(material.uuid)
             output_file = os.path.join(output_dir, "Output", "System_0", filename)
+            while not Path(output_file).exists():
+                process = subprocess.run(["simulate", "./VoidFraction.input"], check=True, cwd=output_dir)
 
             # Parse output
             parse_output(output_file, material, simulation_config)
