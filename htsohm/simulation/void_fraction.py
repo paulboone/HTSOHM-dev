@@ -11,7 +11,6 @@ from htsohm import config
 from htsohm.material_files import write_cif_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
 from htsohm.simulation.files import load_and_subs_template
-from htsohm.simulation.calculate_bin import calc_bin
 from htsohm.db import VoidFraction
 
 def write_raspa_file(filename, uuid, simulation_config):
@@ -59,12 +58,6 @@ def parse_output(output_file, material, simulation_config):
                 continue
             void_fraction.void_fraction = float(line.split()[4])
         print("\nVOID FRACTION : {}\n".format(void_fraction.void_fraction))
-
-    # calculate bin
-    void_fraction.bin_value = calc_bin(
-                void_fraction.void_fraction,
-                *simulation_config["limits"],
-                simulation_config["bins"])
 
     material.void_fraction.append(void_fraction)
 
