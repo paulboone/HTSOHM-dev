@@ -1,10 +1,15 @@
-from random import random
+from random import randint
 
 from Crypto.Hash import SHA256
 from zlib import crc32
 
 from htsohm.db import Material
 from htsohm.structure import Structure, LatticeConstants, AtomSite, AtomType
+
+def get_n_digit_seed(n):
+    range_start = 10 ** (n - 1)
+    range_end = (10 ** n) - 1
+    return randint(range_start, range_end)
 
 # random number generator
 def bytes_to_float(b):
@@ -134,5 +139,7 @@ def generate_material(run_id, seed, config):
     return material, structure
 
 def new_material(run_id, config):
-    seed = random()
+    n = 36
+    seed = get_n_digit_seed(36)
+    print("CREATING MATERIAL WITH SEED : {}".format(seed))
     return generate_material(run_id, seed, config)
