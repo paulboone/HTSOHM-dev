@@ -5,8 +5,8 @@
 # $Author: akaija $
 
 #SBATCH -N 1
-#SBATCH -t 1-00:00 # Runtime in D-HH:MM
-#SBATCH --cpus-per-task=16
+#SBATCH -t 0-06:00 # Runtime in D-HH:MM
+#SBATCH --cpus-per-task=4
 #SBATCH --mem=2g
 
 echo JOB_ID: $SLURM_JOB_ID JOB_NAME: $SLURM_JOB_NAME HOSTNAME: $SLURM_SUBMIT_HOST
