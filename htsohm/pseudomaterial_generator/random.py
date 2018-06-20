@@ -1,3 +1,4 @@
+from math import ceil
 from random import randint
 
 from Crypto.Hash import SHA256
@@ -50,10 +51,10 @@ def random_number_density(number_density_limits, structure, r): #lattice_constan
     min_ND = number_density_limits[0]
     max_ND = number_density_limits[1]
     v = structure.volume()
-    min_atoms = int(min_ND * v)
+    min_atoms = ceil(min_ND * v)
     max_atoms = int(max_ND * v)
     if min_atoms < 2:
-        min_atoms = int(2)
+        min_atoms = 2
     return int(uniform_selection(min_atoms, max_atoms, r))
 
 def generate_material(run_id, seed, config):
