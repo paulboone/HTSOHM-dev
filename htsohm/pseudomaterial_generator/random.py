@@ -82,9 +82,6 @@ def generate_material(run_id, seed, config):
     # create database row
     material = Material(run_id, seed)
 
-    # initialize incrementable value for random number generation
-    seed
-
     # create structure object
     structure = Structure()
 
@@ -139,7 +136,9 @@ def generate_material(run_id, seed, config):
     return material, structure
 
 def new_material(run_id, config):
+    # number of digits for seed
     n = 36
+    # get seed value (initial value to be incremented later)
     seed = get_n_digit_seed(36)
     print("CREATING MATERIAL WITH SEED : {}".format(seed))
     return generate_material(run_id, seed, config)
