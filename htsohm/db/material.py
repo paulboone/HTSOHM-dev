@@ -43,18 +43,3 @@ class Material(Base):
     def clone(self):
         copy = super(Material, self).clone()
         return copy
-
-#    @property
-#    def bin(self):
-#        """Determine material's structure-property bin.
-#
-#        Args:
-#            self (class): row in material table.
-#
-#        Returns:
-#            The bin corresponding to a material's gas loading, void
-#            fraction, and surface area data and their postion in this three-
-#            dimension parameter-space.
-#
-#        """
-#        binning = [*[e[0] for e in session.query(GasLoading.bin).filter(GasLoading.material_id == self.id).all()]
