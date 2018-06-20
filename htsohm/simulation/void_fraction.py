@@ -13,13 +13,13 @@ from htsohm.material_files import write_pseudo_atoms, write_force_field
 from htsohm.simulation.files import load_and_subs_template
 from htsohm.db import VoidFraction
 
-def write_raspa_file(filename, uuid, simulation_config):
+def write_raspa_file(filename, seed, simulation_config):
     """Writes RASPA input file for calculating helium void fraction.
 
     Args:
         filename (str): path to input file.
         run_id (str): identification string for run.
-        material_id (str): uuid for material.
+        material_id (str): seed for material.
 
     Writes RASPA input-file.
 
@@ -27,7 +27,7 @@ def write_raspa_file(filename, uuid, simulation_config):
     # Load simulation parameters from config
     values = {
             "NumberOfCycles"         : simulation_config["simulation_cycles"],
-            "FrameworkName"          : uuid,
+            "FrameworkName"          : seed,
             "ExternalTemperature"    : simulation_config["temperature"],
             "MoleculeName"           : simulation_config["adsorbate"]}
 
@@ -80,14 +80,14 @@ def run(material, structure, simulation_config):
         path = os.environ["SCRATCH"]
     else:
         print("OUTPUT DIRECTORY NOT FOUND.")
-    output_dir = os.path.join(path, "output_{}_{}".format(material.uuid, uuid4()))
+    output_dir = os.path.join(path, "output_{}_{}".format(material.seed, uuid4()))
     print("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
     # Write simulation input-files
     # RASPA input-file
     filename = os.path.join(output_dir, "VoidFraction.input")
-    write_raspa_file(filename, material.uuid, simulation_config)
+    write_raspa_file(filename, material.seed, simulation_config)
     # Pseudomaterial cif-file
     write_cif_file(material, structure, output_dir)
     # Lennard-Jones parameters, force_field_mixing_rules.def
@@ -105,7 +105,7 @@ def run(material, structure, simulation_config):
             print("Simulation type  : {}".format(simulation_config["type"]))
             print("Probe            : {}".format(simulation_config["adsorbate"]))
             print("Temperature      : {}".format(simulation_config["temperature"]))
-            filename = "output_{}_2.2.2_298.000000_0.data".format(material.uuid)
+            filename = "output_{}_2.2.2_298.000000_0.data".format(material.seed)
             output_file = os.path.join(output_dir, "Output", "System_0", filename)
             while not Path(output_file).exists():
                 process = subprocess.run(["simulate", "./VoidFraction.input"], check=True, cwd=output_dir)

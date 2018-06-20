@@ -79,8 +79,7 @@ def generate_material(run_id, seed, config):
 
     ########################################################################
     # create database row
-    material = Material(run_id)
-    material.seed = seed
+    material = Material(run_id, seed)
 
     # initialize incrementable value for random number generation
     seed

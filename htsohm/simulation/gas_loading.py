@@ -33,7 +33,7 @@ def write_raspa_file(filename, material, simulation_config):
     values = {
             "NumberOfCycles"                : simulation_config["simulation_cycles"],
             "NumberOfInitializationCycles"  : simulation_config["initialization_cycles"],
-            "FrameworkName"                 : material.uuid,
+            "FrameworkName"                 : material.seed,
             "HeliumVoidFraction"            : void_fraction,
             "ExternalTemperature"           : simulation_config["temperature"],
             "ExternalPressure"              : simulation_config["pressure"],
@@ -134,7 +134,7 @@ def run(material, structure, simulation_config):
         path = os.environ["SCRATCH"]
     else:
         print("OUTPUT DIRECTORY NOT FOUND.")
-    output_dir = os.path.join(path, "output_{}_{}".format(material.uuid, uuid4()))
+    output_dir = os.path.join(path, "output_{}_{}".format(material.seed, uuid4()))
     print("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
@@ -162,7 +162,7 @@ def run(material, structure, simulation_config):
     while True:
         try:
             #output_file = os.listdir(os.path.join(output_dir, "Output", "System_0"))[0]
-            output_file = "output_{}_2.2.2_{:.6f}_{}.data".format(material.uuid,
+            output_file = "output_{}_2.2.2_{:.6f}_{}.data".format(material.seed,
                     float(simulation_config["temperature"]),
                     pressure_string(simulation_config["pressure"]))
             output_path = os.path.join(output_dir, "Output", "System_0", output_file)

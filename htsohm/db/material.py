@@ -1,5 +1,3 @@
-import uuid
-
 from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 
@@ -11,13 +9,11 @@ class Material(Base):
     Attributes:
         id (int): database table primary_key.
         run_id (str): identification string for run.
-        uuid (str): unique identification string for material.
     """
     __tablename__ = 'materials'
     
     id         = Column(Integer, primary_key=True)
     run_id     = Column(String(50)) 
-    uuid       = Column(String(40))
     seed       = Column(Float)
 
     # structure properties
@@ -31,7 +27,7 @@ class Material(Base):
     surface_area      = relationship("SurfaceArea")
     void_fraction     = relationship("VoidFraction")
 
-    def __init__(self, run_id=None, ):
+    def __init__(self, run_id=None, seed=None, ):
         """Init material-row.
 
         Args:
@@ -41,7 +37,7 @@ class Material(Base):
         Initializes row in materials datatable.
 
         """
-        self.uuid = str(uuid.uuid4())
+        self.seed = seed
         self.run_id = run_id
 
     def clone(self):

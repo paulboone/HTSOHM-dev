@@ -7,7 +7,7 @@ def write_cif_file(material, structure, simulation_path):
 
 
     """
-    file_name = os.path.join(simulation_path, '%s.cif' % material.uuid)
+    file_name = os.path.join(simulation_path, "{}.cif".format(material.seed))
     with open(file_name, "w") as cif_file:
         cif_file.write(
             "\nloop_\n" +
