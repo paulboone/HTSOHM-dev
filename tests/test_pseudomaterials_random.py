@@ -7,9 +7,9 @@ from htsohm.structure import Structure
 @pytest.fixture
 def LCs():
     structure = Structure()
-    structure.lattice_constants["a"] = 1
-    structure.lattice_constants["b"] = 1
-    structure.lattice_constants["c"] = 1
+    structure.lattice_constants.a = 1
+    structure.lattice_constants.b = 1
+    structure.lattice_constants.c = 1
     return structure
 
 def test_number_density_bounds():
