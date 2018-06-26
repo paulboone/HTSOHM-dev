@@ -93,7 +93,7 @@ def generate_material(run_id, seed, config):
     seed += 3
 
     # store unit cell volume to row
-    material.ap_unit_cell_volume = structure.volume()
+    material.unit_cell_volume = structure.volume()
     
     # assign Lennard-Jones parameters
     for chemical_id in range(number_of_atom_types):
@@ -108,7 +108,7 @@ def generate_material(run_id, seed, config):
     seed += 1
 
     # store number density to row
-    material.ap_number_density = number_of_atoms / structure.volume()
+    material.number_density = number_of_atoms / structure.volume()
 
     # assign atom-site positions and calculate avg. sigma/epsilon values
     sigma_sum, epsilon_sum = 0, 0
@@ -120,8 +120,8 @@ def generate_material(run_id, seed, config):
                 AtomSite("A_{}".format(chemical_id), random_number(seed), random_number(seed + 1),
                     random_number(seed + 2)))
         seed += 3
-    material.ap_average_sigma = sigma_sum / structure.n()
-    material.ap_average_epsilon = epsilon_sum / structure.n()
+    material.average_sigma = sigma_sum / structure.n()
+    material.average_epsilon = epsilon_sum / structure.n()
     
     # assign atom-site partial charges
     for i in range(structure.n()):
