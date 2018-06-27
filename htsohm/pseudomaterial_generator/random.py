@@ -137,8 +137,8 @@ def generate_material(run_id, seed, config):
 
 def new_material(run_id, config):
     # number of digits for seed
-    n = 36
+    n = 9
     # get seed value (initial value to be incremented later)
-    seed = get_n_digit_seed(36)
+    seed = get_n_digit_seed(n)
     print("CREATING MATERIAL WITH SEED : {}".format(seed))
     return generate_material(run_id, seed, config)
