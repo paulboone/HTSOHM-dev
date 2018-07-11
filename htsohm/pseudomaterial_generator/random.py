@@ -113,7 +113,7 @@ def generate_material(run_id, seed, config):
     # assign atom-site positions and calculate avg. sigma/epsilon values
     sigma_sum, epsilon_sum = 0, 0
     for i in range(number_of_atoms):
-        chemical_id = int(uniform_selection(0, number_of_atom_types - 1, random_number(seed)))
+        chemical_id = int(uniform_selection(0, number_of_atom_types, random_number(seed)))
         sigma_sum += structure.atom_types[chemical_id].sigma
         epsilon_sum += structure.atom_types[chemical_id].epsilon
         structure.atom_sites.append(
@@ -128,10 +128,16 @@ def generate_material(run_id, seed, config):
         a0 = max_charge - abs(structure.atom_sites[i].q)
         j = int(uniform_selection(0, structure.n() - 1, random_number(seed)))
         a1 = max_charge - abs(structure.atom_sites[j].q)
-        dq = uniform_selection(0, min([a0, a1]), random_number(seed+ 1))
+        dq = float("{0:.6f}".format(
+            uniform_selection(0, min([a0, a1]), random_number(seed+ 1))))
         structure.atom_sites[i].q += dq
         structure.atom_sites[j].q -= dq
         seed += 2
+
+    net_charge = 0
+    for i in range(structure.n()):
+        net_charge += structure.atom_sites[i].q
+    print("FRAMEWORK NET CHARGE :\t{}".format(net_charge))
 
     return material, structure
 
