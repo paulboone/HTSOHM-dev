@@ -13,9 +13,9 @@ def write_cif_file(material, structure, simulation_path):
             "\nloop_\n" +
             "_symmetry_equiv_pos_as_xyz\n" +
             "  x,y,z\n" +
-            "_cell_length_a\t{}\n".format(round(structure.lattice_constants.a)) +
-            "_cell_length_b\t{}\n".format(round(structure.lattice_constants.b)) +
-            "_cell_length_c\t{}\n".format(round(structure.lattice_constants.c)) +
+            "_cell_length_a\t{}\n".format(round(structure.lattice_constants.a, 4)) +
+            "_cell_length_b\t{}\n".format(round(structure.lattice_constants.b, 4)) +
+            "_cell_length_c\t{}\n".format(round(structure.lattice_constants.c, 4)) +
             "_cell_angle_alpha  90.0000\n" +
             "_cell_angle_beta   90.0000\n" +
             "_cell_angle_gamma  90.0000\n" +
