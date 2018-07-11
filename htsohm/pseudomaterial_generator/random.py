@@ -117,9 +117,9 @@ def generate_material(run_id, seed, config):
         sigma_sum += structure.atom_types[chemical_id].sigma
         epsilon_sum += structure.atom_types[chemical_id].epsilon
         structure.atom_sites.append(
-                AtomSite("A_{}".format(chemical_id), random_number(seed), random_number(seed + 1),
-                    random_number(seed + 2)))
-        seed += 3
+                AtomSite("A_{}".format(chemical_id), random_number(seed + 1), random_number(seed + 2),
+                    random_number(seed + 3)))
+        seed += 4
     material.average_sigma = sigma_sum / structure.n()
     material.average_epsilon = epsilon_sum / structure.n()
     
@@ -129,7 +129,7 @@ def generate_material(run_id, seed, config):
         j = int(uniform_selection(0, structure.n() - 1, random_number(seed)))
         a1 = max_charge - abs(structure.atom_sites[j].q)
         dq = float("{0:.6f}".format(
-            uniform_selection(0, min([a0, a1]), random_number(seed+ 1))))
+            uniform_selection(0, min([a0, a1]), random_number(seed + 1))))
         structure.atom_sites[i].q += dq
         structure.atom_sites[j].q -= dq
         seed += 2
