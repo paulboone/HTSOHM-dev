@@ -105,6 +105,7 @@ def generate_material(run_id, seed, config):
     
     # calculate random number of atom-sites
     number_of_atoms = random_number_density(number_density_limits, structure, random_number(seed))
+    print("Number of atoms : {}".format(number_of_atoms))
     seed += 1
 
     # store number density to row
@@ -113,13 +114,27 @@ def generate_material(run_id, seed, config):
     # assign atom-site positions and calculate avg. sigma/epsilon values
     sigma_sum, epsilon_sum = 0, 0
     for i in range(number_of_atoms):
+        # select chemical species
         chemical_id = int(uniform_selection(0, number_of_atom_types, random_number(seed)))
+        seed += 1
+
+        # sum LJ parameters for averaging later
         sigma_sum += structure.atom_types[chemical_id].sigma
         epsilon_sum += structure.atom_types[chemical_id].epsilon
-        structure.atom_sites.append(
-                AtomSite("A_{}".format(chemical_id), random_number(seed + 1), random_number(seed + 2),
-                    random_number(seed + 3)))
-        seed += 4
+
+        # select position sufficiently distanced from all other atom-sites
+        while True:
+            x, y, z = random_number(seed), random_number(seed + 1), random_number(seed + 2)
+            seed += 3
+            distance_passed = True
+            for site in structure.atom_sites:
+                distance_squared = (x - site.x) ** 2 + (y - site.y) ** 2 + (z - site.z) ** 2
+                if distance_squared <= 10 ** -4:
+                    distance_passed = False
+                    break
+            if distance_passed == True:
+                break
+        structure.atom_sites.append(AtomSite("A_{}".format(chemical_id), x, y, z))
     material.average_sigma = sigma_sum / structure.n()
     material.average_epsilon = epsilon_sum / structure.n()
     
