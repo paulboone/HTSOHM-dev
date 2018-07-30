@@ -129,7 +129,7 @@ def generate_material(run_id, seed, config):
             distance_passed = True
             for site in structure.atom_sites:
                 distance_squared = (x - site.x) ** 2 + (y - site.y) ** 2 + (z - site.z) ** 2
-                if distance_squared < 10 ** -4:
+                if distance_squared <= 10 ** -4:
                     distance_passed = False
                     break
             if distance_passed == True:
