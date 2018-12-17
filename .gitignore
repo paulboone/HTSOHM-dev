@@ -18,3 +18,5 @@ MANIFEST
 *.cache
 *.png
 *.yaml
+*.ipynb
+*.blend
