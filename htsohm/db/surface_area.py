@@ -17,6 +17,3 @@ class SurfaceArea(Base):
     unit_cell_surface_area       = Column(Float)
     volumetric_surface_area      = Column(Float)
     gravimetric_surface_area     = Column(Float)
-
-    # bin
-    bin_value = Column(Integer)

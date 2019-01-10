@@ -16,6 +16,3 @@ class VoidFraction(Base):
 
     # simulation output
     void_fraction = Column(Float)
-
-    # bin
-    bin_value = Column(Integer)

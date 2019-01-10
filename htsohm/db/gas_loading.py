@@ -31,6 +31,3 @@ class GasLoading(Base):
     host_adsorbate_avg               = Column(Float)
     host_adsorbate_vdw               = Column(Float)
     host_adsorbate_cou               = Column(Float)
-
-    # bin
-    bin_value = Column(Integer)
