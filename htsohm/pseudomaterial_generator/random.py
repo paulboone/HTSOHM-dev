@@ -80,10 +80,10 @@ def generate_material(run_id, seed, config):
 
     ########################################################################
     # create database row
-    material = Material(run_id, seed)
 
     # create structure object
     structure = Structure()
+    material = Material(run_id, None)
 
     # assign lattice constants
     structure.lattice_constants = LatticeConstants(

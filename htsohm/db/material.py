@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 
@@ -12,9 +14,9 @@ class Material(Base):
     """
     __tablename__ = 'materials'
     
-    id         = Column(Integer, primary_key=True)
-    run_id     = Column(String(50)) 
-    seed       = Column(Float)
+    id           = Column(Integer, primary_key=True)
+    run_id       = Column(String(50))
+    uuid         = Column(String(40))
 
     # structure properties
     unit_cell_volume     = Column(Float)
@@ -37,7 +39,7 @@ class Material(Base):
         Initializes row in materials datatable.
 
         """
-        self.seed = seed
+        self.uuid = str(uuid.uuid4())
         self.run_id = run_id
 
     def clone(self):

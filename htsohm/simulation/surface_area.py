@@ -13,13 +13,13 @@ from htsohm.material_files import write_pseudo_atoms, write_force_field
 from htsohm.simulation.files import load_and_subs_template
 from htsohm.db import SurfaceArea
 
-def write_raspa_file(filename, seed, simulation_config):
+def write_raspa_file(filename, uuid, simulation_config):
     """Writes RASPA input file for calculating surface area.
 
     Args:
         filename (str): path to input file.
         run_id (str): identification string for run.
-        material_id (str): seed for material.
+        material_id (str): uuid for material.
 
     Writes RASPA input-file.
 
@@ -27,7 +27,7 @@ def write_raspa_file(filename, seed, simulation_config):
     # Load simulation parameters from config
     values = {
             "NumberOfCycles"    : simulation_config["simulation_cycles"],
-            "FrameworkName"     : seed,
+            "FrameworkName"     : uuid,
             "MoleculeName"      : simulation_config["adsorbate"]}
 
     # Load template and replace values
@@ -87,14 +87,14 @@ def run(material, structure, simulation_config):
         path = os.environ["SCRATCH"]
     else:
         print("OUTPUT DIRECTORY NOT FOUND.")
-    output_dir = os.path.join(path, "output_{}_{}".format(material.seed, uuid4()))
+    output_dir = os.path.join(path, "output_{}_{}".format(material.uuid, uuid4()))
     print("Output directory :\t{}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
     # Write simulation input-files
     # RASPA input-file
     filename = os.path.join(output_dir, "SurfaceArea.input")
-    write_raspa_file(filename, material.seed, simulation_config)
+    write_raspa_file(filename, material.uuid, simulation_config)
     # Pseudomaterial mol-file
     write_mol_file(material, structure, output_dir)
     # Lennard-Jones parameters, force_field_mixing_rules.def
@@ -111,7 +111,7 @@ def run(material, structure, simulation_config):
             print("Time             : {}".format(datetime.now().time().isoformat()))
             print("Simulation type  : {}".format(simulation_config["type"]))
             print("Probe            : {}".format(simulation_config["adsorbate"]))
-            filename = "output_{}_2.2.2_298.000000_0.data".format(material.seed)
+            filename = "output_{}_2.2.2_298.000000_0.data".format(material.uuid)
             output_file = os.path.join(output_dir, "Output", "System_0", filename)
 
             while not Path(output_file).exists():
