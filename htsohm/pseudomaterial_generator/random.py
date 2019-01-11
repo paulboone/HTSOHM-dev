@@ -1,36 +1,7 @@
-from math import ceil
 from random import choice, random, randrange, uniform
 
 from htsohm.db import Material, Structure, LennardJones, AtomSites
-
-def random_number_density(number_density_limits, structure, r): #lattice_constants):
-    """Produces random number for atom-sites in a unit cell, constrained by
-    some number density limits.
-
-    Args:
-        number_density_limits (list): min and max number densities, for example:
-            [min_(float), max_(float)]
-        lattice_constants (dict): crystal lattice constants, for example:
-            {"a" : (float),
-             "b" : (float),
-             "c" : (float)}
-    
-    Returns:
-        atoms (int): some random number of atom-sites under the imposed limits.
-
-        If the minimum number density results in a unit cell with less than 2
-        atom-sites with the given lattice constants, a minimum number density
-        of TWO ATOM SITES PER UNIT CELL is imposed.
-    
-    """
-    min_ND = number_density_limits[0]
-    max_ND = number_density_limits[1]
-    v = structure.volume()
-    min_atoms = ceil(min_ND * v)
-    max_atoms = int(max_ND * v)
-    if min_atoms < 2:
-        min_atoms = 2
-    return int(uniform_selection(min_atoms, max_atoms, r))
+from htsohm.pseudomaterial_generator.utilities import random_number_density
 
 def generate_material(run_id, config):
     """Create records for pseudomaterial simulation and structure data."
