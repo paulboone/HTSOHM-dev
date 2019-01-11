@@ -115,7 +115,7 @@ def pressure_string(p):
     else:
         return str(p)
 
-def run(material, structure, simulation_config):
+def run(material, simulation_config):
     """Runs gas loading simulation.
 
     Args:
@@ -144,11 +144,11 @@ def run(material, structure, simulation_config):
     filename = os.path.join(output_dir, "{}_loading.input".format(adsorbate))
     write_raspa_file(filename, material, simulation_config)
     # Pseudomaterial mol-file
-    write_mol_file(material, structure, output_dir)
+    write_mol_file(material, output_dir)
     # Lennard-Jones parameters, force_field_mixing_rules.def
-    write_mixing_rules(structure, output_dir)
+    write_mixing_rules(material.structure, output_dir)
     # Pseudoatom definitions, pseudo_atoms.def (placeholder values)
-    write_pseudo_atoms(structure, output_dir)
+    write_pseudo_atoms(material.structure, output_dir)
     # Overwritten interactions, force_field.def (none overwritten by default)
     write_force_field(output_dir)
 

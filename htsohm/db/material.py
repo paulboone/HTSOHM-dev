@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 
 from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction
+from htsohm.db.structure import Structure
 
 class Material(Base):
     """Declarative class mapping to table storing material/simulation data.
@@ -28,6 +29,7 @@ class Material(Base):
     gas_loading       = relationship("GasLoading")
     surface_area      = relationship("SurfaceArea")
     void_fraction     = relationship("VoidFraction")
+    structure         = relationship("Structure", uselist=False, back_populates="material")
 
     def __init__(self, run_id=None, seed=None, ):
         """Init material-row.
@@ -41,6 +43,7 @@ class Material(Base):
         """
         self.uuid = str(uuid.uuid4())
         self.run_id = run_id
+        self.structure = Structure()
 
     def clone(self):
         copy = super(Material, self).clone()

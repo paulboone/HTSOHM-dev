@@ -26,7 +26,7 @@ def worker_run_loop(run_id):
                 config["structure_parameters"])
 
         # simulate properties of interest
-        run_all_simulations(material, structure)
+        run_all_simulations(material)
 
         # add pseudomaterial to database
         session.add(material)

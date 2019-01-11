@@ -23,6 +23,9 @@ from htsohm.db.gas_loading import GasLoading
 from htsohm.db.surface_area import SurfaceArea
 from htsohm.db.void_fraction import VoidFraction
 from htsohm.db.material import Material
+from htsohm.db.structure import Structure
+from htsohm.db.atom_sites import AtomSites
+from htsohm.db.lennard_jones import LennardJones
 
 # Create tables in the engine, if they don't exist already.
 Base.metadata.create_all(engine)
