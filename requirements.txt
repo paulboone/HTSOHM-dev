@@ -1,8 +1,10 @@
 numpy ~= 1.11
 psycopg2 ~= 2.6
+pandas
 pytest ~= 3.0
 pyyaml ~= 3.11
 SQLAlchemy ~= 1.0
 click ~= 6.6
+scipy
 
 git+https://github.com/WilmerLab/raspa2

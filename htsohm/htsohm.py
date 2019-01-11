@@ -19,11 +19,13 @@ def worker_run_loop(run_id):
     Method runs until convergence cutoff is reached.
 
     """
-    # run until library contains one million materials
-    while count_number_of_materials(run_id) <= 1000000:
-        # generate pseudomaterial
-        material, structure = pseudomaterial_generator.random.new_material(run_id,
-                config["structure_parameters"])
+    while count_number_of_materials(run_id) < 1000000:
+        if count_number_of_materials(run_id) < config["seed_count"]:
+            # generate pseudomaterial
+            material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
+        else:
+            # mutate pseudomaterial
+            material = pseudomaterial_generator.mutate.new_material(run_id, config)
 
         # simulate properties of interest
         run_all_simulations(material)

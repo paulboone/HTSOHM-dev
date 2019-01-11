@@ -1,4 +1,5 @@
 simulation_directory: 'HTSOHM'
+seed_count: 10
 
 structure_parameters:
   number_of_atom_types: 4
@@ -7,6 +8,7 @@ structure_parameters:
   lattice_constant_limits: [25.6, 51.2]
   number_density_limits: [1.49e-05, 0.02122]
   sigma_limits: [1.052, 6.549]
+  mutation_strength: 0.2
 
 simulations:
   1:

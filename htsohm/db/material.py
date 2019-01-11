@@ -18,6 +18,7 @@ class Material(Base):
     id           = Column(Integer, primary_key=True)
     run_id       = Column(String(50))
     uuid         = Column(String(40))
+    parent       = Column(String(40))
 
     # structure properties
     unit_cell_volume     = Column(Float)
@@ -31,7 +32,7 @@ class Material(Base):
     void_fraction     = relationship("VoidFraction")
     structure         = relationship("Structure", uselist=False, back_populates="material")
 
-    def __init__(self, run_id=None, seed=None, ):
+    def __init__(self, run_id=None, parent=None, ):
         """Init material-row.
 
         Args:
@@ -42,6 +43,7 @@ class Material(Base):
 
         """
         self.uuid = str(uuid.uuid4())
+        self.parent = parent
         self.run_id = run_id
         self.structure = Structure()
 
