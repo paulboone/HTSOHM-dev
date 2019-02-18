@@ -169,7 +169,7 @@ def run(material, simulation_config):
             #output_path = os.path.join(output_dir, "Output", "System_0", "*.data")
 
             while not Path(output_path).exists():
-                subprocess.run(["simulate", "./{}_loading.input".format(adsorbate)],
+                subprocess.run(["simulate", "-i", "./{}_loading.input".format(adsorbate)],
                     check = True, cwd = output_dir)
         
             print("Output directory : {}".format(output_dir))

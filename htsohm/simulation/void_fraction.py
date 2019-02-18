@@ -108,7 +108,7 @@ def run(material, simulation_config):
             filename = "output_{}_2.2.2_298.000000_0.data".format(material.uuid)
             output_file = os.path.join(output_dir, "Output", "System_0", filename)
             while not Path(output_file).exists():
-                process = subprocess.run(["simulate", "./VoidFraction.input"], check=True, cwd=output_dir)
+                process = subprocess.run(["simulate", "-i", "./VoidFraction.input"], check=True, cwd=output_dir)
 
             # Parse output
             parse_output(output_file, material, simulation_config)

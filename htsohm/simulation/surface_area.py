@@ -115,7 +115,7 @@ def run(material, simulation_config):
             output_file = os.path.join(output_dir, "Output", "System_0", filename)
 
             while not Path(output_file).exists():
-                subprocess.run(["simulate", "./SurfaceArea.input"], check=True,
+                subprocess.run(["simulate", "-i", "./SurfaceArea.input"], check=True,
                         cwd=output_dir)
 
             # Parse output
