@@ -12,4 +12,7 @@ def load_config_file(file_name):
     """
     with open(file_name) as config_file:
          config = yaml.load(config_file)
+
+    if not 'keep_configs' in config:
+        config['keep_configs'] = False
     return config

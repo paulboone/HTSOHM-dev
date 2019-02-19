@@ -1,7 +1,9 @@
-from htsohm import config
+
+from datetime import datetime
+
 from htsohm import simulation
 
-def run_all_simulations(material):
+def run_all_simulations(material, config):
     """Simulate helium void fraction, gas loading, and surface area.
 
     Args:
@@ -10,11 +12,11 @@ def run_all_simulations(material):
     Depending on properties specified in config, adds simulated data for helium
     void fraction, gas loading, heat of adsorption, surface area, and
     corresponding bins to row in database corresponding to the input-material.
-        
+
     """
     for simulation_number in config["simulations"]:
+        print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
         simulation_config = config["simulations"][simulation_number]
-        getattr(simulation, simulation_config["type"]).run(material, simulation_config)
+        getattr(simulation, simulation_config["type"]).run(material, simulation_config, config)
         #material.update_from_dict(results)
-
-
+    print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))

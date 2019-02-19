@@ -7,7 +7,6 @@ from uuid import uuid4
 from string import Template
 from pathlib import Path
 
-from htsohm import config
 from htsohm.material_files import write_mol_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
 from htsohm.simulation.files import load_and_subs_template
@@ -61,7 +60,7 @@ def parse_output(output_file, material, simulation_config):
 
     material.void_fraction.append(void_fraction)
 
-def run(material, simulation_config):
+def run(material, simulation_config, config):
     """Runs void fraction simulation.
 
     Args:
@@ -112,7 +111,8 @@ def run(material, simulation_config):
 
             # Parse output
             parse_output(output_file, material, simulation_config)
-            shutil.rmtree(output_dir, ignore_errors=True)
+            if not config['keep_configs']:
+                shutil.rmtree(output_dir, ignore_errors=True)
             sys.stdout.flush()
         except (FileNotFoundError, IndexError, KeyError) as err:
             print(err)
