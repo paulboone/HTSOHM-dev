@@ -48,7 +48,7 @@ def select_parent(run_id, s_conf):
     point_weights = {i : 0.0 for i in hull_point_indices}
     distances = [distance.euclidean(points[edge[0]], points[edge[1]]) for edge in tesselation.convex_hull]
     distances.sort()
-    
+
     for edge in tesselation.convex_hull:
         d = distance.euclidean(points[edge[0]], points[edge[1]])
         point_weights[edge[0]] += d
@@ -64,29 +64,32 @@ def select_parent(run_id, s_conf):
     parent_index = int(np.random.choice(point_weight_arr[:,1], 1, p=point_weight_arr[:,0]))
     return parent_data["uuid"].tolist()[parent_index]
 
-def closest_distance(x, y):
-    a = 1 - y + x
-    b = abs(y - x)
-    c = 1 - x + y
-    return min(a, b, c)
+# def closest_distance(x, y):
+#     a = 1 - y + x
+#     b = abs(y - x)
+#     c = 1 - x + y
+#     return min(a, b, c)
 
 def random_position(x0, x1, strength):
-    dx = closest_distance(x0, x1)
-    if x0 > x1 and (x0 - x1) > 0.5:
+    # get minimum distance between two points of (1) within the box, and (2) across the box boundary
+    dx = min(abs(x0 - x1), 1 - abs(x0 - x1))
+
+
+    if x0 > x1 and (x0 - x1) > 0.5: # then dx will be through boundary, so move right
         x2 = (x0 + strength * dx) % 1.
-    if x0 < x1 and (x1 - x0) > 0.5:
-        x2 = (x0 - strength * dx) % 1.
-    if x0 >= x1 and (x0 - x1) < 0.5:
+    if x0 >= x1 and (x0 - x1) < 0.5: # then dx will be in box, so move left
         x2 = x0 - strength * dx
-    if x0 < x1 and (x1 - x0) < 0.5:
+    if x0 < x1 and (x1 - x0) > 0.5: # then dx will be through boundary, so move left
+        x2 = (x0 - strength * dx) % 1.
+    if x0 < x1 and (x1 - x0) < 0.5: # then dx will be in box, so move right
         x2 = x0 + strength * dx
     return x2
 
 def net_charge(atom_sites):
     return sum([e.q for e in atom_sites])
 
-def clone_parent(uuid):
-    parent_id = session.query(Material.id).filter(Material.uuid==uuid).one()[0]
+def clone_parent(parent_id):
+    # parent_id = session.query(Material.id).filter(Material.uuid==uuid).one()[0]
     parent = session.query(Material).get(parent_id)
     structure = parent.structure
     atom_sites = parent.structure.atom_sites
@@ -116,7 +119,7 @@ def mutate_material(run_id, parent_uuid, config):
             populate the unit cell.
 
     Returns:
-        material (sqlalchemy.orm.query.Query): database row for storing 
+        material (sqlalchemy.orm.query.Query): database row for storing
             simulation data specific to the material. See
             `htsohm/db/material.py` for more information.
 
@@ -127,7 +130,7 @@ def mutate_material(run_id, parent_uuid, config):
     epsilon_limits          = config["epsilon_limits"]
     sigma_limits            = config["sigma_limits"]
     max_charge              = config["charge_limit"]
-    strength       = config["mutation_strength"]
+    strength                = config["mutation_strength"]
 
     ########################################################################
     # get parent structure
@@ -141,6 +144,7 @@ def mutate_material(run_id, parent_uuid, config):
     print("PARENT UUID :\t{}".format(parent_uuid))
     print("CHILD UUID  :\t{}".format(child.uuid))
 
+    # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb lattice constants
     cs.a = ps.a + strength * (uniform(*lattice_limits) - ps.a)
     cs.b = ps.b + strength * (uniform(*lattice_limits) - ps.b)
@@ -148,7 +152,8 @@ def mutate_material(run_id, parent_uuid, config):
 
     # store unit cell volume to row
     child.unit_cell_volume = cs.volume
-    
+
+    # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb lennard-jones parameters
     for at in ps.lennard_jones:
         cs.lennard_jones.append(LennardJones(
@@ -156,6 +161,7 @@ def mutate_material(run_id, parent_uuid, config):
             sigma = at.sigma + strength * (uniform(*sigma_limits) - at.sigma),
             epsilon = at.epsilon + strength * (uniform(*epsilon_limits) - at.epsilon)))
 
+    # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb number density/ number of atom-sites
     child.number_density = parent.number_density + strength * (uniform(*number_density_limits) - parent.number_density)
     number_of_atoms = int(child.number_density * child.unit_cell_volume)
@@ -174,12 +180,14 @@ def mutate_material(run_id, parent_uuid, config):
                 dq = float("{0:.6f}".format(min(max_charge + cs.atom_sites[i].q, net_charge(cs.atom_sites))))
                 cs.atom_sites[i].q -= dq
 
+    # NOTE: I _think_ this is ok
     # perturb atom-site positions
     for a in cs.atom_sites:
-        a.x = random_position(a.x, random(), strength) 
-        a.y = random_position(a.y, random(), strength) 
+        a.x = random_position(a.x, random(), strength)
+        a.y = random_position(a.y, random(), strength)
         a.x = random_position(a.z, random(), strength)
 
+    # TODO: new points always have ZERO charge?
     # add atom-sites, if necessary
     if number_of_atoms > len(cs.atom_sites):
         for i in range(number_of_atoms - len(cs.atom_sites)):
@@ -194,6 +202,7 @@ def mutate_material(run_id, parent_uuid, config):
     child.average_sigma = sigma_sum / number_of_atoms
     child.average_epsilon = epsilon_sum / number_of_atoms
 
+    # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb partial charges
     for i in range(number_of_atoms):
         while True:
@@ -201,6 +210,7 @@ def mutate_material(run_id, parent_uuid, config):
                 random_q = uniform(-max_charge, max_charge)
                 dq = strength * (random_q - cs.atom_sites[i].q)
                 j = choice(range(number_of_atoms))
+                # TODO: what if i == j ?
                 if abs(cs.atom_sites[i].q + dq) <= max_charge and abs(cs.atom_sites[j].q - dq) <= max_charge:
                     cs.atom_sites[i].q += dq
                     cs.atom_sites[j].q -= dq

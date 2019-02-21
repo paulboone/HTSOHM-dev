@@ -6,8 +6,9 @@ from matplotlib.patches import Rectangle, Circle
 import numpy as np
 from scipy.spatial import Delaunay
 
+
 def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=[], parents=[],
-                    bins=[], new_bins=[], title="", patches=None):
+                    bins=[], new_bins=[], title="", patches=None, prop1range=(0.0,1.0), prop2range=(0.0,1.0)):
 
     if not triang:
         triang = Delaunay(box_r)
@@ -18,19 +19,21 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
     # plot visualization
     fig = plt.figure(figsize=(12,12), tight_layout=True)
     ax = fig.add_subplot(1, 1, 1)
-    ax.set_ylim(0.0, 1.0)
-    ax.set_xlim(0.0, 1.0)
-    ax.set_xticks(np.array(range(0,convergence_bins + 1))/convergence_bins)
-    ax.set_yticks(np.array(range(0,convergence_bins + 1))/convergence_bins)
+    ax.set_xlim(prop1range[0], prop1range[1])
+    ax.set_ylim(prop2range[0], prop2range[1])
+
+    ax.set_xticks(prop1range[1] * np.array(range(0,convergence_bins + 1))/convergence_bins)
+    ax.set_yticks(prop2range[1] * np.array(range(0,convergence_bins + 1))/convergence_bins)
     ax.tick_params(labelbottom=False, labelleft=False)
     ax.grid(linestyle='-', color='0.5', zorder=0)
 
-    dbin = 1.0 / convergence_bins
-    bin_rects = [Rectangle((b[0] * dbin, b[1] * dbin), dbin, dbin) for b in bins]
+    dbinx = prop1range[1] / convergence_bins
+    dbiny = prop2range[1] / convergence_bins
+    bin_rects = [Rectangle((b[0] * dbinx, b[1] * dbiny), dbinx, dbiny) for b in bins]
     pc = PatchCollection(bin_rects, facecolor='0.75')
     ax.add_collection(pc)
 
-    new_bin_rects = [Rectangle((b[0] * dbin, b[1] * dbin), dbin, dbin) for b in new_bins]
+    new_bin_rects = [Rectangle((b[0] * dbinx, b[1] * dbiny), dbinx, dbiny) for b in new_bins]
     pc2 = PatchCollection(new_bin_rects, facecolor='#82b7b7')
     ax.add_collection(pc2)
 
