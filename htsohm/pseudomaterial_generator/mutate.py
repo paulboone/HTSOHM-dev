@@ -108,7 +108,7 @@ def mutate_material(run_id, parent_uuid, config):
                             (number_density_limits[1] - number_density_limits[0])*strength, \
                             number_density_limits)
 
-    number_of_atoms = int(child.number_density * child.unit_cell_volume)
+    number_of_atoms = max(1, int(child.number_density * child.unit_cell_volume))
 
     # remove atom-sites, if necessary
     cs.atom_sites = np.random.choice(ps.atom_sites, min(number_of_atoms, len(ps.atom_sites)), replace=False).tolist()
