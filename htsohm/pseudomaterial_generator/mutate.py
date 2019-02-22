@@ -110,6 +110,11 @@ def clone_parent(parent_id):
     parent.id = None
     return parent
 
+def perturb_unweighted(curr_val, max_change, var_limits):
+    new_val = curr_val + uniform(-max_change, max_change)
+    return min(max(new_val, var_limits[0]), var_limits[1])
+
+
 def mutate_material(run_id, parent_uuid, config):
     """Create records for pseudomaterial simulation and structure data."
 
@@ -141,14 +146,11 @@ def mutate_material(run_id, parent_uuid, config):
     child = Material(run_id, parent_uuid)
     cs = child.structure
 
-    print("PARENT UUID :\t{}".format(parent_uuid))
-    print("CHILD UUID  :\t{}".format(child.uuid))
-
     # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb lattice constants
-    cs.a = ps.a + strength * (uniform(*lattice_limits) - ps.a)
-    cs.b = ps.b + strength * (uniform(*lattice_limits) - ps.b)
-    cs.c = ps.c + strength * (uniform(*lattice_limits) - ps.c)
+    cs.a = perturb_unweighted(ps.a, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
+    cs.b = perturb_unweighted(ps.b, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
+    cs.c = perturb_unweighted(ps.c, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
 
     # store unit cell volume to row
     child.unit_cell_volume = cs.volume
@@ -163,7 +165,10 @@ def mutate_material(run_id, parent_uuid, config):
 
     # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb number density/ number of atom-sites
-    child.number_density = parent.number_density + strength * (uniform(*number_density_limits) - parent.number_density)
+    child.number_density = perturb_unweighted(parent.number_density, \
+                            (number_density_limits[1] - number_density_limits[0])*strength, \
+                            number_density_limits)
+
     number_of_atoms = int(child.number_density * child.unit_cell_volume)
 
     # remove atom-sites, if necessary
@@ -217,6 +222,15 @@ def mutate_material(run_id, parent_uuid, config):
                     break
             except:
                 pass
+
+    print("PARENT UUID :\t{}".format(parent_uuid))
+    print("CHILD UUID  :\t{}".format(child.uuid))
+    print("lattice constants: (%.2f, %.2f, %.2f) => (%.2f, %.2f, %.2f)" % (ps.a, ps.b, ps.c, cs.a, cs.b, cs.c))
+    print("number_density: %.2e => %.2e" % (parent.number_density, child.number_density))
+    print("number of atoms: %.2f => %.2f" % (int(parent.number_density * parent.unit_cell_volume), number_of_atoms))
+    parent_ljs = ", ".join(["(%.1f, %.1f)" % (ljs.epsilon, ljs.sigma) for ljs in ps.lennard_jones])
+    child_ljs = ", ".join(["(%.1f, %.1f)" % (ljs.epsilon, ljs.sigma) for ljs in cs.lennard_jones])
+    print("lennard jones: %s => %s" % (parent_ljs, child_ljs))
 
     print("FRAMEWORK NET CHARGE :\t{}".format(sum([e.q for e in cs.atom_sites])))
     return child
