@@ -2,73 +2,12 @@ from math import isclose
 from random import choice, random, uniform
 
 import numpy as np
-import pandas as pd
 from scipy.spatial import Delaunay, distance
 from sqlalchemy import text
 from sqlalchemy.orm.session import make_transient
 
 from htsohm.db import engine, session, Material, Structure, LennardJones, AtomSites
 from htsohm.pseudomaterial_generator.utilities import random_number_density
-
-def result_to_dataframe(sql, run_id):
-    rows = engine.connect().execute(sql, run_id=run_id)
-    data = pd.DataFrame(rows.fetchall())
-    data.columns = rows.keys()
-    return data
-
-def query_all_data(run_id, s_conf):
-    sql_selects = """select m.uuid,"""
-    sql_joins = """\nfrom materials m"""
-    sql_where = """\nwhere run_id=:run_id"""
-    for s_id in s_conf:
-        if s_conf[s_id]["type"] == "gas_loading":
-            sql_selects += """\ng{}.absolute_volumetric_loading,""".format(s_id)
-            sql_joins += """\njoin gas_loadings g{0} on m.id=g{0}.material_id""".format(s_id)
-            sql_where += """\nand g{0}.adsorbate='{1}' and g{0}.pressure={2} and g{0}.temperature={3}""".format(
-                s_id, s_conf[s_id]["adsorbate"], s_conf[s_id]["pressure"], s_conf[s_id]["temperature"])
-        elif s_conf[s_id]["type"] == "surface_area":
-            sql_selects += """\ns{}.volumetric_surface_area,""".format(s_id)
-            sql_joins += """\njoin surface_areas s{0} on m.id=s{0}.material_id""".format(s_id)
-            sql_where += """\nand s{0}.adsorbate='{1}'""".format(
-                s_id, s_conf[s_id]["adsorbate"])
-        elif s_conf[s_id]["type"] == "void_fraction":
-            sql_selects += """\nv{}.void_fraction,""".format(s_id)
-            sql_joins += """\njoin void_fractions v{0} on m.id=v{0}.material_id""".format(s_id)
-            sql_where += """\nand v{0}.adsorbate='{1}' and v{0}.temperature={2}""".format(
-                s_id, s_conf[s_id]["adsorbate"], s_conf[s_id]["temperature"])
-    sql_query = text(sql_selects[:-1] + sql_joins + sql_where)
-    return result_to_dataframe(sql_query, run_id)
-
-def select_parent(run_id, s_conf):
-    parent_data = query_all_data(run_id, s_conf)
-    points = parent_data.drop("uuid", axis=1).values
-    tesselation = Delaunay(points)
-    hull_point_indices = np.unique(tesselation.convex_hull.flatten())
-
-    point_weights = {i : 0.0 for i in hull_point_indices}
-    distances = [distance.euclidean(points[edge[0]], points[edge[1]]) for edge in tesselation.convex_hull]
-    distances.sort()
-
-    for edge in tesselation.convex_hull:
-        d = distance.euclidean(points[edge[0]], points[edge[1]])
-        point_weights[edge[0]] += d
-        point_weights[edge[1]] += d
-
-    point_weight_arr = [[point_weights[i], i] for i in point_weights.keys()]
-    point_weight_arr.sort(key=lambda x: x[0])
-    point_weight_arr = np.array(point_weight_arr)
-
-    total_weight = point_weight_arr[:,0].sum()
-    point_weight_arr[:,0] /= total_weight
-
-    parent_index = int(np.random.choice(point_weight_arr[:,1], 1, p=point_weight_arr[:,0]))
-    return parent_data["uuid"].tolist()[parent_index]
-
-# def closest_distance(x, y):
-#     a = 1 - y + x
-#     b = abs(y - x)
-#     c = 1 - x + y
-#     return min(a, b, c)
 
 def random_position(x0, x1, strength):
     # get minimum distance between two points of (1) within the box, and (2) across the box boundary
@@ -234,7 +173,3 @@ def mutate_material(run_id, parent_uuid, config):
 
     print("FRAMEWORK NET CHARGE :\t{}".format(sum([e.q for e in cs.atom_sites])))
     return child
-
-def new_material(run_id, config):
-    parent_uuid = select_parent(run_id, config["simulations"])
-    return mutate_material(run_id, parent_uuid, config["structure_parameters"])
