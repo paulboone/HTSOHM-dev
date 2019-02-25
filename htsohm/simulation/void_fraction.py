@@ -56,8 +56,10 @@ def parse_output(output_file, material, simulation_config):
             if not "Average Widom Rosenbluth-weight:" in line:
                 continue
             void_fraction.void_fraction = float(line.split()[4])
-        print("\nVOID FRACTION : {}\n".format(void_fraction.void_fraction))
-
+        print("\nVOID FRACTION : {}".format(void_fraction.void_fraction))
+        if material.parent:
+            print("(parent VOID FRACTION : {})".format(material.parent.void_fraction[0].void_fraction))
+        print("\n")
     material.void_fraction.append(void_fraction)
 
 def run(material, simulation_config, config):
