@@ -86,9 +86,11 @@ def parse_output(output_file, material, simulation_config):
                 host_adsorbate_line = line_counter + 8
             line_counter += 1
 
-        print("\n{} LOADING : {} v/v (STP)\n".format(simulation_config["adsorbate"],
+        print("\n{} LOADING : {} v/v (STP)".format(simulation_config["adsorbate"],
                                             gas_loading.absolute_volumetric_loading))
-
+        if material.parent:
+            print("(parent LOADING : {} v/v (STP))".format(material.parent.gas_loading[0].absolute_volumetric_loading))
+        print("\n")
     with open(output_file) as origin:
         line_counter = 1
         for line in origin:
