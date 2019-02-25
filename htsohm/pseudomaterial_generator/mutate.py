@@ -114,15 +114,15 @@ def mutate_material(run_id, parent_uuid, config):
     cs.atom_sites = np.random.choice(ps.atom_sites, min(number_of_atoms, len(ps.atom_sites)), replace=False).tolist()
     # remove atom-sites, if necessary
     # adjust charges if atom-sites were removed
-    while not isclose(net_charge(cs.atom_sites), 0., abs_tol=1.0e-6):
-            # pick an atom-site at random
-            i = choice(range(len(cs.atom_sites)))
-            if net_charge(cs.atom_sites) < 0:
-                dq = float("{0:.6f}".format(min(max_charge - cs.atom_sites[i].q, -net_charge(cs.atom_sites))))
-                cs.atom_sites[i].q += dq
-            else:
-                dq = float("{0:.6f}".format(min(max_charge + cs.atom_sites[i].q, net_charge(cs.atom_sites))))
-                cs.atom_sites[i].q -= dq
+    # while not isclose(net_charge(cs.atom_sites), 0., abs_tol=1.0e-6):
+    #         # pick an atom-site at random
+    #         i = choice(range(len(cs.atom_sites)))
+    #         if net_charge(cs.atom_sites) < 0:
+    #             dq = float("{0:.6f}".format(min(max_charge - cs.atom_sites[i].q, -net_charge(cs.atom_sites))))
+    #             cs.atom_sites[i].q += dq
+    #         else:
+    #             dq = float("{0:.6f}".format(min(max_charge + cs.atom_sites[i].q, net_charge(cs.atom_sites))))
+    #             cs.atom_sites[i].q -= dq
 
     # NOTE: I _think_ this is ok
     # perturb atom-site positions
@@ -148,21 +148,21 @@ def mutate_material(run_id, parent_uuid, config):
 
     # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb partial charges
-    for i in range(number_of_atoms):
-        while True:
-            try:
-                random_q = uniform(-max_charge, max_charge)
-                dq = strength * (random_q - cs.atom_sites[i].q)
-                j = choice(range(number_of_atoms))
-                # TODO: what if i == j ?
-                if abs(cs.atom_sites[i].q + dq) <= max_charge and abs(cs.atom_sites[j].q - dq) <= max_charge:
-                    cs.atom_sites[i].q += dq
-                    cs.atom_sites[j].q -= dq
-                    break
-            except:
-                pass
+    # for i in range(number_of_atoms):
+    #     while True:
+    #         try:
+    #             random_q = uniform(-max_charge, max_charge)
+    #             dq = strength * (random_q - cs.atom_sites[i].q)
+    #             j = choice(range(number_of_atoms))
+    #             # TODO: what if i == j ?
+    #             if abs(cs.atom_sites[i].q + dq) <= max_charge and abs(cs.atom_sites[j].q - dq) <= max_charge:
+    #                 cs.atom_sites[i].q += dq
+    #                 cs.atom_sites[j].q -= dq
+    #                 break
+    #         except:
+    #             pass
 
-    print("PARENT UUID :\t{}".format(parent_uuid))
+
     print("CHILD UUID  :\t{}".format(child.uuid))
     print("lattice constants: (%.2f, %.2f, %.2f) => (%.2f, %.2f, %.2f)" % (ps.a, ps.b, ps.c, cs.a, cs.b, cs.c))
     print("number_density: %.2e => %.2e" % (parent.number_density, child.number_density))
