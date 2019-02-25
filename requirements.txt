@@ -7,4 +7,4 @@ SQLAlchemy ~= 1.0
 click ~= 6.6
 scipy
 matplotlib
-git+https://github.com/WilmerLab/raspa2
+git+https://github.com/iRASPA/RASPA2
