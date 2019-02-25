@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import ForeignKey, Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 
 from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction
@@ -14,11 +14,11 @@ class Material(Base):
         run_id (str): identification string for run.
     """
     __tablename__ = 'materials'
-    
+
     id           = Column(Integer, primary_key=True)
     run_id       = Column(String(50))
     uuid         = Column(String(40))
-    parent       = Column(String(40))
+    parent_id    = Column(Integer, ForeignKey('materials.id'))
 
     # structure properties
     unit_cell_volume     = Column(Float)
@@ -31,8 +31,9 @@ class Material(Base):
     surface_area      = relationship("SurfaceArea")
     void_fraction     = relationship("VoidFraction")
     structure         = relationship("Structure", uselist=False, back_populates="material")
+    parent            = relationship("Material", remote_side=[id])
 
-    def __init__(self, run_id=None, parent=None, ):
+    def __init__(self, run_id, parent=None):
         """Init material-row.
 
         Args:
@@ -43,10 +44,15 @@ class Material(Base):
 
         """
         self.uuid = str(uuid.uuid4())
-        self.parent = parent
+        if parent:
+            self.parent = parent
+            self.parent_id = parent.id
         self.run_id = run_id
         self.structure = Structure()
 
     def clone(self):
         copy = super(Material, self).clone()
         return copy
+
+    def __repr__(self):
+        return "(%s: %s-%s p: %s)" % (self.run_id, str(self.id), self.uuid, self.parent_id)

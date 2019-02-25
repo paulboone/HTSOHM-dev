@@ -30,23 +30,19 @@ def net_charge(atom_sites):
 def clone_parent(parent_id):
     # parent_id = session.query(Material.id).filter(Material.uuid==uuid).one()[0]
     parent = session.query(Material).get(parent_id)
-    structure = parent.structure
-    atom_sites = parent.structure.atom_sites
-    for a in atom_sites:
+    for a in parent.structure.atom_sites:
         session.expunge(a)
         make_transient(a)
         a.id = None
-    lennard_jones = parent.structure.lennard_jones
-    for l in lennard_jones:
+    for l in parent.structure.lennard_jones:
         session.expunge(l)
         make_transient(l)
         l.id = None
-    session.expunge(structure)
-    make_transient(structure)
-    structure.id = None
+    session.expunge(parent.structure)
+    make_transient(parent.structure)
+    parent.structure.id = None
     session.expunge(parent)
     make_transient(parent)
-    parent.id = None
     return parent
 
 def perturb_unweighted(curr_val, max_change, var_limits):
@@ -54,7 +50,7 @@ def perturb_unweighted(curr_val, max_change, var_limits):
     return min(max(new_val, var_limits[0]), var_limits[1])
 
 
-def mutate_material(run_id, parent_uuid, config):
+def mutate_material(run_id, parent_id, config):
     """Create records for pseudomaterial simulation and structure data."
 
     Args:
@@ -77,13 +73,15 @@ def mutate_material(run_id, parent_uuid, config):
     strength                = config["mutation_strength"]
 
     ########################################################################
+
     # get parent structure
-    parent = clone_parent(parent_uuid)
+    parent = session.query(Material).get(parent_id)
     ps = parent.structure
 
     # create database row
-    child = Material(run_id, parent_uuid)
+    child = Material(run_id, parent)
     cs = child.structure
+
 
     # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb lattice constants
@@ -162,7 +160,7 @@ def mutate_material(run_id, parent_uuid, config):
     #         except:
     #             pass
 
-
+    print("PARENT UUID :\t{}".format(parent.uuid))
     print("CHILD UUID  :\t{}".format(child.uuid))
     print("lattice constants: (%.2f, %.2f, %.2f) => (%.2f, %.2f, %.2f)" % (ps.a, ps.b, ps.c, cs.a, cs.b, cs.c))
     print("number_density: %.2e => %.2e" % (parent.number_density, child.number_density))
