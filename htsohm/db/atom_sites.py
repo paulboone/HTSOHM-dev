@@ -14,3 +14,13 @@ class AtomSites(Base):
     q = Column(Float)
 
     structure_id = Column(Integer, ForeignKey("structure.id"))
+
+    def exclude_cols(self):
+        return ['id']
+
+    def clone(self):
+        copy = super(AtomSites, self).clone()
+        return copy
+
+    def __repr__(self):
+        return "(%s: %s, %f, %f, %f, %f)" % (str(self.id), self.atom_type, self.x, self.y, self.z, self.q)

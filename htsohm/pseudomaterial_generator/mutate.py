@@ -27,24 +27,6 @@ def random_position(x0, x1, strength):
 def net_charge(atom_sites):
     return sum([e.q for e in atom_sites])
 
-def clone_parent(parent_id):
-    # parent_id = session.query(Material.id).filter(Material.uuid==uuid).one()[0]
-    parent = session.query(Material).get(parent_id)
-    for a in parent.structure.atom_sites:
-        session.expunge(a)
-        make_transient(a)
-        a.id = None
-    for l in parent.structure.lennard_jones:
-        session.expunge(l)
-        make_transient(l)
-        l.id = None
-    session.expunge(parent.structure)
-    make_transient(parent.structure)
-    parent.structure.id = None
-    session.expunge(parent)
-    make_transient(parent)
-    return parent
-
 def perturb_unweighted(curr_val, max_change, var_limits):
     new_val = curr_val + uniform(-max_change, max_change)
     return min(max(new_val, var_limits[0]), var_limits[1])
@@ -79,7 +61,7 @@ def mutate_material(run_id, parent_id, config):
     ps = parent.structure
 
     # create database row
-    child = Material(run_id, parent)
+    child = parent.clone()
     cs = child.structure
 
 

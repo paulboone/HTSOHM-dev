@@ -33,7 +33,7 @@ class Material(Base):
     structure         = relationship("Structure", uselist=False, back_populates="material")
     parent            = relationship("Material", remote_side=[id])
 
-    def __init__(self, run_id, parent=None):
+    def __init__(self, run_id=None, parent=None):
         """Init material-row.
 
         Args:
@@ -52,7 +52,13 @@ class Material(Base):
 
     def clone(self):
         copy = super(Material, self).clone()
+        copy.parent = self
+        copy.parent_id = self.id
+        copy.structure = self.structure.clone()
         return copy
+
+    def exclude_cols(self):
+        return ['uuid', 'id']
 
     def __repr__(self):
         return "(%s: %s-%s p: %s)" % (self.run_id, str(self.id), self.uuid, self.parent_id)

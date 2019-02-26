@@ -18,3 +18,13 @@ class LennardJones(Base):
         self.atom_type = atom_type
         self.sigma = sigma
         self.epsilon = epsilon
+
+    def exclude_cols(self):
+        return ['id']
+
+    def clone(self):
+        copy = super(LennardJones, self).clone()
+        return copy
+
+    def __repr__(self):
+        return "(%s: %s, sigma: %f, epsilon: %f)" % (str(self.id), self.atom_type, self.sigma, self.epsilon)

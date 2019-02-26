@@ -12,8 +12,9 @@ class Base(object):
         """
         copy = self.__class__()
         for col in self.__table__.columns:
-            val = getattr(self, col.name)
-            setattr(copy, col.name, val)
+            if not col.name in self.exclude_cols():
+                val = getattr(self, col.name)
+                setattr(copy, col.name, val)
         return copy
 
     def update_from_dict(self, d):
@@ -24,7 +25,7 @@ class Base(object):
             d (dict): attributes in a dictionary.
 
         Dynamically adds property from dictionary to class-attribute.
-        
+
         """
         for k, v in d.items():
             setattr(self, k, v)

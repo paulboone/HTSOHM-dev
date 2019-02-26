@@ -12,7 +12,7 @@ class Structure(Base):
     a = Column(Float)
     b = Column(Float)
     c = Column(Float)
-    
+
     # relationship with 'materials'
     material_id = Column(Integer, ForeignKey("materials.id"))
     material = relationship("Material", back_populates="structure")
@@ -22,6 +22,9 @@ class Structure(Base):
 
     # relationship with 'lennard_jones'
     lennard_jones = relationship("LennardJones")
+
+    def exclude_cols(self):
+        return ['id']
 
     def __init__(self, a=None, b=None, c=None, atom_sites=[], lennard_jones=[]):
         self.a = a
@@ -34,7 +37,11 @@ class Structure(Base):
         copy = super(Structure, self).clone()
         if self.atom_sites:
             for atom_site in self.atom_sites:
-                copy.atom_sites.append(atom_site)
+                copy.atom_sites.append(atom_site.clone())
+        if self.lennard_jones:
+            for lj in self.lennard_jones:
+                copy.lennard_jones.append(lj.clone())
+        return copy
 
     @property
     def volume(self):
@@ -43,3 +50,7 @@ class Structure(Base):
             for atom_type in self.lennard_jones:
                 copy.lennard_jones.append(atom_type)
         return copy
+
+
+    def __repr__(self):
+        return "(%d: %f, %f, %f)" % (str(self.id), self.a, self.b, self.c)
