@@ -85,8 +85,10 @@ def serial_runloop(config_path):
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
         new_box_r = -1 * np.ones((children_per_generation, 2))
+        perturbation_methods = [""] * children_per_generation
         for i in range(children_per_generation):
             material = pseudomaterial_generator.mutate.mutate_material(run_id, parents_d[i], config["structure_parameters"])
+            perturbation_methods[i] = material.perturbation
             run_all_simulations(material, config)
             session.add(material)
             session.commit()
@@ -119,7 +121,8 @@ def serial_runloop(config_path):
                             title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
                                 (gen, len(bins), num_bins ** 2, len(new_bins),
                                 100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
-                            patches=None, prop1range=prop1range, prop2range=prop2range)
+                            patches=None, prop1range=prop1range, prop2range=prop2range, \
+                            perturbation_methods=perturbation_methods)
 
         box_d = np.append(box_d, new_box_d, axis=0)
         box_r = np.append(box_r, new_box_r, axis=0)

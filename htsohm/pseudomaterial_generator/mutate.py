@@ -12,8 +12,6 @@ from htsohm.pseudomaterial_generator.utilities import random_number_density
 def random_position(x0, x1, strength):
     # get minimum distance between two points of (1) within the box, and (2) across the box boundary
     dx = min(abs(x0 - x1), 1 - abs(x0 - x1))
-
-
     if x0 > x1 and (x0 - x1) > 0.5: # then dx will be through boundary, so move right
         x2 = (x0 + strength * dx) % 1.
     if x0 >= x1 and (x0 - x1) < 0.5: # then dx will be in box, so move left
@@ -64,34 +62,42 @@ def mutate_material(run_id, parent_id, config):
     child = parent.clone()
     cs = child.structure
 
+    child.perturbation = choice(["lattice", "atom_types", "atom_sites", "density"])
+    print("Parent ID: %d" % (child.parent_id))
+    print("PERTURBING: ", child.perturbation)
 
-    # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb lattice constants
-    cs.a = perturb_unweighted(ps.a, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
-    cs.b = perturb_unweighted(ps.b, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
-    cs.c = perturb_unweighted(ps.c, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
+    if child.perturbation == "lattice":
+        cs.a = perturb_unweighted(cs.a, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
+        cs.b = perturb_unweighted(cs.b, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
+        cs.c = perturb_unweighted(cs.c, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
 
     # store unit cell volume to row
     child.unit_cell_volume = cs.volume
 
-    # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb lennard-jones parameters
-    for at in ps.lennard_jones:
-        cs.lennard_jones.append(LennardJones(
-            atom_type = at.atom_type,
-            sigma = at.sigma + strength * (uniform(*sigma_limits) - at.sigma),
-            epsilon = at.epsilon + strength * (uniform(*epsilon_limits) - at.epsilon)))
+    if child.perturbation == "atom_types":
+        for at in cs.lennard_jones:
+            at.sigma = perturb_unweighted(at.sigma, strength * (sigma_limits[1] - sigma_limits[0]), sigma_limits)
+            at.epsilon = perturb_unweighted(at.epsilon, strength * (epsilon_limits[1] - epsilon_limits[0]), epsilon_limits)
 
-    # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb number density/ number of atom-sites
-    child.number_density = perturb_unweighted(parent.number_density, \
-                            (number_density_limits[1] - number_density_limits[0])*strength, \
-                            number_density_limits)
+    if child.perturbation == "density":
+        child.number_density = perturb_unweighted(parent.number_density, \
+                                (number_density_limits[1] - number_density_limits[0])*strength, \
+                                number_density_limits)
 
     number_of_atoms = max(1, int(child.number_density * child.unit_cell_volume))
 
     # remove atom-sites, if necessary
-    cs.atom_sites = np.random.choice(ps.atom_sites, min(number_of_atoms, len(ps.atom_sites)), replace=False).tolist()
+    cs.atom_sites = np.random.choice(cs.atom_sites, min(number_of_atoms, len(cs.atom_sites)), replace=False).tolist()
+
+    # TODO: new points always have ZERO charge?
+    # add atom-sites, if necessary
+    if number_of_atoms > len(cs.atom_sites):
+        for i in range(number_of_atoms - len(cs.atom_sites)):
+            cs.atom_sites.append(AtomSites(atom_type="A_{}".format(choice(range(number_of_atom_types))), x=random(), y=random(), z=random(), q=0.))
+
     # remove atom-sites, if necessary
     # adjust charges if atom-sites were removed
     # while not isclose(net_charge(cs.atom_sites), 0., abs_tol=1.0e-6):
@@ -104,18 +110,13 @@ def mutate_material(run_id, parent_id, config):
     #             dq = float("{0:.6f}".format(min(max_charge + cs.atom_sites[i].q, net_charge(cs.atom_sites))))
     #             cs.atom_sites[i].q -= dq
 
-    # NOTE: I _think_ this is ok
     # perturb atom-site positions
-    for a in cs.atom_sites:
-        a.x = random_position(a.x, random(), strength)
-        a.y = random_position(a.y, random(), strength)
-        a.x = random_position(a.z, random(), strength)
+    if child.perturbation == "atom_sites":
+        for a in cs.atom_sites:
+            a.x = random_position(a.x, random(), strength)
+            a.y = random_position(a.y, random(), strength)
+            a.x = random_position(a.z, random(), strength)
 
-    # TODO: new points always have ZERO charge?
-    # add atom-sites, if necessary
-    if number_of_atoms > len(cs.atom_sites):
-        for i in range(number_of_atoms - len(cs.atom_sites)):
-            cs.atom_sites.append(AtomSites(atom_type="A_{}".format(choice(range(number_of_atom_types))), x=random(), y=random(), z=random(), q=0.))
 
     # calculate avg. sigma/epsilon values
     sigma_sum, epsilon_sum = 0, 0
@@ -151,5 +152,5 @@ def mutate_material(run_id, parent_id, config):
     child_ljs = ", ".join(["(%.1f, %.1f)" % (ljs.epsilon, ljs.sigma) for ljs in cs.lennard_jones])
     print("lennard jones: %s => %s" % (parent_ljs, child_ljs))
 
-    print("FRAMEWORK NET CHARGE :\t{}".format(sum([e.q for e in cs.atom_sites])))
+    # print("FRAMEWORK NET CHARGE :\t{}".format(sum([e.q for e in cs.atom_sites])))
     return child

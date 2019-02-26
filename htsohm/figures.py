@@ -8,7 +8,8 @@ from scipy.spatial import Delaunay
 
 
 def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=[], parents=[],
-                    bins=[], new_bins=[], title="", patches=None, prop1range=(0.0,1.0), prop2range=(0.0,1.0)):
+                    bins=[], new_bins=[], title="", patches=None, prop1range=(0.0,1.0), prop2range=(0.0,1.0),
+                    perturbation_methods=None):
 
     if not triang:
         triang = Delaunay(box_r)
@@ -62,8 +63,10 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
         ax.add_patch(Circle((0.5, 0.5), 0.125, fill=False, linestyle="dashed", linewidth=1, zorder=50))
         ax.add_patch(Circle((0.5, 0.5), 0.375, fill=False, linestyle="dashed", linewidth=2, zorder=50))
 
+    p_cmap = {"lattice": "#F9F7F3", "atom_types": "#EDDEA4", "atom_sites": "#F7A072", "density": "#0FA3B1"}
     arrows = [ConnectionPatch(parents[i], children[i], "data", arrowstyle="-|>", \
-                shrinkA=5, shrinkB=5, mutation_scale=20, fc="w", linestyle="--", zorder=40) \
+                shrinkA=5, shrinkB=5, mutation_scale=20, fc=p_cmap[perturbation_methods[i]], \
+                linestyle="--", zorder=40) \
                 for i in range(len(children))]
     for a in arrows:
         ax.add_patch(a)

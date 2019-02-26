@@ -19,6 +19,8 @@ class Material(Base):
     run_id       = Column(String(50))
     uuid         = Column(String(40))
     parent_id    = Column(Integer, ForeignKey('materials.id'))
+    perturbation = Column(String(10))
+
 
     # structure properties
     unit_cell_volume     = Column(Float)
