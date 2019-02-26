@@ -115,7 +115,7 @@ def mutate_material(run_id, parent_id, config):
         for a in cs.atom_sites:
             a.x = random_position(a.x, random(), strength)
             a.y = random_position(a.y, random(), strength)
-            a.x = random_position(a.z, random(), strength)
+            a.z = random_position(a.z, random(), strength)
 
 
     # calculate avg. sigma/epsilon values
