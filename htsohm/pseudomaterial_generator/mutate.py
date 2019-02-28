@@ -6,7 +6,8 @@ from scipy.spatial import Delaunay, distance
 from sqlalchemy import text
 from sqlalchemy.orm.session import make_transient
 
-from htsohm.db import engine, session, Material, Structure, LennardJones, AtomSites
+from htsohm import db
+from htsohm.db import Material, Structure, LennardJones, AtomSites
 from htsohm.pseudomaterial_generator.utilities import random_number_density
 
 def random_position(x0, x1, strength):
@@ -55,6 +56,7 @@ def mutate_material(run_id, parent_id, config):
     ########################################################################
 
     # get parent structure
+    session = db.get_session()
     parent = session.query(Material).get(parent_id)
     ps = parent.structure
 

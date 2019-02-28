@@ -6,8 +6,8 @@ import random
 
 import numpy as np
 
-from htsohm import pseudomaterial_generator, load_config_file
-from htsohm.db import session, Material
+from htsohm import pseudomaterial_generator, load_config_file, db
+from htsohm.db import Material
 from htsohm.simulation.run_all import run_all_simulations
 
 from htsohm.figures import delaunay_figure
@@ -46,6 +46,9 @@ def serial_runloop(config_path):
 
     run_id = datetime.now().isoformat()
     config = load_config_file(config_path)
+    os.makedirs(config['output_dir'], exist_ok=True)
+    db.init_database(config["database_connection_string"])
+    session = db.get_session()
 
     num_bins = config['number_of_convergence_bins']
     bin_counts = np.zeros((num_bins, num_bins))
@@ -90,7 +93,6 @@ def serial_runloop(config_path):
     print("bins", bins)
 
     last_benchmark_reached = False
-    os.makedirs(config['visualization_output_dir'], exist_ok=True)
 
     for gen in range(1, config['max_generations'] + 1):
 
@@ -130,7 +132,7 @@ def serial_runloop(config_path):
                 last_benchmark_reached = True
 
         if config['output_all_graphs']:
-            output_path = os.path.join(config['visualization_output_dir'], "binplot_%d.png" % gen)
+            output_path = os.path.join(config['output_dir'], "binplot_%d.png" % gen)
             delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
                             bins=bin_counts, new_bins=new_bins,
                             title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
@@ -141,7 +143,7 @@ def serial_runloop(config_path):
 
         if gen <= 10 or (gen <=50 and gen % 10 == 0) or (gen <=500 and gen % 50 == 0) or \
             gen % 100 == 0 or last_benchmark_reached:
-            output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % gen)
+            output_path = os.path.join(config['output_dir'], "triplot_%d.png" % gen)
             delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
                             bins=bin_counts, new_bins=new_bins,
                             title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
