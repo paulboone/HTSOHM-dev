@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 import math
+import random
 
 import numpy as np
 
@@ -67,7 +68,13 @@ def serial_runloop(config_path):
     box_d = np.zeros(children_per_generation)
     box_r = -1 * np.ones((children_per_generation, 2))
     for i in range(children_per_generation):
+        if config['initial_points_random_seed']:
+            print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
+            random.seed(config['initial_points_random_seed'])
+
         material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
+        random.seed() # flush the seed so that only the initial points are set, not generated points
+
         run_all_simulations(material, config)
         session.add(material)
         session.commit()
