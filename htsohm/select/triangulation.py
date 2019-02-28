@@ -7,11 +7,8 @@ from scipy.spatial import Delaunay
 
 def choose_parents_hull(triang, box_range, num_parents):
     hull_point_indices = np.unique(triang.convex_hull.flatten())
-
     point_weights = {i:0.0 for i in hull_point_indices}
-    distances = [np.sqrt(np.sum((box_range[edge[0]] - box_range[edge[1]]) ** 2))for edge in triang.convex_hull]
-    distances.sort()
-
+    
     for edge in triang.convex_hull:
         distance = np.sqrt(np.sum((box_range[edge[0]] - box_range[edge[1]]) ** 2))
         point_weights[edge[0]] += distance
