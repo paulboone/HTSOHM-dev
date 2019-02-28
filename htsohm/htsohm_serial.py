@@ -96,15 +96,22 @@ def serial_runloop(config_path):
 
     for gen in range(1, config['max_generations'] + 1):
 
-        parents_d, parents_r = choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
+        parents_r = parents_d = perturbation_methods = None
+        if config['generator_type'] == 'mutate':
+            parents_d, parents_r = choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
+            perturbation_methods = [""] * children_per_generation
 
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
         new_box_r = -1 * np.ones((children_per_generation, 2))
-        perturbation_methods = [""] * children_per_generation
         for i in range(children_per_generation):
-            material = pseudomaterial_generator.mutate.mutate_material(run_id, parents_d[i], config["structure_parameters"])
-            perturbation_methods[i] = material.perturbation
+
+            if config['generator_type'] == 'random':
+                material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
+            elif config['generator_type'] == 'mutate':
+                material = pseudomaterial_generator.mutate.mutate_material(run_id, parents_d[i], config["structure_parameters"])
+                perturbation_methods[i] = material.perturbation
+
             run_all_simulations(material, config)
             session.add(material)
             session.commit()
