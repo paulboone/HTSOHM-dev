@@ -70,14 +70,13 @@ def serial_runloop(config_path):
     # generate initial generation of random materials
     box_d = np.zeros(children_per_generation)
     box_r = -1 * np.ones((children_per_generation, 2))
+
+    if config['initial_points_random_seed']:
+        print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
+        random.seed(config['initial_points_random_seed'])
+
     for i in range(children_per_generation):
-        if config['initial_points_random_seed']:
-            print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
-            random.seed(config['initial_points_random_seed'])
-
         material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
-        random.seed() # flush the seed so that only the initial points are set, not generated points
-
         run_all_simulations(material, config)
         session.add(material)
         session.commit()
@@ -85,6 +84,7 @@ def serial_runloop(config_path):
         box_r[i,:] = (material.void_fraction[0].void_fraction, material.gas_loading[0].absolute_volumetric_loading)
         # box_r[i,:] = (material[prop1], material[prop2])
 
+    random.seed() # flush the seed so that only the initial points are set, not generated points
 
     all_bins = calc_bins(box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
     for bx, by in all_bins:
