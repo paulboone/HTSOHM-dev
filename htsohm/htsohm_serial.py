@@ -43,9 +43,12 @@ def serial_runloop(config_path):
 
     """
 
-    config = load_config_file(config_path)
-    num_bins = config['number_of_convergence_bins']
     run_id = datetime.now().isoformat()
+    config = load_config_file(config_path)
+
+    num_bins = config['number_of_convergence_bins']
+    bin_counts = np.zeros((num_bins, num_bins))
+
     children_per_generation = config['children_per_generation']
     # prop1 = config['prop1']
     # prop2 = config['prop2']
@@ -72,7 +75,11 @@ def serial_runloop(config_path):
         box_r[i,:] = (material.void_fraction[0].void_fraction, material.gas_loading[0].absolute_volumetric_loading)
         # box_r[i,:] = (material[prop1], material[prop2])
 
-    bins = set(calc_bins(box_r, num_bins, prop1range=prop1range, prop2range=prop2range))
+
+    all_bins = calc_bins(box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
+    for bx, by in all_bins:
+        bin_counts[bx,by] += 1
+    bins = set(all_bins)
     print("bins", bins)
 
     last_benchmark_reached = False
@@ -97,12 +104,14 @@ def serial_runloop(config_path):
             # new_box_r[i,:] = (material[prop1], material[prop2])
 
         # TODO: bins for methane loading?
-        new_bins = set(calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)) - bins
+        all_bins = calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
+        for bx, by in all_bins:
+            bin_counts[bx,by] += 1
+        new_bins = set(all_bins) - bins
         bins = bins.union(new_bins)
 
         # evaluate algorithm effectiveness
-        bin_count = len(bins)
-        bin_fraction_explored = bin_count / num_bins ** 2
+        bin_fraction_explored = len(bins) / num_bins ** 2
         if verbose:
             print_block('%s GENERATION %s: %5.2f%%' % (run_id, gen, bin_fraction_explored * 100))
         if bin_fraction_explored >= next_benchmark:
@@ -113,11 +122,21 @@ def serial_runloop(config_path):
             else:
                 last_benchmark_reached = True
 
+        if config['output_all_graphs']:
+            output_path = os.path.join(config['visualization_output_dir'], "binplot_%d.png" % gen)
+            delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
+                            bins=bin_counts, new_bins=new_bins,
+                            title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
+                                (gen, len(bins), num_bins ** 2, len(new_bins),
+                                100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
+                            patches=None, prop1range=prop1range, prop2range=prop2range, \
+                            perturbation_methods=perturbation_methods, showtriangulation=False)
+
         if gen <= 10 or (gen <=50 and gen % 10 == 0) or (gen <=500 and gen % 50 == 0) or \
             gen % 100 == 0 or last_benchmark_reached:
             output_path = os.path.join(config['visualization_output_dir'], "triplot_%d.png" % gen)
             delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
-                            bins=bins, new_bins=new_bins,
+                            bins=bin_counts, new_bins=new_bins,
                             title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
                                 (gen, len(bins), num_bins ** 2, len(new_bins),
                                 100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
