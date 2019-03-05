@@ -56,11 +56,13 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
     # for p in hull_points:
     #     ax.annotate(i, (p[0], p[1] - 0.01), zorder=30, ha="center", va="top", size=9)
 
+
     # plot children
-    ax.plot(children[:,0], children[:,1], color='#81ff6b', marker='o', linestyle='None', zorder=12)
+    if len(children) > 0:
+        ax.plot(children[:,0], children[:,1], color='#81ff6b', marker='o', linestyle='None', zorder=12)
 
     # plot chosen parents with proportional circles and label
-    if parents:
+    if len(parents) > 0:
         parent_counter = Counter([tuple(x) for x in parents]) #need tuples because they are hashable
         unique_parents = np.array([[x[0], x[1], num] for x, num in parent_counter.items()])
         ax.scatter(unique_parents[:,0], unique_parents[:,1], s=40*unique_parents[:,2], color='#ffbe6b', marker='o', linestyle='None', zorder=15)

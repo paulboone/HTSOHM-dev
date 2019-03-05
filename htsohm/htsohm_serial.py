@@ -92,11 +92,18 @@ def serial_runloop(config_path):
     bins = set(all_bins)
     print("bins", bins)
 
+    output_path = os.path.join(config['output_dir'], "triplot_0.png")
+    delaunay_figure(box_r, num_bins, output_path, bins=bin_counts, \
+                    title="Starting random materials", \
+                    prop1range=prop1range, prop2range=prop2range)
+
+
     last_benchmark_reached = False
 
     for gen in range(1, config['max_generations'] + 1):
 
-        parents_r = parents_d = perturbation_methods = None
+        parents_r = parents_d = []
+        perturbation_methods = None
         if config['generator_type'] == 'mutate':
             parents_d, parents_r = choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
             perturbation_methods = [""] * children_per_generation
