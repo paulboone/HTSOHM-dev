@@ -11,7 +11,8 @@ from htsohm.db import Material
 from htsohm.simulation.run_all import run_all_simulations
 
 from htsohm.figures import delaunay_figure
-from htsohm.select.triangulation import choose_parents
+import htsohm.select.triangulation as selector_tri
+import htsohm.select.density_bin as selector_bin
 
 
 def print_block(string):
@@ -37,6 +38,9 @@ def calc_bin(value, bound_min, bound_max, bins):
 def calc_bins(box_r, num_bins, prop1range=(0.0, 1.0), prop2range=(0.0, 1.0)):
     return [(calc_bin(b[0], *prop1range, num_bins), calc_bin(b[1], *prop2range, num_bins)) for b in box_r]
 
+def empty_lists_2d(x,y):
+    return [[[] for j in range(x)] for i in range(y)]
+
 def serial_runloop(config_path):
     """
     Args:
@@ -52,6 +56,7 @@ def serial_runloop(config_path):
 
     num_bins = config['number_of_convergence_bins']
     bin_counts = np.zeros((num_bins, num_bins))
+    bin_materials = empty_lists_2d(num_bins, num_bins)
 
     children_per_generation = config['children_per_generation']
     # prop1 = config['prop1']
@@ -68,7 +73,7 @@ def serial_runloop(config_path):
     print(config)
 
     # generate initial generation of random materials
-    box_d = np.zeros(children_per_generation)
+    box_d = np.zeros(children_per_generation, dtype=int)
     box_r = -1 * np.ones((children_per_generation, 2))
 
     if config['initial_points_random_seed']:
@@ -76,10 +81,12 @@ def serial_runloop(config_path):
         random.seed(config['initial_points_random_seed'])
 
     for i in range(children_per_generation):
+        print("Material Index: ", i)
         material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
         run_all_simulations(material, config)
         session.add(material)
         session.commit()
+
         box_d[i] = material.id
         box_r[i,:] = (material.void_fraction[0].void_fraction, material.gas_loading[0].absolute_volumetric_loading)
         # box_r[i,:] = (material[prop1], material[prop2])
@@ -87,8 +94,9 @@ def serial_runloop(config_path):
     random.seed() # flush the seed so that only the initial points are set, not generated points
 
     all_bins = calc_bins(box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
-    for bx, by in all_bins:
+    for i, (bx, by) in enumerate(all_bins):
         bin_counts[bx,by] += 1
+        bin_materials[bx][by].append(i)
     bins = set(all_bins)
     print("bins", bins)
 
@@ -104,32 +112,40 @@ def serial_runloop(config_path):
 
         parents_r = parents_d = []
         perturbation_methods = None
-        if config['generator_type'] == 'mutate':
-            parents_d, parents_r = choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
+        if config['selector_type'] == 'simplices-or-hull':
+            parents_d, parents_r = selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
+            perturbation_methods = [""] * children_per_generation
+        elif config['selector_type'] == 'density-bin':
+            parents_d, parents_r = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
+            print("parents_d: ", parents_d)
             perturbation_methods = [""] * children_per_generation
 
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
         new_box_r = -1 * np.ones((children_per_generation, 2))
         for i in range(children_per_generation):
-
+            print("Material Index: ", i + gen * children_per_generation)
             if config['generator_type'] == 'random':
                 material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
             elif config['generator_type'] == 'mutate':
+                print("parents_d[i]: ", parents_d[i])
                 material = pseudomaterial_generator.mutate.mutate_material(run_id, parents_d[i], config["structure_parameters"])
                 perturbation_methods[i] = material.perturbation
 
             run_all_simulations(material, config)
             session.add(material)
             session.commit()
+
             new_box_d[i] = material.id
             new_box_r[i,:] = (material.void_fraction[0].void_fraction, material.gas_loading[0].absolute_volumetric_loading)
             # new_box_r[i,:] = (material[prop1], material[prop2])
 
         # TODO: bins for methane loading?
         all_bins = calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
-        for bx, by in all_bins:
+        for i, (bx, by) in enumerate(all_bins):
             bin_counts[bx,by] += 1
+            material_index = i + gen * children_per_generation
+            bin_materials[bx][by].append(material_index)
         new_bins = set(all_bins) - bins
         bins = bins.union(new_bins)
 
