@@ -53,4 +53,4 @@ class Structure(Base):
 
 
     def __repr__(self):
-        return "(%d: %f, %f, %f)" % (str(self.id), self.a, self.b, self.c)
+        return "(%d: %f, %f, %f)" % (self.id, self.a, self.b, self.c)
