@@ -10,11 +10,11 @@ number_of_convergence_bins: 40
 max_generations: 3000
 children_per_generation: 10
 benchmarks: [0.25, 0.5, 0.75, 0.9]
-output_dir: "output-hull"
+output_dir: "output-bin"
 selector_type: "density-bin"
 generator_type: "mutate"
 simplices_or_hull: "hull"
-database_connection_string: "sqlite:///output-hull/HTSOHM-dev.db"
+database_connection_string: "sqlite:///output-bin/HTSOHM-dev.db"
 
 prop1range: [0.0, 1.25]
 prop2range: [0.0, 350.0]
