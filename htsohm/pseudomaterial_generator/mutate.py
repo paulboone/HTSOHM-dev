@@ -58,7 +58,7 @@ def mutate_material(run_id, parent_id, config):
 
     # get parent structure
     session = db.get_session()
-    parent = session.query(Material).get(parent_id)
+    parent = session.query(Material).get(int(parent_id))
     ps = parent.structure
 
     # create database row
