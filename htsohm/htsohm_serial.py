@@ -169,10 +169,10 @@ def serial_runloop(config_path):
                                 (gen, len(bins), num_bins ** 2, len(new_bins),
                                 100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
                             patches=None, prop1range=prop1range, prop2range=prop2range, \
-                            perturbation_methods=perturbation_methods, showtriangulation=False)
+                            perturbation_methods=perturbation_methods, show_triangulation=False, show_hull=False)
 
-        if gen <= 10 or (gen <=50 and gen % 10 == 0) or (gen <=500 and gen % 50 == 0) or \
-            gen % 100 == 0 or last_benchmark_reached:
+        if config['output_tri_graph'] and (gen <= 10 or (gen <=50 and gen % 10 == 0) or
+            (gen <=500 and gen % 50 == 0) or gen % 100 == 0 or last_benchmark_reached):
             output_path = os.path.join(config['output_dir'], "triplot_%d.png" % gen)
             delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
                             bins=bin_counts, new_bins=new_bins,
