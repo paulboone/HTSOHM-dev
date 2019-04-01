@@ -16,3 +16,7 @@ class VoidFraction(Base):
 
     # simulation output
     void_fraction = Column(Float)
+
+    def __repr__(self):
+        return "(%s: %s-%s p: %s)" % (str(self.id), self.material_id,
+                    self.adsorbate, self.temperature, self.void_fraction)
