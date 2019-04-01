@@ -1,4 +1,5 @@
 import os
+import sys
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -21,7 +22,8 @@ def init_database(connection_string):
     if 'sqlite' in connection_string:
         print(
             'WARNING: attempting to use SQLite database! Okay for local debugging\n' +
-            'but will not work with multiple workers, due to lack of locking features.'
+            'but will not work with multiple workers, due to lack of locking features.',
+            file=sys.stderr
         )
 
     __engine__ = create_engine(connection_string)
