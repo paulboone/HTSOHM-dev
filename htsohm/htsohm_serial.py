@@ -99,6 +99,7 @@ def serial_runloop(config_path):
             print("Material Index: ", i)
             material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
             run_all_simulations(material, config)
+            material.generation = 0
             session.add(material)
             session.commit()
 
@@ -142,6 +143,7 @@ def serial_runloop(config_path):
                 perturbation_methods[i] = material.perturbation
 
             run_all_simulations(material, config)
+            material.generation = gen
             session.add(material)
             session.commit()
 
