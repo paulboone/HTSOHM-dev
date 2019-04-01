@@ -66,7 +66,7 @@ def mutate_material(run_id, parent_id, config):
     cs = child.structure
 
     if perturb == "random":
-        child.perturbation = choice(["lattice", "atom_types", "atom_sites", "density"])
+        child.perturbation = choice(["lattice", "lattice_nodens", "atom_types", "atom_sites", "density", "all"])
     else:
         child.perturbation = perturb
 
@@ -74,10 +74,15 @@ def mutate_material(run_id, parent_id, config):
     print("PERTURBING: ", child.perturbation)
 
     # perturb lattice constants
-    if child.perturbation in ["lattice", "all"]:
+    if child.perturbation in ["lattice", "lattice_nodens", "all"]:
         cs.a = perturb_unweighted(cs.a, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
         cs.b = perturb_unweighted(cs.b, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
         cs.c = perturb_unweighted(cs.c, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
+
+        if child.perturbation in ["lattice", "all"]:
+            new_density = len(cs.atom_sites) / cs.volume
+            child.number_density = min(max(new_density, number_density_limits[0]), number_density_limits[1])
+
 
     # store unit cell volume to row
     child.unit_cell_volume = cs.volume
@@ -94,15 +99,13 @@ def mutate_material(run_id, parent_id, config):
                                 (number_density_limits[1] - number_density_limits[0])*strength, \
                                 number_density_limits)
 
-    number_of_atoms = max(1, int(child.number_density * child.unit_cell_volume))
-
-    # remove atom-sites, if necessary
-    cs.atom_sites = np.random.choice(cs.atom_sites, min(number_of_atoms, len(cs.atom_sites)), replace=False).tolist()
-
-    # TODO: new points always have ZERO charge?
-    # add atom-sites, if necessary
-    if number_of_atoms > len(cs.atom_sites):
+    # adjust # of atom sites to match density--should only be required if number density is perturbed!
+    number_of_atoms = max(1, round(child.number_density * child.unit_cell_volume))
+    if number_of_atoms < len(cs.atom_sites):
+        cs.atom_sites = np.random.choice(cs.atom_sites, number_of_atoms, replace=False).tolist()
+    elif number_of_atoms > len(cs.atom_sites):
         for i in range(number_of_atoms - len(cs.atom_sites)):
+            # TODO: new points always have ZERO charge?
             cs.atom_sites.append(AtomSites(atom_type="A_{}".format(choice(range(number_of_atom_types))), x=random(), y=random(), z=random(), q=0.))
 
     # remove atom-sites, if necessary
