@@ -102,8 +102,10 @@ def mutate_material(run_id, parent_id, config):
     # adjust # of atom sites to match density--should only be required if number density is perturbed!
     number_of_atoms = max(1, round(child.number_density * child.unit_cell_volume))
     if number_of_atoms < len(cs.atom_sites):
+        print("***** deleting atom sites")
         cs.atom_sites = np.random.choice(cs.atom_sites, number_of_atoms, replace=False).tolist()
     elif number_of_atoms > len(cs.atom_sites):
+        print("***** adding atom sites")
         for i in range(number_of_atoms - len(cs.atom_sites)):
             # TODO: new points always have ZERO charge?
             cs.atom_sites.append(AtomSites(atom_type="A_{}".format(choice(range(number_of_atom_types))), x=random(), y=random(), z=random(), q=0.))
