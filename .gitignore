@@ -4,12 +4,12 @@ settings/*.yaml
 !settings/*.sample.yaml
 *.db
 output_*
+output-*
 config
 logs
 .ipynb_checkpoints/
 *.o*
-2016*
-
+2019*
 dist/
 build/
 MANIFEST
