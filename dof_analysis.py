@@ -52,10 +52,11 @@ def dof_analysis(config_path, output_directory, run_id=None):
     gen = 1
     new_mats_d = mats_d[gen*children_per_generation:(gen + 1)*children_per_generation]
     new_mats_r = mats_r[gen*children_per_generation:(gen + 1)*children_per_generation]
+    animation = []
     while len(new_mats_d) > 0:
         new_bins = calc_bins(new_mats_r, num_bins, prop1range=prop1range, prop2range=prop2range)
 
-
+        gen_animation = []
         gen_stats = {t:[0, 0.0, 0.0, 0.0, 0] for t in perturbation_types}
         for i, m in enumerate(new_mats_d):
             m_stats = gen_stats[m.perturbation]
@@ -67,6 +68,11 @@ def dof_analysis(config_path, output_directory, run_id=None):
             m_stats[3] += (dvf ** 2 + dml ** 2) ** 0.5
             if bin_counts[new_bins[i][0], new_bins[i][1]] == 0:
                 m_stats[4] += 1
+
+            # generate information for animation script
+            parent_r = (m.parent.void_fraction[0].void_fraction, m.parent.gas_loading[0].absolute_volumetric_loading)
+            parent_bin = calc_bins([parent_r], num_bins, prop1range=prop1range, prop2range=prop2range)[0]
+            gen_animation.append([new_bins[i][0], new_bins[i][1], parent_bin[0], parent_bin[1]])
 
             # this and dml needed for output of numpy arrays # num_materials, ∆vf, ∆ml, ∆all, new_bins
             pts[m.perturbation].append([m.parent.gas_loading[0].absolute_volumetric_loading / ml_binunits, dml])
@@ -80,7 +86,9 @@ def dof_analysis(config_path, output_directory, run_id=None):
         gen += 1
         new_mats_d = mats_d[gen*children_per_generation:(gen + 1)*children_per_generation]
         new_mats_r = mats_r[gen*children_per_generation:(gen + 1)*children_per_generation]
+        animation.append(gen_animation)
 
+    np.save(os.path.join(output_directory, "animation"), animation)
 
     for k in pts:
         np.save(os.path.join(output_directory, k), pts[k])
