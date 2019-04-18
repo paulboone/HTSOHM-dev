@@ -2,6 +2,7 @@
 
 import csv
 from itertools import chain
+import os
 import sys
 
 import click
@@ -11,7 +12,7 @@ from htsohm import load_config_file, db
 from htsohm.db import Material
 from htsohm.htsohm_serial import calc_bins
 
-def dof_analysis(config_path, run_id=None):
+def dof_analysis(config_path, output_directory, run_id=None):
     config = load_config_file(config_path)
     db.init_database(config["database_connection_string"])
     session = db.get_session()
@@ -31,14 +32,12 @@ def dof_analysis(config_path, run_id=None):
         materials = materials.filter(Material.run_id==run_id)
 
     perturbation_types = ["lattice", "lattice_nodens", "atom_types", "atom_sites", "density", "all"]
-    tsv = csv.writer(sys.stdout, delimiter="\t", lineterminator="\n")
 
-    write_all_stats = False
-    if write_all_stats:
-        tsv.writerow(["perturbation", "ml", "dml"])
-    else:
-        tsv.writerow([""] + list(chain.from_iterable([[t] * 5 for t in perturbation_types])))
-        tsv.writerow(["gen"] + list(chain.from_iterable([["#", "∆vf", "∆ml", "dist", "new_bins"] for t in perturbation_types])))
+    tsv_output_path = os.path.join(output_directory, "data.tsv")
+    tsvfile = open(tsv_output_path, 'w')
+    tsv = csv.writer(tsvfile, delimiter="\t", lineterminator="\n")
+    tsv.writerow([""] + list(chain.from_iterable([[t] * 5 for t in perturbation_types])))
+    tsv.writerow(["gen"] + list(chain.from_iterable([["#", "∆vf", "∆ml", "dist", "new_bins"] for t in perturbation_types])))
 
     mats_d = materials.all()
     mats_r = [(m.void_fraction[0].void_fraction, m.gas_loading[0].absolute_volumetric_loading) for m in mats_d]
@@ -56,45 +55,42 @@ def dof_analysis(config_path, run_id=None):
     while len(new_mats_d) > 0:
         new_bins = calc_bins(new_mats_r, num_bins, prop1range=prop1range, prop2range=prop2range)
 
-        # num_materials, ∆vf, ∆ml, ∆all, new_bins
-        if write_all_stats:
-            for m in new_mats_d:
-                dml = (m.gas_loading[0].absolute_volumetric_loading - m.parent.gas_loading[0].absolute_volumetric_loading) / ml_binunits
-                pts[m.perturbation].append([m.parent.gas_loading[0].absolute_volumetric_loading / ml_binunits, dml])
-                # tsv.writerow([m.perturbation, m.gas_loading[0].absolute_volumetric_loading / ml_binunits, dml])
-        else:
-            gen_stats = {t:[0, 0.0, 0.0, 0.0, 0] for t in perturbation_types}
-            for i, m in enumerate(new_mats_d):
-                m_stats = gen_stats[m.perturbation]
-                m_stats[0] += 1
-                dvf = (m.void_fraction[0].void_fraction - m.parent.void_fraction[0].void_fraction) / vf_binunits
-                dml = (m.gas_loading[0].absolute_volumetric_loading - m.parent.gas_loading[0].absolute_volumetric_loading) / ml_binunits
-                m_stats[1] += dvf
-                m_stats[2] += dml
-                m_stats[3] += (dvf ** 2 + dml ** 2) ** 0.5
-                if bin_counts[new_bins[i][0], new_bins[i][1]] == 0:
-                    m_stats[4] += 1
 
+        gen_stats = {t:[0, 0.0, 0.0, 0.0, 0] for t in perturbation_types}
+        for i, m in enumerate(new_mats_d):
+            m_stats = gen_stats[m.perturbation]
+            m_stats[0] += 1
+            dvf = (m.void_fraction[0].void_fraction - m.parent.void_fraction[0].void_fraction) / vf_binunits
+            dml = (m.gas_loading[0].absolute_volumetric_loading - m.parent.gas_loading[0].absolute_volumetric_loading) / ml_binunits
+            m_stats[1] += dvf
+            m_stats[2] += dml
+            m_stats[3] += (dvf ** 2 + dml ** 2) ** 0.5
+            if bin_counts[new_bins[i][0], new_bins[i][1]] == 0:
+                m_stats[4] += 1
 
-            for i, (bx, by) in enumerate(new_bins):
-                bin_counts[bx,by] += 1
+            # this and dml needed for output of numpy arrays # num_materials, ∆vf, ∆ml, ∆all, new_bins
+            pts[m.perturbation].append([m.parent.gas_loading[0].absolute_volumetric_loading / ml_binunits, dml])
 
-            row = [gen] + list(chain.from_iterable([gen_stats[t] for t in perturbation_types]))
-            tsv.writerow(row)
+        for i, (bx, by) in enumerate(new_bins):
+            bin_counts[bx,by] += 1
+
+        row = [gen] + list(chain.from_iterable([gen_stats[t] for t in perturbation_types]))
+        tsv.writerow(row)
 
         gen += 1
         new_mats_d = mats_d[gen*children_per_generation:(gen + 1)*children_per_generation]
         new_mats_r = mats_r[gen*children_per_generation:(gen + 1)*children_per_generation]
 
-    if write_all_stats:
-        for k in pts:
-            np.save(k, pts[k])
+
+    for k in pts:
+        np.save(os.path.join(output_directory, k), pts[k])
 
 @click.command()
 @click.argument('config_path', type=click.Path())
+@click.argument('output_directory', type=click.Path())
 @click.option('--run_id', type=click.STRING, default=None)
-def dof(config_path, run_id):
-    dof_analysis(config_path, run_id)
+def dof(config_path, output_directory, run_id):
+    dof_analysis(config_path, output_directory, run_id)
 
 if __name__ == '__main__':
     dof()
