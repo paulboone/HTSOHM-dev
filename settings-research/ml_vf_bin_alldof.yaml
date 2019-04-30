@@ -4,19 +4,21 @@ htsohm_dir: "/home/pboone/workspace/HTSOHM-dev"
 verbose: true
 keep_configs: true
 output_all_graphs: true
+output_tri_graph: false
 initial_points_random_seed: 1701393
+# load_restart_path: "/home/pboone/workspace/HTSOHM-dev/output-bin/restart_3.txt.npz"
+
 
 number_of_convergence_bins: 40
 max_generations: 3000
 children_per_generation: 10
 benchmarks: [0.25, 0.5, 0.75, 0.9]
-output_dir: "output-bin"
+output_dir: "output-bin-alldofs"
 selector_type: "density-bin"
 generator_type: "mutate"
-simplices_or_hull: "hull"
-database_connection_string: "sqlite:///output-bin/HTSOHM-dev.db"
+database_connection_string: "sqlite:///output-bin-alldofs/HTSOHM-dev.db"
 
-prop1range: [0.0, 1.25]
+prop1range: [0.0, 1.0]
 prop2range: [0.0, 350.0]
 
 structure_parameters:
@@ -27,7 +29,7 @@ structure_parameters:
   number_density_limits: [1.49e-05, 0.02122]
   sigma_limits: [1.052, 6.549]
   mutation_strength: 0.2
-  perturb: "random"
+  perturb: "all"
 
 simulations:
   1:
