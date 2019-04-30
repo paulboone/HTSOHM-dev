@@ -1,7 +1,7 @@
 simulation_directory: 'HTSOHM'
 
 verbose: true
-keep_configs: true
+keep_configs: false
 output_all_graphs: true
 output_tri_graph: false
 initial_points_random_seed: 1701393
