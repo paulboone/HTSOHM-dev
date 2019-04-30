@@ -19,7 +19,7 @@ In any case, following Python packages are required:
   - numpy   
   - SQLAlchemy   
   - RASPA2 (git+https://github.com/WilmerLab/raspa2)   
-  
+
 ## First time setup
 ```
 # If using environment modules    
@@ -38,12 +38,6 @@ source ~/venv/htsohm/bin/activate
 cd path/to/htsohm/repo    
 pip install -r requirements.txt    
 ```
-You will need a database.yaml file for HTSOHM to use to store results. You    
-can use the database.sample.yaml file (just copy it to database.yaml) if you    
-just want to use a local SQLite database. Otherwise, enter in your    
-connection_string into the database.yaml file per the format of the example    
-file.    
-  
 You will also need configuration file to specify the run-parameters. You can    
 use the htsohm.sample.yaml file (just copy it and change the values specified    
 within).    
@@ -77,13 +71,13 @@ resources such as PBS/Torque.
 cd /path/to/htsohm/repo
 ~/venv/htsohm/bin/python setup.py install
 ```
-  
+
 Please send questions/comments/concerns to `ark111@pitt.edu`.
-  
+
 ## License
-  
+
 HTSOHM-dev and related modules released under the MIT License 2016.    
-  
+
 ## Development environment
 
 ```
