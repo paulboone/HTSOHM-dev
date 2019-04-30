@@ -6,6 +6,7 @@ import random
 
 import numpy as np
 
+import htsohm
 from htsohm import pseudomaterial_generator, load_config_file, db
 from htsohm.db import Material
 from htsohm.simulation.run_all import run_all_simulations
@@ -57,8 +58,13 @@ def serial_runloop(config_path):
 
     run_id = datetime.now().isoformat()
     config = load_config_file(config_path)
+    if not "htsohm_dir" in config:
+        config["htsohm_dir"] = os.path.dirname(os.path.dirname(htsohm.__file__))
     os.makedirs(config['output_dir'], exist_ok=True)
-    db.init_database(config["database_connection_string"])
+    dbcs = config["database_connection_string"]
+    if dbcs == "sqlite":
+        dbcs = "sqlite:///%s" % os.path.join(config['output_dir'], "HTSOHM-dev.db")
+    db.init_database(dbcs)
     session = db.get_session()
 
     print(config)

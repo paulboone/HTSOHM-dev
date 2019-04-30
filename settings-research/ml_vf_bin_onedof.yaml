@@ -1,5 +1,4 @@
 simulation_directory: 'HTSOHM'
-htsohm_dir: "/home/pboone/workspace/HTSOHM-dev"
 
 verbose: true
 keep_configs: true
@@ -16,7 +15,7 @@ benchmarks: [0.25, 0.5, 0.75, 0.9]
 output_dir: "output-bin-onedof"
 selector_type: "density-bin"
 generator_type: "mutate"
-database_connection_string: "sqlite:///output-bin-onedof/HTSOHM-dev.db"
+database_connection_string: "sqlite"
 
 prop1range: [0.0, 1.0]
 prop2range: [0.0, 350.0]
