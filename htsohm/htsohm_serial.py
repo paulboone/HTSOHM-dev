@@ -121,21 +121,23 @@ def serial_runloop(config_path):
             bin_materials[bx][by].append(i)
         bins = set(all_bins)
 
-        output_path = os.path.join(config['output_dir'], "triplot_0.png")
+        output_path = os.path.join(config['output_dir'], "binplot_0.png")
         delaunay_figure(box_r, num_bins, output_path, bins=bin_counts, \
-                        title="Starting random materials", \
-                        prop1range=prop1range, prop2range=prop2range)
+                            title="Starting random materials", show_triangulation=False, show_hull=False, \
+                            prop1range=prop1range, prop2range=prop2range)
+
         start_gen = 1
 
     for gen in range(start_gen, config['max_generations'] + 1):
         parents_r = parents_d = []
-        perturbation_methods = None
+        perturbation_methods = [""] * children_per_generation
+        bin_scores = None
         if config['selector_type'] == 'simplices-or-hull':
             parents_d, parents_r = selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
-            perturbation_methods = [""] * children_per_generation
         elif config['selector_type'] == 'density-bin':
-            parents_d, parents_r = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
-            perturbation_methods = [""] * children_per_generation
+            parents_d, parents_r, _ = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
+        elif config['selector_type'] == 'density-bin-neighbor-radius':
+            parents_d, parents_r, bin_scores = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials, score_by_empty_neighbors=True)
 
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
@@ -186,7 +188,8 @@ def serial_runloop(config_path):
                                 (gen, len(bins), num_bins ** 2, len(new_bins),
                                 100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
                             patches=None, prop1range=prop1range, prop2range=prop2range, \
-                            perturbation_methods=perturbation_methods, show_triangulation=False, show_hull=False)
+                            perturbation_methods=perturbation_methods, show_triangulation=False, show_hull=False,
+                            bin_scores=bin_scores)
 
         if config['output_tri_graph'] and (gen <= 10 or (gen <=50 and gen % 10 == 0) or
             (gen <=500 and gen % 50 == 0) or gen % 100 == 0 or last_benchmark_reached):

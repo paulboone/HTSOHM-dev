@@ -10,7 +10,7 @@ from scipy.spatial import Delaunay
 def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=[], parents=[],
                     bins=[], new_bins=[], title="", patches=None, prop1range=(0.0,1.0),
                     prop2range=(0.0,1.0),perturbation_methods=None, show_grid=False,
-                    show_triangulation=True, show_hull=True, bin_saturated=10):
+                    show_triangulation=True, show_hull=True, bin_saturated=10, bin_scores=None):
 
 
     # plot visualization
@@ -40,6 +40,10 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
     new_bin_rects = [Rectangle((b[0] * dbinx, b[1] * dbiny), dbinx, dbiny) for b in new_bins]
     pc2 = PatchCollection(new_bin_rects, facecolor='#82b7b7')
     ax.add_collection(pc2)
+
+    if bin_scores is not None:
+        for (i,j), score in bin_scores:
+            ax.annotate(str(int(score)), ((i + 0.5) * dbinx, (j+0.5) * dbiny), zorder=80, ha="center", va="center", size=9)
 
     if not triang and (show_hull or show_triangulation):
         triang = Delaunay(box_r)
