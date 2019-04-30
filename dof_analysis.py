@@ -52,7 +52,8 @@ def dof_analysis(config_path, output_directory, run_id=None):
     gen = 1
     new_mats_d = mats_d[gen*children_per_generation:(gen + 1)*children_per_generation]
     new_mats_r = mats_r[gen*children_per_generation:(gen + 1)*children_per_generation]
-    animation = []
+    animation = [[[b[0], b[1], -1, -1] for b in new_bins]]
+
     while len(new_mats_d) > 0:
         new_bins = calc_bins(new_mats_r, num_bins, prop1range=prop1range, prop2range=prop2range)
 
