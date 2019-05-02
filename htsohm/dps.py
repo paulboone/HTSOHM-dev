@@ -6,8 +6,8 @@ from htsohm.htsohm_serial import serial_runloop
 
 @click.command()
 @click.argument('config_path',type=click.Path())
-def dps(config_path):
+def cmdline(config_path):
     serial_runloop(config_path)
 
 if __name__ == '__main__':
-    dps()
+    cmdline()
