@@ -14,6 +14,7 @@ from htsohm.simulation.run_all import run_all_simulations
 from htsohm.figures import delaunay_figure
 import htsohm.select.triangulation as selector_tri
 import htsohm.select.density_bin as selector_bin
+import htsohm.select.best as selector_best
 
 
 def print_block(string):
@@ -138,6 +139,9 @@ def serial_runloop(config_path):
             parents_d, parents_r, _ = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
         elif config['selector_type'] == 'density-bin-neighbor-radius':
             parents_d, parents_r, bin_scores = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials, score_by_empty_neighbors=True)
+        elif config['selector_type'] == 'best':
+            parents_d, parents_r, _ = selector_best.choose_parents(children_per_generation, box_d, box_r)
+
 
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
