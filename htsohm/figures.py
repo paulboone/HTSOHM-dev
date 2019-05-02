@@ -9,7 +9,7 @@ from scipy.spatial import Delaunay
 
 def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=[], parents=[],
                     bins=[], new_bins=[], title="", patches=None, prop1range=(0.0,1.0),
-                    prop2range=(0.0,1.0),perturbation_methods=None, show_grid=False,
+                    prop2range=(0.0,1.0),perturbation_methods=None, show_grid=True,
                     show_triangulation=True, show_hull=True, bin_saturated=10, bin_scores=None):
 
 
@@ -18,12 +18,16 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
     ax = fig.add_subplot(1, 1, 1)
     ax.set_xlim(prop1range[0], prop1range[1])
     ax.set_ylim(prop2range[0], prop2range[1])
+    ax.set_xlabel("Void Fraction")
+    ax.set_ylabel("Methane Loading (V/V)")
 
-    ax.set_xticks(prop1range[1] * np.array(range(0,convergence_bins + 1))/convergence_bins)
-    ax.set_yticks(prop2range[1] * np.array(range(0,convergence_bins + 1))/convergence_bins)
-    ax.tick_params(labelbottom=False, labelleft=False)
+    ax.set_xticks(prop1range[1] * np.array([0.0, 0.25, 0.5, 0.75, 1.0]))
+    ax.set_yticks(prop2range[1] * np.array([0.0, 0.25, 0.5, 0.75, 1.0]))
+    ax.set_xticks(prop1range[1] * np.array(range(0,convergence_bins + 1))/convergence_bins, minor=True)
+    ax.set_yticks(prop2range[1] * np.array(range(0,convergence_bins + 1))/convergence_bins, minor=True)
+
     if show_grid:
-        ax.grid(linestyle='-', color='0.5', zorder=0)
+        ax.grid(linestyle='-', color='0.8', zorder=0)
 
     dbinx = prop1range[1] / convergence_bins
     dbiny = prop2range[1] / convergence_bins
