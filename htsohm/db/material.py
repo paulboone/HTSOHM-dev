@@ -29,10 +29,10 @@ class Material(Base):
     average_sigma        = Column(Float)
 
     # relationships
-    gas_loading       = relationship("GasLoading")
-    surface_area      = relationship("SurfaceArea")
-    void_fraction     = relationship("VoidFraction")
-    structure         = relationship("Structure", uselist=False, back_populates="material")
+    gas_loading       = relationship("GasLoading", cascade="all, delete-orphan")
+    surface_area      = relationship("SurfaceArea", cascade="all, delete-orphan")
+    void_fraction     = relationship("VoidFraction", cascade="all, delete-orphan")
+    structure         = relationship("Structure", uselist=False, back_populates="material", cascade="all, delete-orphan")
     parent            = relationship("Material", remote_side=[id])
 
     def __init__(self, run_id=None, parent=None):

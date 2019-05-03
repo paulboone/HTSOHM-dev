@@ -98,10 +98,23 @@ def serial_runloop(config_path):
         box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart(load_restart_path)
         print("Restarting at generation %d" % start_gen)
         print("There are currently %d materials" % len(box_r))
+
+        extra_materials = session.query(Material).filter(Material.id > len(box_r)).all()
+        if len(extra_materials) > 0:
+            if len(extra_materials) > children_per_generation:
+                print("There are %d extra materials in the database, which is more than the %d " \
+                      "children per generation. Is this the right restart file?" %
+                      (len(extra_materials), children_per_generation))
+                sys.exit(1)
+            print("The database has an extra %d materials in it; deleting..." % len(extra_materials))
+            for m in extra_materials:
+                session.delete(m)
+            session.commit()
+
     else:
         if session.query(Material).count() > 0:
             print("ERROR: cannot have existing materials in the database for a new run")
-            sys.exit()
+            sys.exit(1)
 
 
         # define variables that are needed for state
