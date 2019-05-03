@@ -62,7 +62,10 @@ def serial_runloop(config_path):
     config = load_config_file(config_path)
     if not "htsohm_dir" in config:
         config["htsohm_dir"] = os.path.dirname(os.path.dirname(htsohm.__file__))
-    os.makedirs(config['output_dir'], exist_ok=True)
+    if not "output_dir" in config or not config["output_dir"]:
+        config["output_dir"] = os.getcwd()
+    else:
+        os.makedirs(config['output_dir'], exist_ok=True)
     print(config)
 
     children_per_generation = config['children_per_generation']
