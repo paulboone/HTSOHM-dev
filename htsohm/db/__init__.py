@@ -1,4 +1,6 @@
+from datetime import datetime
 import os
+from shutil import copy2
 import sys
 
 from sqlalchemy import create_engine
@@ -15,16 +17,21 @@ def get_session():
 def get_engine():
     return __engine__
 
-def init_database(connection_string):
+def init_database(connection_string, backup=False):
     global __engine__
     global __session__
 
-    if 'sqlite' in connection_string:
+    if connection_string[0:10] == "sqlite:///":
         print(
             'WARNING: attempting to use SQLite database! Okay for local debugging\n' +
             'but will not work with multiple workers, due to lack of locking features.',
             file=sys.stderr
         )
+        db_path = connection_string[10:]
+        if backup and os.path.exists(db_path):
+            backup_path = db_path + "." + datetime.now().isoformat() + ".backup"
+            copy2(db_path, backup_path)
+            print("backing up prexisting database file %s to %s" % (db_path, backup_path))
 
     __engine__ = create_engine(connection_string)
     __session__ = sessionmaker(bind=__engine__)()

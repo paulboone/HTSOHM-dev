@@ -1,8 +1,10 @@
 
-import os
 from datetime import datetime
+from glob import glob
 import math
+import os
 import random
+import sys
 
 import numpy as np
 
@@ -10,7 +12,6 @@ import htsohm
 from htsohm import pseudomaterial_generator, load_config_file, db
 from htsohm.db import Material
 from htsohm.simulation.run_all import run_all_simulations
-
 from htsohm.figures import delaunay_figure
 import htsohm.select.triangulation as selector_tri
 import htsohm.select.density_bin as selector_bin
@@ -62,13 +63,8 @@ def serial_runloop(config_path):
     if not "htsohm_dir" in config:
         config["htsohm_dir"] = os.path.dirname(os.path.dirname(htsohm.__file__))
     os.makedirs(config['output_dir'], exist_ok=True)
-    dbcs = config["database_connection_string"]
-    if dbcs == "sqlite":
-        dbcs = "sqlite:///%s" % os.path.join(config['output_dir'], "HTSOHM-dev.db")
-    db.init_database(dbcs)
-    session = db.get_session()
-
     print(config)
+
     children_per_generation = config['children_per_generation']
     # prop1 = config['prop1']
     # prop2 = config['prop2']
@@ -81,14 +77,32 @@ def serial_runloop(config_path):
     last_benchmark_reached = False
     load_restart_path = config['load_restart_path'] if 'load_restart_path' in config else False
 
+    dbcs = config["database_connection_string"]
+    db.init_database(dbcs, backup=(load_restart_path != False))
+    session = db.get_session()
+
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
     if load_restart_path:
+        if load_restart_path == "auto":
+            restart_files = glob("*.txt.npz")
+            restart_files.sort(key=os.path.getmtime)
+            if len(restart_files) == 0:
+                print("ERROR: no txt.npz restart file in the current directory; auto cannot be used.")
+                return
+            load_restart_path = restart_files[-1]
+            if len(restart_files) > 1:
+                print("WARNING: more than one txt.npz file found in this directory. Using last one: %s" % load_restart_path)
+
         print("Restarting from file: %s" % load_restart_path)
         box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart(load_restart_path)
         print("Restarting at generation %d" % start_gen)
         print("There are currently %d materials" % len(box_r))
     else:
+        if session.query(Material).count() > 0:
+            print("ERROR: cannot have existing materials in the database for a new run")
+            sys.exit()
+
 
         # define variables that are needed for state
         bin_counts = np.zeros((num_bins, num_bins))
