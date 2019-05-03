@@ -48,7 +48,7 @@ def dump_restart(path, box_d, box_r, bin_counts, bin_materials, bins, gen):
     np.savez(path, box_d, box_r, bin_counts, bin_materials, bins, gen)
 
 def load_restart(path):
-    npzfile = np.load(path)
+    npzfile = np.load(path, allow_pickle=True)
     return [npzfile[v] if npzfile[v].size != 1 else npzfile[v].item() for v in npzfile.files]
 
 def serial_runloop(config_path):
