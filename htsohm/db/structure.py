@@ -46,11 +46,6 @@ class Structure(Base):
     @property
     def volume(self):
         return self.a * self.b * self.c
-        if self.lennard_jones:
-            for atom_type in self.lennard_jones:
-                copy.lennard_jones.append(atom_type)
-        return copy
-
 
     def __repr__(self):
         return "(%d: %f, %f, %f)" % (self.id, self.a, self.b, self.c)
