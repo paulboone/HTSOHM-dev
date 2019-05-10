@@ -24,7 +24,9 @@ def random_number_density(number_density_limits, structure):
     v = structure.volume
     min_atoms = ceil(min_ND * v)
     max_atoms = int(max_ND * v)
-    if min_atoms < 2:
-        min_atoms = 2
-    return randrange(min_atoms, max_atoms + 1, 1)
+    if min_atoms < 1:
+        min_atoms = 1
+    if min_atoms >= max_atoms:
+        return min_atoms
 
+    return randrange(min_atoms, max_atoms + 1, 1)
