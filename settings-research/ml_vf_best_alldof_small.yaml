@@ -1,0 +1,46 @@
+simulation_directory: 'HTSOHM'
+
+verbose: true
+keep_configs: false
+output_all_graphs: true
+output_tri_graph: false
+initial_points_random_seed: 1701393
+# load_restart_path: "/home/pboone/workspace/HTSOHM-dev/output-bin/restart_3.txt.npz"
+
+
+number_of_convergence_bins: 40
+max_generations: 3000
+children_per_generation: 10
+benchmarks: [0.25, 0.5, 0.75, 0.9]
+selector_type: "best"
+generator_type: "mutate"
+database_connection_string: "sqlite:///HTSOHM-dev.db"
+
+prop1range: [0.0, 1.0]
+prop2range: [0.0, 800.0]
+
+structure_parameters:
+  number_of_atom_types: 1
+  charge_limit: 1.0
+  epsilon_limits: [1.258, 513.264]
+  lattice_constant_limits: [2.5, 5.0]
+  number_density_limits: [1.49e-05, 0.02122]
+  sigma_limits: [1.052, 6.549]
+  mutation_strength: 0.2
+  perturb: "all"
+
+simulations:
+  1:
+    type: 'void_fraction'
+    adsorbate: 'helium'
+    temperature: 298
+    simulation_cycles: 100
+    cutoff: 12.8
+  2:
+    type: 'gas_loading'
+    adsorbate: 'methane'
+    pressure: 3500000
+    temperature: 298
+    initialization_cycles: 100
+    simulation_cycles: 100
+    cutoff: 12.8
