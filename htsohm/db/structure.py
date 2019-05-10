@@ -1,3 +1,5 @@
+import math
+
 from sqlalchemy import Column, ForeignKey, Integer, String, Float
 from sqlalchemy.orm import relationship
 
@@ -42,6 +44,11 @@ class Structure(Base):
             for lj in self.lennard_jones:
                 copy.lennard_jones.append(lj.clone())
         return copy
+
+    def minimum_unit_cells(self, cutoff):
+        return (math.ceil(2 * cutoff / self.a),
+                math.ceil(2 * cutoff / self.b),
+                math.ceil(2 * cutoff / self.c))
 
     @property
     def volume(self):

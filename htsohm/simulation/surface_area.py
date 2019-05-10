@@ -12,7 +12,7 @@ from htsohm.material_files import write_pseudo_atoms, write_force_field
 from htsohm.simulation.files import load_and_subs_template
 from htsohm.db import SurfaceArea
 
-def write_raspa_file(filename, uuid, simulation_config):
+def write_raspa_file(filename, material, simulation_config):
     """Writes RASPA input file for calculating surface area.
 
     Args:
@@ -24,10 +24,13 @@ def write_raspa_file(filename, uuid, simulation_config):
 
     """
     # Load simulation parameters from config
+    unit_cells = material.structure.minimum_unit_cells(simulation_config['cutoff'])
     values = {
+            "Cutoff"            : simulation_config['cutoff'],
             "NumberOfCycles"    : simulation_config["simulation_cycles"],
-            "FrameworkName"     : uuid,
-            "MoleculeName"      : simulation_config["adsorbate"]}
+            "FrameworkName"     : material.uuid,
+            "MoleculeName"      : simulation_config["adsorbate"],
+            "UnitCell"          : " ".join(map(str, unit_cells))}
 
     # Load template and replace values
     input_data = load_and_subs_template("input_file_templates/surface_area.input", values)
@@ -93,7 +96,7 @@ def run(material, simulation_config, config):
     # Write simulation input-files
     # RASPA input-file
     filename = os.path.join(output_dir, "SurfaceArea.input")
-    write_raspa_file(filename, material.uuid, simulation_config)
+    write_raspa_file(filename, material, simulation_config)
     # Pseudomaterial mol-file
     write_mol_file(material, output_dir)
     # Lennard-Jones parameters, force_field_mixing_rules.def

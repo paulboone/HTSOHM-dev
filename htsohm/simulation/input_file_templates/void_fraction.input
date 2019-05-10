@@ -4,13 +4,13 @@ PrintEvery              10
 PrintPropertiesEvery    10
 
 Forcefield              $FrameworkName
-CutOff                  12.8
+CutOff                  $Cutoff
 UseChargesFromMOLFile   yes
 
 Framework               0
 FrameworkName           $FrameworkName
 InputFileType           mol
-UnitCells               2 2 2
+UnitCells               $UnitCell
 ExternalTemperature     $ExternalTemperature
 
 Component 0 MoleculeName                $MoleculeName

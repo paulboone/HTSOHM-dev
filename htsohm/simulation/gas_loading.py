@@ -1,11 +1,12 @@
-import sys
+from datetime import datetime
+from glob import glob
 import os
+from pathlib import Path
 import subprocess
 import shutil
-from uuid import uuid4
-from datetime import datetime
 from string import Template
-from pathlib import Path
+import sys
+from uuid import uuid4
 
 from htsohm.material_files import write_mol_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
@@ -29,14 +30,17 @@ def write_raspa_file(filename, material, simulation_config):
         void_fraction = material.void_fraction[0].void_fraction
 
     # Load simulation parameters from config
+    unit_cells = material.structure.minimum_unit_cells(simulation_config['cutoff'])
     values = {
+            "Cutoff"                        : simulation_config['cutoff'],
             "NumberOfCycles"                : simulation_config["simulation_cycles"],
             "NumberOfInitializationCycles"  : simulation_config["initialization_cycles"],
             "FrameworkName"                 : material.uuid,
             "HeliumVoidFraction"            : void_fraction,
             "ExternalTemperature"           : simulation_config["temperature"],
             "ExternalPressure"              : simulation_config["pressure"],
-            "MoleculeName"                  : simulation_config["adsorbate"]}
+            "MoleculeName"                  : simulation_config["adsorbate"],
+            "UnitCell"                      : " ".join(map(str, unit_cells))}
 
     # Load template and replace values
     input_data = load_and_subs_template("input_file_templates/gas_loading.input", values)
@@ -126,17 +130,7 @@ def run(material, simulation_config, config):
         results (dict): gas loading simulation results.
 
     """
-    # Determine where to write simulation input/output files, create directory
-    simulation_directory = config["simulation_directory"]
-    if simulation_directory == "HTSOHM":
-        htsohm_dir = config["htsohm_dir"]
-        path = os.path.join(htsohm_dir, material.run_id)
-    elif simulation_directory == "SCRATCH":
-        path = os.environ["SCRATCH"]
-    else:
-        print("OUTPUT DIRECTORY NOT FOUND.")
-    output_dir = os.path.join(path, "output_{}_{}".format(material.uuid, uuid4()))
-    print("Output directory : {}".format(output_dir))
+    output_dir = "output_{}_{}".format(material.uuid, uuid4())
     os.makedirs(output_dir, exist_ok=True)
 
     # Write simulation input-files
@@ -160,28 +154,16 @@ def run(material, simulation_config, config):
     print("Adsorbate        : {}".format(adsorbate))
     print("Pressure         : {}".format(simulation_config["pressure"]))
     print("Temperature      : {}".format(simulation_config["temperature"]))
-    while True:
-        try:
-            #output_file = os.listdir(os.path.join(output_dir, "Output", "System_0"))[0]
-            output_file = "output_{}_2.2.2_{:.6f}_{}.data".format(material.uuid,
-                    float(simulation_config["temperature"]),
-                    pressure_string(simulation_config["pressure"]))
-            output_path = os.path.join(output_dir, "Output", "System_0", output_file)
-            #output_path = os.path.join(output_dir, "Output", "System_0", "*.data")
 
-            while not Path(output_path).exists():
-                subprocess.run(["simulate", "-i", "./{}_loading.input".format(adsorbate)],
-                    check = True, cwd = output_dir)
+    subprocess.run(["simulate", "-i", "./{}_loading.input".format(adsorbate)], check=True, cwd=output_dir)
 
-            print("Output directory : {}".format(output_dir))
+    data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
+    if len(data_files) != 1:
+        raise Exception("ERROR: There should only be one data file in the output directory for %s. Check code!" % output_dir)
+    output_file = data_files[0]
 
-            # Parse output
-            parse_output(output_path, material, simulation_config)
-            if not config['keep_configs']:
-                shutil.rmtree(output_dir, ignore_errors=True)
-            sys.stdout.flush()
-        except FileNotFoundError as err:
-            print(err)
-            print(err.args)
-            continue
-        break
+    # Parse output
+    parse_output(output_file, material, simulation_config)
+    if not config['keep_configs']:
+        shutil.rmtree(output_dir, ignore_errors=True)
+    sys.stdout.flush()

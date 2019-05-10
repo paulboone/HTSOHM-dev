@@ -1,7 +1,11 @@
-import sys
+
+from glob import glob
+import math
 import os
-import subprocess
 import shutil
+import sys
+import subprocess
+
 from datetime import datetime
 from uuid import uuid4
 from string import Template
@@ -12,7 +16,7 @@ from htsohm.material_files import write_pseudo_atoms, write_force_field
 from htsohm.simulation.files import load_and_subs_template
 from htsohm.db import VoidFraction
 
-def write_raspa_file(filename, uuid, simulation_config):
+def write_raspa_file(filename, material, simulation_config):
     """Writes RASPA input file for calculating helium void fraction.
 
     Args:
@@ -23,12 +27,16 @@ def write_raspa_file(filename, uuid, simulation_config):
     Writes RASPA input-file.
 
     """
+
     # Load simulation parameters from config
+    unit_cells = material.structure.minimum_unit_cells(simulation_config['cutoff'])
     values = {
+            "Cutoff"                 : simulation_config['cutoff'],
             "NumberOfCycles"         : simulation_config["simulation_cycles"],
-            "FrameworkName"          : uuid,
+            "FrameworkName"          : material.uuid,
             "ExternalTemperature"    : simulation_config["temperature"],
-            "MoleculeName"           : simulation_config["adsorbate"]}
+            "MoleculeName"           : simulation_config["adsorbate"],
+            "UnitCell"               : " ".join(map(str, unit_cells))}
 
     # Load template and replace values
     input_data = load_and_subs_template("input_file_templates/void_fraction.input", values)
@@ -72,23 +80,14 @@ def run(material, simulation_config, config):
         results (dict): void fraction simulation results.
 
     """
-    # Determine where to write simulation input/output files, create directory
-    simulation_directory  = config["simulation_directory"]
-    if simulation_directory == "HTSOHM":
-        htsohm_dir = config["htsohm_dir"]
-        path = os.path.join(htsohm_dir, material.run_id)
-    elif simulation_directory == "SCRATCH":
-        path = os.environ["SCRATCH"]
-    else:
-        print("OUTPUT DIRECTORY NOT FOUND.")
-    output_dir = os.path.join(path, "output_{}_{}".format(material.uuid, uuid4()))
+    output_dir = "output_{}_{}".format(material.uuid, uuid4())
     print("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
     # Write simulation input-files
     # RASPA input-file
     filename = os.path.join(output_dir, "VoidFraction.input")
-    write_raspa_file(filename, material.uuid, simulation_config)
+    write_raspa_file(filename, material, simulation_config)
     # Pseudomaterial mol-file
     write_mol_file(material, output_dir)
     # Lennard-Jones parameters, force_field_mixing_rules.def
@@ -99,25 +98,22 @@ def run(material, simulation_config, config):
     write_force_field(output_dir)
 
     # Run simulations
-    while True:
-        try:
-            print("Date             : {}".format(datetime.now().date().isoformat()))
-            print("Time             : {}".format(datetime.now().time().isoformat()))
-            print("Simulation type  : {}".format(simulation_config["type"]))
-            print("Probe            : {}".format(simulation_config["adsorbate"]))
-            print("Temperature      : {}".format(simulation_config["temperature"]))
-            filename = "output_{}_2.2.2_298.000000_0.data".format(material.uuid)
-            output_file = os.path.join(output_dir, "Output", "System_0", filename)
-            while not Path(output_file).exists():
-                process = subprocess.run(["simulate", "-i", "./VoidFraction.input"], check=True, cwd=output_dir)
+    print("Date             : {}".format(datetime.now().date().isoformat()))
+    print("Time             : {}".format(datetime.now().time().isoformat()))
+    print("Simulation type  : {}".format(simulation_config["type"]))
+    print("Probe            : {}".format(simulation_config["adsorbate"]))
+    print("Temperature      : {}".format(simulation_config["temperature"]))
 
-            # Parse output
-            parse_output(output_file, material, simulation_config)
-            if not config['keep_configs']:
-                shutil.rmtree(output_dir, ignore_errors=True)
-            sys.stdout.flush()
-        except (FileNotFoundError, IndexError, KeyError) as err:
-            print(err)
-            print(err.args)
-            continue
-        break
+    # while not Path(output_file).exists():
+    process = subprocess.run(["simulate", "-i", "./VoidFraction.input"], check=True, cwd=output_dir)
+
+    data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
+    if len(data_files) != 1:
+        raise Exception("ERROR: There should only be one data file in the output directory for %s. Check code!" % output_dir)
+    output_file = data_files[0]
+
+    # Parse output
+    parse_output(output_file, material, simulation_config)
+    if not config['keep_configs']:
+        shutil.rmtree(output_dir, ignore_errors=True)
+    sys.stdout.flush()

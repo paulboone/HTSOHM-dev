@@ -5,13 +5,13 @@ PrintEvery              1
 PrintPropertiesEvery    1
 
 Forcefield              $FrameworkName
-CutOff                  12.8
+CutOff                  $Cutoff
 UseChargesFromMOLFile   yes
 
 Framework                   0
 FrameworkName               $FrameworkName
 InputFileType               mol
-UnitCells                   2 2 2
+UnitCells                   $UnitCell
 SurfaceAreaProbeDistance    Sigma
 
 Component 0 MoleculeName                $MoleculeName

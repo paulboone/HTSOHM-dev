@@ -5,13 +5,13 @@ PrintEvery                      10
 RestartFile                     no
 
 Forcefield                      $FrameworkName
-CutOff                          12.8
+CutOff                          $Cutoff
 UseChargesFromMOLFile           yes
 
 Framework                       0
 FrameworkName                   $FrameworkName
 InputFileType                   mol
-UnitCells                       2 2 2
+UnitCells                       $UnitCell
 HeliumVoidFraction              $HeliumVoidFraction
 ExternalTemperature             $ExternalTemperature
 ExternalPressure                $ExternalPressure
