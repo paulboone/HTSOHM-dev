@@ -11,10 +11,11 @@ from htsohm.htsohm_serial import calc_bins
 from sqlalchemy.orm import joinedload
 
 @click.command()
-@click.argument('config_path', type=click.Path())
-def bin_graph(config_path):
+@click.argument('config-path', type=click.Path())
+@click.option('--database-path', type=click.Path())
+def bin_graph(config_path, database_path=None):
     config = load_config_file(config_path)
-    db.init_database(db.get_sqlite_dbcs())
+    db.init_database(db.get_sqlite_dbcs(database_path))
     session = db.get_session()
 
     prop1range = config['prop1range']
