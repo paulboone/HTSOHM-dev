@@ -14,11 +14,6 @@ class LennardJones(Base):
     # relationship with 'structures'
     structure_id = Column(Integer, ForeignKey("structure.id"))
 
-    def __init__(self, atom_type=None, sigma=None, epsilon=None):
-        self.atom_type = atom_type
-        self.sigma = sigma
-        self.epsilon = epsilon
-
     def exclude_cols(self):
         return ['id']
 

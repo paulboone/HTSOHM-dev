@@ -51,10 +51,10 @@ def init_database(connection_string, backup=False):
 
 # Import all models
 from htsohm.db.base import Base
+from htsohm.db.atom_sites import AtomSites
+from htsohm.db.lennard_jones import LennardJones
 from htsohm.db.gas_loading import GasLoading
 from htsohm.db.surface_area import SurfaceArea
 from htsohm.db.void_fraction import VoidFraction
 from htsohm.db.material import Material
 from htsohm.db.structure import Structure
-from htsohm.db.atom_sites import AtomSites
-from htsohm.db.lennard_jones import LennardJones

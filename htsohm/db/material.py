@@ -35,7 +35,7 @@ class Material(Base):
     structure         = relationship("Structure", uselist=False, back_populates="material", cascade="all, delete-orphan")
     parent            = relationship("Material", remote_side=[id])
 
-    def __init__(self, run_id=None, parent=None):
+    def __init__(self, run_id=None, parent=None, structure=None):
         """Init material-row.
 
         Args:
@@ -50,7 +50,11 @@ class Material(Base):
             self.parent = parent
             self.parent_id = parent.id
         self.run_id = run_id
-        self.structure = Structure()
+        if structure is None:
+            self.structure = Structure()
+        else:
+            self.structure = structure
+
 
     def clone(self):
         copy = super(Material, self).clone()
