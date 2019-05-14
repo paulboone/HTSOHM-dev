@@ -1,4 +1,5 @@
 from datetime import datetime
+from glob import glob
 import os
 from shutil import copy2
 import sys
@@ -16,6 +17,12 @@ def get_session():
 
 def get_engine():
     return __engine__
+
+def get_sqlite_dbcs():
+    dbs = glob("*.db")
+    if len(dbs) > 1:
+        print("WARNING: more than one *.db file found in this directory. Using first one: %s" % dbs[0])
+    return "sqlite:///%s" % dbs[0]
 
 def init_database(connection_string, backup=False):
     global __engine__
