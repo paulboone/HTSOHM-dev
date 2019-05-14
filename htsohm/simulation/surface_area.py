@@ -39,6 +39,20 @@ def write_raspa_file(filename, material, simulation_config):
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(input_data)
 
+def write_output_files(material, simulation_config, output_dir):
+    # Write simulation input-files
+    # RASPA input-file
+    filename = os.path.join(output_dir, "SurfaceArea.input")
+    write_raspa_file(filename, material, simulation_config)
+    # Pseudomaterial mol-file
+    write_mol_file(material, output_dir)
+    # Lennard-Jones parameters, force_field_mixing_rules.def
+    write_mixing_rules(material.structure, output_dir)
+    # Pseudoatom definitions, pseudo_atoms.def (placeholder values)
+    write_pseudo_atoms(material.structure, output_dir)
+    # Overwritten interactions, force_field.def (none overwritten by default)
+    write_force_field(output_dir)
+
 def parse_output(output_file, material, simulation_config):
     """Parse output file for void fraction data.
 
@@ -80,31 +94,12 @@ def run(material, simulation_config, config):
         results (dict): surface area simulation results.
 
     """
-    # Determine where to write simulation input/output files, create directory
-    simulation_directory  = config["simulation_directory"]
-    if simulation_directory == "HTSOHM":
-        htsohm_dir = config["htsohm_dir"]
-        path = os.path.join(htsohm_dir, material.run_id)
-    elif simulation_directory == "SCRATCH":
-        path = os.environ["SCRATCH"]
-    else:
-        print("OUTPUT DIRECTORY NOT FOUND.")
-    output_dir = os.path.join(path, "output_{}_{}".format(material.uuid, uuid4()))
+    output_dir = "output_{}_{}".format(material.uuid, uuid4())
     print("Output directory :\t{}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
     # Write simulation input-files
-    # RASPA input-file
-    filename = os.path.join(output_dir, "SurfaceArea.input")
-    write_raspa_file(filename, material, simulation_config)
-    # Pseudomaterial mol-file
-    write_mol_file(material, output_dir)
-    # Lennard-Jones parameters, force_field_mixing_rules.def
-    write_mixing_rules(material.structure, output_dir)
-    # Pseudoatom definitions, pseudo_atoms.def (placeholder values)
-    write_pseudo_atoms(material.structure, output_dir)
-    # Overwritten interactions, force_field.def (none overwritten by default)
-    write_force_field(output_dir)
+    write_output_files(filename, material, simulation_config)
 
     # Run simulations
     while True:

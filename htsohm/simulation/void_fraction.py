@@ -45,6 +45,20 @@ def write_raspa_file(filename, material, simulation_config):
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(input_data)
 
+def write_output_files(material, simulation_config, output_dir):
+    # Write simulation input-files
+    # RASPA input-file
+    filename = os.path.join(output_dir, "VoidFraction.input")
+    write_raspa_file(filename, material, simulation_config)
+    # Pseudomaterial mol-file
+    write_mol_file(material, output_dir)
+    # Lennard-Jones parameters, force_field_mixing_rules.def
+    write_mixing_rules(material.structure, output_dir)
+    # Pseudoatom definitions, pseudo_atoms.def (placeholder values)
+    write_pseudo_atoms(material.structure, output_dir)
+    # Overwritten interactions, force_field.def (none overwritten by default)
+    write_force_field(output_dir)
+
 def parse_output(output_file, material, simulation_config):
     """Parse output file for void fraction data.
 
@@ -84,18 +98,7 @@ def run(material, simulation_config, config):
     print("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
-    # Write simulation input-files
-    # RASPA input-file
-    filename = os.path.join(output_dir, "VoidFraction.input")
-    write_raspa_file(filename, material, simulation_config)
-    # Pseudomaterial mol-file
-    write_mol_file(material, output_dir)
-    # Lennard-Jones parameters, force_field_mixing_rules.def
-    write_mixing_rules(material.structure, output_dir)
-    # Pseudoatom definitions, pseudo_atoms.def (placeholder values)
-    write_pseudo_atoms(material.structure, output_dir)
-    # Overwritten interactions, force_field.def (none overwritten by default)
-    write_force_field(output_dir)
+    write_output_files(material, simulation_config, output_dir)
 
     # Run simulations
     print("Date             : {}".format(datetime.now().date().isoformat()))
