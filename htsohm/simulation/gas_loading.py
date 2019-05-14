@@ -149,7 +149,7 @@ def run(material, simulation_config, config):
     os.makedirs(output_dir, exist_ok=True)
 
     # RASPA input-file
-    write_output_files(material, simulation_config, ouput_dir, adsorbate)
+    write_output_files(material, simulation_config, output_dir, adsorbate)
 
     # Run simulations
     print("Date             : {}".format(datetime.now().date().isoformat()))
