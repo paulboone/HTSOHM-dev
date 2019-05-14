@@ -8,7 +8,6 @@ import sys
 
 import numpy as np
 
-import htsohm
 from htsohm import pseudomaterial_generator, load_config_file, db
 from htsohm.db import Material
 from htsohm.simulation.run_all import run_all_simulations
@@ -60,12 +59,6 @@ def serial_runloop(config_path):
 
     run_id = datetime.now().isoformat()
     config = load_config_file(config_path)
-    if not "htsohm_dir" in config:
-        config["htsohm_dir"] = os.path.dirname(os.path.dirname(htsohm.__file__))
-    if not "output_dir" in config or not config["output_dir"]:
-        config["output_dir"] = os.getcwd()
-    else:
-        os.makedirs(config['output_dir'], exist_ok=True)
     print(config)
 
     children_per_generation = config['children_per_generation']

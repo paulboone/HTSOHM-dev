@@ -1,3 +1,4 @@
+import os
 import yaml
 
 def load_config_file(file_name):
@@ -15,4 +16,8 @@ def load_config_file(file_name):
 
     if not 'keep_configs' in config:
         config['keep_configs'] = False
+    if not "output_dir" in config or not config["output_dir"]:
+        config["output_dir"] = os.getcwd()
+    else:
+        os.makedirs(config['output_dir'], exist_ok=True)
     return config
