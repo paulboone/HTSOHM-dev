@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import ForeignKey, Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 
-from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction
+from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction, AtomSites, LennardJones
 from htsohm.db.structure import Structure
 
 class Material(Base):
@@ -55,6 +55,13 @@ class Material(Base):
         else:
             self.structure = structure
 
+    @staticmethod
+    def one_atom_new(sigma, epsilon, a, b, c):
+        structure = Structure(a, b, c,
+                [AtomSites(atom_type="A_0", x=1.0, y=1.0, z=1.0, q=0.0)],
+                [LennardJones(atom_type="A_0", sigma=sigma, epsilon=epsilon)])
+        m = Material(structure=structure)
+        return m
 
     def clone(self):
         copy = super(Material, self).clone()
