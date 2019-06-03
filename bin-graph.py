@@ -13,7 +13,8 @@ from sqlalchemy.orm import joinedload
 @click.command()
 @click.argument('config-path', type=click.Path())
 @click.option('--database-path', type=click.Path())
-def bin_graph(config_path, database_path=None):
+@click.option('--addl-data-path', type=click.Path())
+def bin_graph(config_path, database_path=None, addl_data_path=None):
     config = load_config_file(config_path)
     db.init_database(db.get_sqlite_dbcs(database_path))
     session = db.get_session()
@@ -40,12 +41,18 @@ def bin_graph(config_path, database_path=None):
 
     bins_explored = np.count_nonzero(bin_counts)
 
+    addl_data = None
+    if addl_data_path:
+        print("adding additional data from: %s" % addl_data_path)
+        addl_data = np.loadtxt(addl_data_path, delimiter=",", skiprows=1, usecols=(1,2))
+
     print("outputting graph...")
     output_path = "binplot_%d_materials.png" % len(mats_d)
     delaunay_figure(mats_r, num_bins, output_path, bins=bin_counts,
                     title="%d Materials: %d/%d %5.2f%%" % (len(mats_d), bins_explored,
                     num_bins ** 2, 100*float(bins_explored / num_bins ** 2)),
-                    prop1range=prop1range, prop2range=prop2range, show_triangulation=False, show_hull=False)
+                    prop1range=prop1range, prop2range=prop2range, show_triangulation=False, show_hull=False,
+                    addl_data_set=addl_data)
 
 if __name__ == '__main__':
     bin_graph()
