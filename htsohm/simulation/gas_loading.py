@@ -49,10 +49,10 @@ def write_raspa_file(filename, material, simulation_config):
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(input_data)
 
-def write_output_files(material, simulation_config, output_dir, adsorbate):
+def write_output_files(material, simulation_config, output_dir):
     # Write simulation input-files
     # RASPA input-file
-    filename = os.path.join(output_dir, "{}_loading.input".format(adsorbate))
+    filename = os.path.join(output_dir, "{}_loading.input".format(simulation_config['adsorbate']))
     write_raspa_file(filename, material, simulation_config)
     # Pseudomaterial mol-file
     write_mol_file(material, output_dir)
@@ -149,7 +149,7 @@ def run(material, simulation_config, config):
     os.makedirs(output_dir, exist_ok=True)
 
     # RASPA input-file
-    write_output_files(material, simulation_config, output_dir, adsorbate)
+    write_output_files(material, simulation_config, output_dir)
 
     # Run simulations
     print("Date             : {}".format(datetime.now().date().isoformat()))
