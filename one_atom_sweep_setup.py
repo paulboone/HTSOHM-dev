@@ -17,15 +17,17 @@ def sweep_materials(config_path):
     scfg = config['structure_parameters']
     eps_d = np.linspace(*scfg['epsilon_limits'], config['sweep_points'])
     sig_d = np.linspace(*scfg['sigma_limits'], config['sweep_points'])
-
     a_d = np.linspace(*scfg['lattice_constant_limits'], config['sweep_points'])
-    b_d = np.linspace(*scfg['lattice_constant_limits'], config['sweep_points'])
-    c_d = np.linspace(*scfg['lattice_constant_limits'], config['sweep_points'])
-    lattice_coords = np.array(np.meshgrid(a_d, b_d, c_d)).T.reshape(-1,3)
+    # always do symmetrical with one-atom only
+    lattice_coords = [(a, a, a) for a in a_d]
 
-    # remove symmetrical points
-    lattice_coords = map(sorted, lattice_coords)
-    lattice_coords = set(map(tuple, lattice_coords))
+    # b_d = np.linspace(*scfg['lattice_constant_limits'], config['sweep_points'])
+    # c_d = np.linspace(*scfg['lattice_constant_limits'], config['sweep_points'])
+    # lattice_coords = np.array(np.meshgrid(a_d, b_d, c_d)).T.reshape(-1,3)
+
+    # # remove symmetrical points
+    # lattice_coords = map(sorted, lattice_coords)
+    # lattice_coords = set(map(tuple, lattice_coords))
 
     for eps in eps_d:
         for sig in sig_d:
