@@ -21,9 +21,11 @@ def get_engine():
 def get_sqlite_dbcs(database_path=None):
     if database_path is None:
         dbs = glob("*.db")
-        if len(dbs) > 1:
+        if len(dbs) == 0:
+            raise FileNotFoundError("Cannot find sqlite DBCS in the current directory: %s" % os.getcwd())
+        elif len(dbs) > 1:
             print("WARNING: more than one *.db file found in this directory. Using first one: %s" % dbs[0])
-        path = dbs[0]
+        database_path = dbs[0]
     return "sqlite:///%s" % database_path
 
 def init_database(connection_string, backup=False):
