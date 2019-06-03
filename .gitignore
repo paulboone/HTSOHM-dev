@@ -17,3 +17,8 @@ MANIFEST
 *.png
 *.ipynb
 *.blend
+*.npy
+*.csv
+*.tsv
+.DS_Store
+HTSOHM.egg-info
