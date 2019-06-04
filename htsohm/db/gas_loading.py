@@ -17,6 +17,7 @@ class GasLoading(Base):
 
     # simulation output
     absolute_volumetric_loading      = Column(Float)
+    absolute_volumetric_loading_error = Column(Float)
     absolute_gravimetric_loading     = Column(Float)
     absolute_molar_loading           = Column(Float)
     excess_volumetric_loading        = Column(Float)
@@ -24,7 +25,7 @@ class GasLoading(Base):
     excess_molar_loading             = Column(Float)
     host_host_avg                    = Column(Float)
     host_host_vdw                    = Column(Float)
-    host_host_cou                    = Column(Float) 
+    host_host_cou                    = Column(Float)
     adsorbate_adsorbate_avg          = Column(Float)
     adsorbate_adsorbate_vdw          = Column(Float)
     adsorbate_adsorbate_cou          = Column(Float)

@@ -90,6 +90,7 @@ def parse_output(output_file, material, simulation_config):
                 gas_loading.absolute_gravimetric_loading = float(line.split()[6])
             elif "absolute [cm^3 (STP)/c" in line:
                 gas_loading.absolute_volumetric_loading = float(line.split()[6])
+                gas_loading.absolute_volumetric_loading_error = float(line.split()[8])
             elif "excess [mol/kg" in line:
                 gas_loading.excess_molar_loading = float(line.split()[5])
             elif "excess [cm^3 (STP)/g" in line:
