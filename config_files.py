@@ -11,9 +11,10 @@ from htsohm.simulation import void_fraction, gas_loading
 @click.command()
 @click.argument('config-path', type=click.Path())
 @click.argument('material_ids', type=int, nargs=-1)
-def output_config_files(config_path, material_ids):
+@click.option('--database-path', type=click.Path())
+def output_config_files(config_path, material_ids, database_path=None):
     config = load_config_file(config_path)
-    db.init_database(db.get_sqlite_dbcs())
+    db.init_database(db.get_sqlite_dbcs(database_path))
     session = db.get_session()
 
     from htsohm.db import Material
