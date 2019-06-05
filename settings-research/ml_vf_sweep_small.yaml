@@ -25,12 +25,12 @@ simulations:
     adsorbate: 'helium'
     temperature: 298
     simulation_cycles: 100
-    cutoff: 12.8
+    cutoff: 14
   2:
     type: 'gas_loading'
     adsorbate: 'methane'
     pressure: 3500000
     temperature: 298
-    initialization_cycles: 100
-    simulation_cycles: 100
-    cutoff: 12.8
+    initialization_cycles: 1000
+    simulation_cycles: 1000
+    cutoff: 14
