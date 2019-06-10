@@ -21,11 +21,11 @@ setup(
     entry_points={
           'console_scripts': [
               'dps = htsohm.dps:cmdline',
-              'pm-graph-bins = htsohm.bin.bin_graph:bin_graph',
-              'pm-output-config-files = htsohm.bin.config_files:output_config_files',
-              'pm-dof-analysis = htsohm.bin.dof_analysis:dof_analysis',
-              'pm-setup-one-atom-sweep = htsohm.bin.one_atom_sweep_setup:sweep_materials',
-              'pm-run-one-atom-sweep = htsohm.bin.one_atom_sweep_run:run_materials',
+              'psm-graph-bins = htsohm.bin.bin_graph:bin_graph',
+              'psm-output-config-files = htsohm.bin.config_files:output_config_files',
+              'psm-dof-analysis = htsohm.bin.dof_analysis:dof_analysis',
+              'psm-setup-one-atom-sweep = htsohm.bin.one_atom_sweep_setup:sweep_materials',
+              'psm-run-one-atom-sweep = htsohm.bin.one_atom_sweep_run:run_materials',
 
           ]
       },
