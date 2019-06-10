@@ -13,7 +13,7 @@ class AtomSites(Base):
     z = Column(Float)
     q = Column(Float)
 
-    structure_id = Column(Integer, ForeignKey("structure.id"))
+    structure_id = Column(Integer, ForeignKey("structures.id"))
 
     def exclude_cols(self):
         return ['id']

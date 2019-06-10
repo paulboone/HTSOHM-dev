@@ -8,7 +8,7 @@ from htsohm.db.atom_sites import AtomSites
 from htsohm.db.lennard_jones import LennardJones
 
 class Structure(Base):
-    __tablename__ = "structure"
+    __tablename__ = "structures"
 
     id = Column(Integer, primary_key=True)
     a = Column(Float)

@@ -12,7 +12,7 @@ class LennardJones(Base):
     epsilon = Column(Float)
 
     # relationship with 'structures'
-    structure_id = Column(Integer, ForeignKey("structure.id"))
+    structure_id = Column(Integer, ForeignKey("structures.id"))
 
     def exclude_cols(self):
         return ['id']
