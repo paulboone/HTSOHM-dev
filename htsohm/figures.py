@@ -11,7 +11,7 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
                     bins=[], new_bins=[], title="", patches=None, prop1range=(0.0,1.0),
                     prop2range=(0.0,1.0),perturbation_methods=None, show_grid=True,
                     show_triangulation=True, show_hull=True, bin_saturated=10, bin_scores=None,
-                    addl_data_set=[]):
+                    addl_data_set=None):
 
 
     # plot visualization
@@ -78,7 +78,7 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
                 ax.annotate(str(int(parent_count)), (x, y), zorder=30, ha="center", va="center", size=9)
 
     # plot additional data set
-    if len(addl_data_set) > 0:
+    if addl_data_set is not None:
         ax.plot(addl_data_set[:,0], addl_data_set[:,1], color='#FF8C00', marker=',', linestyle='None', zorder=20)
 
 
