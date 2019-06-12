@@ -22,6 +22,7 @@ setup(
           'console_scripts': [
               'dps = htsohm.dps:cmdline',
               'psm-graph-bins = htsohm.bin.bin_graph:bin_graph',
+              'psm-graph-a-ml = htsohm.bin.graph_sig_eps_a_ml:bin_graph',
               'psm-output-config-files = htsohm.bin.config_files:output_config_files',
               'psm-dof-analysis = htsohm.bin.dof_analysis:dof_analysis',
               'psm-setup-one-atom-sweep = htsohm.bin.one_atom_sweep_setup:sweep_materials',
