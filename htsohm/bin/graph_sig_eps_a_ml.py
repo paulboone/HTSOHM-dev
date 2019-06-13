@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import csv
+
 import click
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,31 +14,41 @@ def limit_index(v, limits, sweep_points):
     return int(round((sweep_points - 1) * (v - limits[0]) / (limits[1] - limits[0])))
 
 @click.command()
-@click.argument('config-path', type=click.Path())
+@click.argument('config_path', type=click.Path())
+@click.option('--csv-path', type=click.Path())
 @click.option('--database-path', type=click.Path())
-@click.option('--addl-data-path', type=click.Path())
-def bin_graph(config_path, database_path=None, addl_data_path=None):
-    config = load_config_file(config_path)
-    db.init_database(db.get_sqlite_dbcs(database_path))
-    session = db.get_session()
+def bin_graph(config_path, csv_path=None, database_path=None):
 
+    config = load_config_file(config_path)
     num_bins = config['number_of_convergence_bins']
-    prop1range = [2.5, 5.0]
+    prop1range = [2.5, 7.5]
     prop2range = config['prop2range']
 
+
     print("loading materials...")
-    mats = session.query(Material) \
-        .options(joinedload("structure").joinedload("lennard_jones")) \
-        .options(joinedload("gas_loading")).all()
-
-    print("calculating material properties...")
     mats_by_lj = {}
-    for m in mats:
-        lj = (m.structure.lennard_jones[0].sigma, m.structure.lennard_jones[0].epsilon)
-        if lj not in mats_by_lj:
-            mats_by_lj[lj] = []
+    if csv_path:
+        csvrows = np.loadtxt(csv_path, delimiter=',', skiprows=1)
+        for m in csvrows:
+            lj = (m[4], m[5]) # sigma, epsilon
+            if lj not in mats_by_lj:
+                mats_by_lj[lj] = []
+            mats_by_lj[lj].append([m[1], m[7]]) # lattice a, abs volumetric loading
 
-        mats_by_lj[lj].append([m.structure.a, m.gas_loading[0].absolute_volumetric_loading])
+    else:
+        db.init_database(db.get_sqlite_dbcs(database_path))
+        session = db.get_session()
+        mats = session.query(Material) \
+            .options(joinedload("structure").joinedload("lennard_jones")) \
+            .options(joinedload("gas_loading")).all()
+
+        print("calculating material properties...")
+        for m in mats:
+            lj = (m.structure.lennard_jones[0].sigma, m.structure.lennard_jones[0].epsilon)
+            if lj not in mats_by_lj:
+                mats_by_lj[lj] = []
+
+            mats_by_lj[lj].append([m.structure.a, m.gas_loading[0].absolute_volumetric_loading])
 
     print("plotting...")
     fig = plt.figure(figsize=(12,12), tight_layout=True)
@@ -48,7 +60,7 @@ def bin_graph(config_path, database_path=None, addl_data_path=None):
     ax.set_yticks(prop2range[1] * np.array([0.0, 0.25, 0.5, 0.75, 1.0]))
     ax.set_yticks(prop2range[1] * np.array(range(0,num_bins + 1))/num_bins, minor=True)
 
-    ax.set_xticks(prop1range[0] + (prop1range[1] - prop1range[0]) * np.array([0.0, 0.25, 0.5, 0.75, 1.0]))
+    ax.set_xticks(prop1range[0] + (prop1range[1] - prop1range[0]) * np.array(range(0,config['sweep_points']))/(config['sweep_points'] - 1))
     ax.set_xticks(prop1range[0] + (prop1range[1] - prop1range[0]) * np.array(range(0,num_bins + 1))/num_bins, minor=True)
 
     # if show_grid:
