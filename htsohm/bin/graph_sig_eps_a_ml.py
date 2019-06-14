@@ -23,6 +23,8 @@ def bin_graph(config_path, csv_path=None, database_path=None):
     num_bins = config['number_of_convergence_bins']
     prop1range = [2.5, 7.5]
     prop2range = config['prop2range']
+    sweep_points = config['sweep_points']
+    xticks = sweep_points * 2 - 1
 
 
     print("loading materials...")
@@ -60,7 +62,7 @@ def bin_graph(config_path, csv_path=None, database_path=None):
     ax.set_yticks(prop2range[1] * np.array([0.0, 0.25, 0.5, 0.75, 1.0]))
     ax.set_yticks(prop2range[1] * np.array(range(0,num_bins + 1))/num_bins, minor=True)
 
-    ax.set_xticks(prop1range[0] + (prop1range[1] - prop1range[0]) * np.array(range(0,config['sweep_points']))/(config['sweep_points'] - 1))
+    ax.set_xticks(prop1range[0] + (prop1range[1] - prop1range[0]) * np.array(range(0,xticks))/(xticks - 1))
     ax.set_xticks(prop1range[0] + (prop1range[1] - prop1range[0]) * np.array(range(0,num_bins + 1))/num_bins, minor=True)
 
     # if show_grid:
@@ -75,13 +77,13 @@ def bin_graph(config_path, csv_path=None, database_path=None):
 
     for (sig, eps), a_ml in mats_by_lj.items():
         a_ml = np.array(a_ml)
-        sig_index = limit_index(sig, config['structure_parameters']['sigma_limits'], config['sweep_points'])
-        eps_index = limit_index(eps, config['structure_parameters']['epsilon_limits'], config['sweep_points'])
+        sig_index = limit_index(sig, config['structure_parameters']['sigma_limits'], sweep_points)
+        eps_index = limit_index(eps, config['structure_parameters']['epsilon_limits'], sweep_points)
         # print(sig, eps, marker_index)
 
 
-        alpha = (eps_index + 1) / config['sweep_points']
-        if eps_index + 1 == config['sweep_points']:
+        alpha = (eps_index + 1) / sweep_points
+        if eps_index + 1 == sweep_points:
             label = "sigma = %3.2f" % sig
         else:
             label = None
