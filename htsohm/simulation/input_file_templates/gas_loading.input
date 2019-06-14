@@ -2,7 +2,9 @@ SimulationType                  MonteCarlo
 NumberOfCycles                  $NumberOfCycles
 NumberOfInitializationCycles    $NumberOfInitializationCycles
 PrintEvery                      10
-RestartFile                     no
+RestartFile                     $Restart
+Movies                          yes
+WriteMoviesEvery                10
 
 Forcefield                      $FrameworkName
 CutOff                          $Cutoff

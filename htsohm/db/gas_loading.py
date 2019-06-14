@@ -16,6 +16,7 @@ class GasLoading(Base):
     temperature    = Column(Float)
 
     # simulation output
+    cycles                           = Column(Integer)
     absolute_volumetric_loading      = Column(Float)
     absolute_volumetric_loading_error = Column(Float)
     absolute_gravimetric_loading     = Column(Float)

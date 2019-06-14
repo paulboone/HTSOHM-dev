@@ -179,10 +179,12 @@ def run(material, simulation_config, config):
 
         # Parse output
         gas_loading, atom_blocks, atoms_uc_to_vv = parse_output(output_file, material, simulation_config)
+        atom_blocks = [a * atoms_uc_to_vv / total_unit_cells for a in atom_blocks]
+        print("blocks for averaging [v/v]: ", atom_blocks)
         print("atoms_uc_to_vv = %f" % atoms_uc_to_vv)
 
         all_atom_blocks += atom_blocks
-        print("All blocks: ", all_atom_blocks)
+        print("all blocks: ", all_atom_blocks)
 
         atoms_std = np.std(np.mean(np.array(all_atom_blocks).reshape(-1, i+1), axis=1))
         print("std of all blocks avg %d: %f" % (i, np.std(all_atom_blocks)))
@@ -192,21 +194,33 @@ def run(material, simulation_config, config):
         gas_loading.absolute_volumetric_loading_error = error_vv
         print("calculated error: %f" % error_vv)
 
+        print("Copying restart to RestartInitial...")
         # remove old RestartInitial directory and copy the current one to there
         shutil.rmtree(os.path.join(output_dir, "RestartInitial"), ignore_errors=True)
         shutil.copytree(os.path.join(output_dir, "Restart"), os.path.join(output_dir, "RestartInitial"))
 
-        # backup RASPA outputs to restart index
+        print("Moving backup RASPA outputs to restart index")
         shutil.move(os.path.join(output_dir, "Output"), os.path.join(output_dir, "Output-%d" % i))
         shutil.move(os.path.join(output_dir, "Restart"), os.path.join(output_dir, "Restart-%d" % i))
         shutil.move(os.path.join(output_dir, "Movies"), os.path.join(output_dir, "Movies-%d" % i))
         shutil.move(os.path.join(output_dir, "VTK"), os.path.join(output_dir, "VTK-%d" % i))
 
-        if gas_loading.absolute_volumetric_loading_error < simulation_config['restart_err_threshold']:
-            # gas_loading.cycles = simulation_config['simulation_cycles'] * (i + 1)
+        if (gas_loading.absolute_volumetric_loading_error < simulation_config['restart_err_threshold']):
+            print("Exiting because v/v err < restart_err_threshold: %4.2f < %4.2f" %
+                (gas_loading.absolute_volumetric_loading_error, simulation_config['restart_err_threshold']))
             break
+        elif i == simulation_config['max_restarts']:
+            print("Exiting because we've already restarted maximum number of times.")
+            print("v/v err >= restart_err_threshold: %4.2f >= %4.2f" %
+                (gas_loading.absolute_volumetric_loading_error, simulation_config['restart_err_threshold']))
+            print("--")
+            gas_loading.cycles = simulation_config['simulation_cycles'] * (i + 1)
+            break
+        else:
+            print("\n--")
+            print("restart # %d" % i)
+            subprocess.run(["simulate", "-i", raspa_restart_config], check=True, cwd=output_dir)
 
-        subprocess.run(["simulate", "-i", raspa_restart_config], check=True, cwd=output_dir)
 
 
 
