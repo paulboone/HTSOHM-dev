@@ -33,4 +33,6 @@ simulations:
     temperature: 298
     initialization_cycles: 1000
     simulation_cycles: 1000
+    restart_err_threshold: 5
+    max_restarts: 10
     cutoff: 14
