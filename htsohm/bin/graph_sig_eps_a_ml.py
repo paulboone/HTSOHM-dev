@@ -11,6 +11,8 @@ from htsohm import load_config_file, db
 from htsohm.db import Material
 
 def limit_index(v, limits, sweep_points):
+    if sweep_points == 1:
+        return 0
     return int(round((sweep_points - 1) * (v - limits[0]) / (limits[1] - limits[0])))
 
 @click.command()
@@ -21,10 +23,19 @@ def bin_graph(config_path, csv_path=None, database_path=None):
 
     config = load_config_file(config_path)
     num_bins = config['number_of_convergence_bins']
-    prop1range = [2.5, 7.5]
+    prop1range = [2.5, 5.0]
     prop2range = config['prop2range']
-    sweep_points = config['sweep_points']
-    xticks = sweep_points * 2 - 1
+
+    if 'sweep_points' in config:
+        lattice_sweep_points = sigma_sweep_points = epsilon_sweep_points = config['sweep_points']
+    else:
+        lattice_sweep_points = config['lattice_sweep_points']
+        sigma_sweep_points = config['sigma_sweep_points']
+        epsilon_sweep_points = config['epsilon_sweep_points']
+
+    xticks = lattice_sweep_points - 1
+    if xticks > 11:
+        xticks = 11
 
 
     print("loading materials...")
@@ -49,7 +60,7 @@ def bin_graph(config_path, csv_path=None, database_path=None):
             lj = (m.structure.lennard_jones[0].sigma, m.structure.lennard_jones[0].epsilon)
             if lj not in mats_by_lj:
                 mats_by_lj[lj] = []
-
+            print(m)
             mats_by_lj[lj].append([m.structure.a, m.gas_loading[0].absolute_volumetric_loading])
 
     print("plotting...")
@@ -73,21 +84,20 @@ def bin_graph(config_path, csv_path=None, database_path=None):
     ml_atoms_a3_stp = 2.69e-5
     absolute_limits_ml = [ (1/a**3) / ml_atoms_a3_stp for a in absolute_limits_a]
     ax.plot(absolute_limits_a, absolute_limits_ml, lw=3, linestyle="--", color="black", zorder=15, label="all sites filled")
-    # print(mats_by_lj.keys())
 
     for (sig, eps), a_ml in mats_by_lj.items():
         a_ml = np.array(a_ml)
-        sig_index = limit_index(sig, config['structure_parameters']['sigma_limits'], sweep_points)
-        eps_index = limit_index(eps, config['structure_parameters']['epsilon_limits'], sweep_points)
+        # sig_index = limit_index(sig, config['structure_parameters']['sigma_limits'], sigma_sweep_points)
+        eps_index = limit_index(eps, config['structure_parameters']['epsilon_limits'], epsilon_sweep_points)
         # print(sig, eps, marker_index)
 
 
-        alpha = (eps_index + 1) / sweep_points
-        if eps_index + 1 == sweep_points:
-            label = "sigma = %3.2f" % sig
+        alpha = (eps_index + 1) / epsilon_sweep_points
+        if eps_index + 1 == epsilon_sweep_points:
+            label = "sigma = %4.3f" % sig
         else:
             label = None
-        #  marker="$%d$" % sig_index, markersize=10,
+
         ax.plot(a_ml[:,0], a_ml[:,1], lw=3, zorder=20, alpha=alpha, label=label)
 
     ax.legend()
