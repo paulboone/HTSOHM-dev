@@ -15,6 +15,5 @@ def LCs():
 def test_number_density_bounds():
     assert random_number_density((100000, 100000), LCs()) == 100000
 
-def test_two_site_constraint():
-    assert random_number_density((1, 2), LCs()) == 2
-
+def test_one_site_constraint():
+    assert random_number_density((0, 0), LCs()) == 1

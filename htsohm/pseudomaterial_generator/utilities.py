@@ -14,9 +14,9 @@ def random_number_density(number_density_limits, structure):
 
     Returns:
         atoms (int): some random number of atom-sites under the imposed limits.
-        If the minimum number density results in a unit cell with less than 2
+        If the minimum number density results in a unit cell with less than 1
         atom-sites with the given lattice constants, a minimum number density
-        of TWO ATOM SITES PER UNIT CELL is imposed.
+        of one atom site per unit cell is imposed.
 
     """
     min_ND = number_density_limits[0]
