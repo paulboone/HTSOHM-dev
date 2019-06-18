@@ -36,6 +36,10 @@ def sweep_materials(config_path):
     # lattice_coords = map(sorted, lattice_coords)
     # lattice_coords = set(map(tuple, lattice_coords))
 
+    print("epsilons: ", eps_d)
+    print("sigmas: ", sig_d)
+    print("lattice constants: ", a_d)
+
     for eps in eps_d:
         for sig in sig_d:
             for coords in lattice_coords:
