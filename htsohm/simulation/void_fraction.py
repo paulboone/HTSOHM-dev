@@ -48,7 +48,7 @@ def write_raspa_file(filename, material, simulation_config):
 def write_output_files(material, simulation_config, output_dir):
     # Write simulation input-files
     # RASPA input-file
-    filename = os.path.join(output_dir, "VoidFraction.input")
+    filename = os.path.join(output_dir, "void_fraction.input")
     write_raspa_file(filename, material, simulation_config)
     # Pseudomaterial mol-file
     write_mol_file(material, output_dir)
@@ -108,7 +108,7 @@ def run(material, simulation_config, config):
     print("Temperature      : {}".format(simulation_config["temperature"]))
 
     # while not Path(output_file).exists():
-    process = subprocess.run(["simulate", "-i", "./VoidFraction.input"], check=True, cwd=output_dir)
+    process = subprocess.run(["simulate", "-i", "./void_fraction.input"], check=True, cwd=output_dir)
 
     data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
     if len(data_files) != 1:
