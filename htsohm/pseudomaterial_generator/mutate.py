@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.orm.session import make_transient
 
 from htsohm import db
-from htsohm.db import Material, Structure, LennardJones, AtomSites
+from htsohm.db import Material, Structure, LennardJones, AtomSite
 from htsohm.pseudomaterial_generator.utilities import random_number_density
 
 def random_position(x0, x1, strength):
@@ -108,7 +108,7 @@ def mutate_material(run_id, parent_id, config):
         print("***** adding atom sites")
         for i in range(number_of_atoms - len(cs.atom_sites)):
             # TODO: new points always have ZERO charge?
-            cs.atom_sites.append(AtomSites(atom_type="A_{}".format(choice(range(number_of_atom_types))), x=random(), y=random(), z=random(), q=0.))
+            cs.atom_sites.append(AtomSite(atom_type="A_{}".format(choice(range(number_of_atom_types))), x=random(), y=random(), z=random(), q=0.))
 
     # remove atom-sites, if necessary
     # adjust charges if atom-sites were removed

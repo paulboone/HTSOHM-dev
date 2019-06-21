@@ -4,7 +4,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, Float
 from sqlalchemy.orm import relationship
 
 from htsohm.db import Base
-from htsohm.db.atom_sites import AtomSites
+from htsohm.db.atom_sites import AtomSite
 from htsohm.db.lennard_jones import LennardJones
 
 class Structure(Base):
@@ -20,7 +20,7 @@ class Structure(Base):
     material = relationship("Material", back_populates="structure")
 
     # relationship with 'atom_sites'
-    atom_sites = relationship("AtomSites")
+    atom_sites = relationship("AtomSite")
 
     # relationship with 'lennard_jones'
     lennard_jones = relationship("LennardJones")

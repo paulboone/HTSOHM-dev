@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 
 from htsohm.db import Base
 
-class AtomSites(Base):
+class AtomSite(Base):
     __tablename__ = "atom_sites"
 
     id = Column(Integer, primary_key=True)
@@ -19,7 +19,7 @@ class AtomSites(Base):
         return ['id']
 
     def clone(self):
-        copy = super(AtomSites, self).clone()
+        copy = super(AtomSite, self).clone()
         return copy
 
     def __repr__(self):

@@ -1,6 +1,6 @@
 from random import choice, random, randrange, uniform
 
-from htsohm.db import Material, Structure, LennardJones, AtomSites
+from htsohm.db import Material, Structure, LennardJones, AtomSite
 from htsohm.pseudomaterial_generator.utilities import random_number_density
 
 def generate_material(run_id, config):
@@ -63,7 +63,7 @@ def generate_material(run_id, config):
 
         # set position and add atom-site
         structure.atom_sites.append(
-                AtomSites(
+                AtomSite(
                     atom_type = "A_{}".format(atom_type),
                     x = random(), y = random(), z = random(),
                     q = 0.))
