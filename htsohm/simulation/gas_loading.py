@@ -24,7 +24,7 @@ def write_raspa_file(filename, material, simulation_config):
 
     """
     # Set default void fraction value if non was calculated
-    if material.void_fraction[0].void_fraction == None:
+    if len(material.void_fraction) == 0 or material.void_fraction[0].void_fraction is None:
         void_fraction = 0.
     else:
         void_fraction = material.void_fraction[0].void_fraction
