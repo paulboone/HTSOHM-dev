@@ -114,5 +114,5 @@ for sigma in sigmas:
 
 ax.legend()
 
-# fig.savefig("sig_eps_a_ml.png")
+fig.savefig("lattice-energies.png")
 # plt.close(fig)
