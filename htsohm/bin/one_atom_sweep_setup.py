@@ -9,7 +9,7 @@ from htsohm.db import Material
 
 @click.command()
 @click.argument('config-path', type=click.Path())
-def sweep_materials(config_path):
+def sweep_setup(config_path):
     config = load_config_file(config_path)
     db.init_database(config["database_connection_string"])
     session = db.get_session()
@@ -49,4 +49,4 @@ def sweep_materials(config_path):
     session.commit()
 
 if __name__ == '__main__':
-    sweep_materials()
+    sweep_setup()

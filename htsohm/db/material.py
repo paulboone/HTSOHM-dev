@@ -63,6 +63,28 @@ class Material(Base):
         m = Material(structure=structure)
         return m
 
+    @staticmethod
+    def cube_pore_new(sigma, epsilon, num_atoms, atom_diameter):
+        # lattice constant a is calculated from number of atoms times the atom_diameter
+        a = num_atoms * atom_diameter
+
+        atom_sites = []
+        for xi in range(num_atoms):
+            for yi in range(num_atoms):
+                for zi in range(num_atoms):
+                    # only add indices that are in one of the three boundary planes, i.e index == 0
+                    if min(xi, yi, zi) == 0:
+                        x = xi * atom_diameter / a
+                        y = yi * atom_diameter / a
+                        z = zi * atom_diameter / a
+                        atom_sites.append(AtomSite(atom_type="A_0", x=x, y=y, z=z, q=0.0))
+
+        structure = Structure(a, a, a, atom_sites, [LennardJones(atom_type="A_0", sigma=sigma, epsilon=epsilon)])
+        m = Material(structure=structure)
+        return m
+
+
+
     def clone(self):
         copy = super(Material, self).clone()
         copy.parent = self

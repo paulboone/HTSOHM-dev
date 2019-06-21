@@ -3,7 +3,7 @@
 from distutils.core import setup
 setup(
     name = 'HTSOHM',
-    version = '0.5.0',
+    version = '0.5.1',
     description = 'High-throughput Screening of Hypothetical Materials',
     author = 'Paul Boone / A Reino Kaija',
     author_email = 'paulboone@pitt.edu',
@@ -26,7 +26,8 @@ setup(
               'psm-output-config-files = htsohm.bin.config_files:output_config_files',
               'psm-csv = htsohm.bin.csv:output_csv',
               'psm-dof-analysis = htsohm.bin.dof_analysis:dof_analysis',
-              'psm-setup-one-atom-sweep = htsohm.bin.one_atom_sweep_setup:sweep_materials',
+              'psm-setup-one-atom-sweep = htsohm.bin.one_atom_sweep_setup:sweep_setup',
+              'psm-setup-cube-pore-sweep = htsohm.bin.cube_pore_sweep_setup:sweep_setup',
               'psm-run-one-atom-sweep = htsohm.bin.one_atom_sweep_run:run_materials',
 
           ]
