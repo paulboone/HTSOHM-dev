@@ -207,7 +207,7 @@ def serial_runloop(config_path):
             else:
                 last_benchmark_reached = True
 
-        if config['output_all_graphs']:
+        if 'output_all_graphs' in config and config['output_all_graphs']:
             output_path = os.path.join(config['output_dir'], "binplot_%d.png" % gen)
             delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
                             bins=bin_counts, new_bins=new_bins,
@@ -218,7 +218,7 @@ def serial_runloop(config_path):
                             perturbation_methods=perturbation_methods, show_triangulation=False, show_hull=False,
                             bin_scores=bin_scores)
 
-        if config['output_tri_graph'] and (gen <= 10 or (gen <=50 and gen % 10 == 0) or
+        if 'output_tri_graph' in config and config['output_tri_graph'] and (gen <= 10 or (gen <=50 and gen % 10 == 0) or
             (gen <=500 and gen % 50 == 0) or gen % 100 == 0 or last_benchmark_reached):
             output_path = os.path.join(config['output_dir'], "triplot_%d.png" % gen)
             delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
