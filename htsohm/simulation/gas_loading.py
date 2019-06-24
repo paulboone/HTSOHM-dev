@@ -205,6 +205,7 @@ def run(material, simulation_config, config):
         shutil.move(os.path.join(output_dir, "Movies"), os.path.join(output_dir, "Movies-%d" % i))
         shutil.move(os.path.join(output_dir, "VTK"), os.path.join(output_dir, "VTK-%d" % i))
 
+        gas_loading.cycles = simulation_config['simulation_cycles'] * (i + 1)
         if (gas_loading.absolute_volumetric_loading_error < simulation_config['restart_err_threshold']):
             print("Exiting because v/v err < restart_err_threshold: %4.2f < %4.2f" %
                 (gas_loading.absolute_volumetric_loading_error, simulation_config['restart_err_threshold']))
@@ -214,7 +215,7 @@ def run(material, simulation_config, config):
             print("v/v err >= restart_err_threshold: %4.2f >= %4.2f" %
                 (gas_loading.absolute_volumetric_loading_error, simulation_config['restart_err_threshold']))
             print("--")
-            gas_loading.cycles = simulation_config['simulation_cycles'] * (i + 1)
+
             break
         else:
             print("\n--")
