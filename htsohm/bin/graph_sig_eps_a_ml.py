@@ -33,7 +33,7 @@ def bin_graph(config_path, csv_path=None, database_path=None):
         sigma_sweep_points = config['sigma_sweep_points']
         epsilon_sweep_points = config['epsilon_sweep_points']
 
-    xticks = lattice_sweep_points - 1
+    xticks = lattice_sweep_points
     if xticks > 11:
         xticks = 11
 
