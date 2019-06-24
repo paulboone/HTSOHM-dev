@@ -29,7 +29,6 @@ setup(
               'psm-setup-one-atom-sweep = htsohm.bin.one_atom_sweep_setup:sweep_setup',
               'psm-setup-cube-pore-sweep = htsohm.bin.cube_pore_sweep_setup:sweep_setup',
               'psm-run-one-atom-sweep = htsohm.bin.one_atom_sweep_run:run_materials',
-
           ]
       },
 )
