@@ -20,7 +20,7 @@ setup(
     ],
     entry_points={
           'console_scripts': [
-              'dps = htsohm.dps:cmdline',
+              'dps = htsohm.bin.dps:cmdline',
               'psm-graph-bins = htsohm.bin.bin_graph:bin_graph',
               'psm-graph-a-ml = htsohm.bin.graph_sig_eps_a_ml:bin_graph',
               'psm-output-config-files = htsohm.bin.config_files:output_config_files',
