@@ -60,7 +60,6 @@ def bin_graph(config_path, csv_path=None, database_path=None):
             lj = (m.structure.lennard_jones[0].sigma, m.structure.lennard_jones[0].epsilon)
             if lj not in mats_by_lj:
                 mats_by_lj[lj] = []
-            print(m)
             mats_by_lj[lj].append([m.structure.a, m.gas_loading[0].absolute_volumetric_loading])
 
     print("plotting...")
@@ -85,12 +84,14 @@ def bin_graph(config_path, csv_path=None, database_path=None):
     absolute_limits_ml = [ (1/a**3) / ml_atoms_a3_stp for a in absolute_limits_a]
     ax.plot(absolute_limits_a, absolute_limits_ml, lw=3, linestyle="--", color="black", zorder=15, label="all sites filled")
 
+    tab10 = plt.get_cmap("tab10").colors
     for (sig, eps), a_ml in mats_by_lj.items():
         a_ml = np.array(a_ml)
-        # sig_index = limit_index(sig, config['structure_parameters']['sigma_limits'], sigma_sweep_points)
+        sig_index = limit_index(sig, config['structure_parameters']['sigma_limits'], sigma_sweep_points)
         eps_index = limit_index(eps, config['structure_parameters']['epsilon_limits'], epsilon_sweep_points)
-        # print(sig, eps, marker_index)
+        # print(sig, eps, eps_index)
 
+        color = tab10[sig_index]
 
         alpha = (eps_index + 1) / epsilon_sweep_points
         if eps_index + 1 == epsilon_sweep_points:
@@ -98,7 +99,7 @@ def bin_graph(config_path, csv_path=None, database_path=None):
         else:
             label = None
 
-        ax.plot(a_ml[:,0], a_ml[:,1], lw=3, zorder=20, alpha=alpha, label=label)
+        ax.plot(a_ml[:,0], a_ml[:,1], lw=3, color=color, zorder=20, alpha=alpha, label=label)
 
     ax.legend()
     ax.set_title("Methane loading vs lattice constant. Lines colored by sigma. \nLine transparency shows epsilon (no transparency is highest epsilon value; highest transparency is lowest epsilon value)")
