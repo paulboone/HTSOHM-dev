@@ -52,7 +52,7 @@ def write_raspa_file(filename, material, simulation_config, restart):
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(input_data)
 
-def write_output_files(material, simulation_config, output_dir, restart, filename=None):
+def write_output_files(material, simulation_config, output_dir, restart=False, filename=None):
     # Write simulation input-files
     # RASPA input-file
     if filename is None:
