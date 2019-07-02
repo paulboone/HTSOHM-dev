@@ -11,7 +11,10 @@ def test_void_fraction_empty_crystal():
     assert calculate_void_fraction([], (4,4,4)) == 1.0
 
 def test_void_fraction_huge_atom():
-    assert calculate_void_fraction([(2,2,2,10)], (4,4,4)) == 0.0
+    assert calculate_void_fraction([(2,2,2,4)], (4,4,4), points_per_angstrom=2) == 0.0
+
+def test_void_fraction_huger_atom():
+    assert calculate_void_fraction([(2,2,2,100)], (4,4,4), points_per_angstrom=2) == 0.0
 
 def test_void_fraction_one_sphere():
     atoms = [(2,2,2,1)]

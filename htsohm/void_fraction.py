@@ -20,9 +20,12 @@ def calculate_void_fraction(atoms, box, points_per_angstrom=10):
     for x, y, z, r in atoms:
         delt_i = ceil(r / dx)
         xi = int(x // dx); yi = int(y // dy); zi = int(z // dz)
-        lattice_indices = itertools.product(range(xi - delt_i, xi + delt_i + 1),
-                                            range(yi - delt_i, yi + delt_i + 1),
-                                            range(zi - delt_i, zi + delt_i + 1))
+
+        # limit the lattice_indices to only crossing a boundary once in each direction
+        lattice_indices = itertools.product(
+            range(max(xi - delt_i, -xi_max), min(xi + delt_i + 1, 2*xi_max)),
+            range(max(yi - delt_i, -yi_max), min(yi + delt_i + 1, 2*yi_max)),
+            range(max(zi - delt_i, -zi_max), min(zi + delt_i + 1, 2*zi_max)))
 
         for lxi, lyi, lzi in lattice_indices:
             lx = lxi * dx; ly = lyi * dy; lz = lzi * dz
