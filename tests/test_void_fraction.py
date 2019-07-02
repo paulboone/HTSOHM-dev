@@ -31,3 +31,6 @@ def test_void_fraction_two_separate_spheres():
 def test_void_fraction_one_sphere_across_pbc():
     atoms = [(0,0,0,1)]
     assert calculate_void_fraction(atoms, (4,4,4)) == approx(1 - r1volume/4**3, 0.01)
+
+    atoms = [(4,4,4,1)]
+    assert calculate_void_fraction(atoms, (4,4,4)) == approx(1 - r1volume/4**3, 0.01)
