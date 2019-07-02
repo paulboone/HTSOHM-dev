@@ -8,12 +8,15 @@ class AtomSite(Base):
 
     id = Column(Integer, primary_key=True)
     atom_type = Column(String(10))
+    lennard_jones_id = Column(Integer, ForeignKey("lennard_jones.id"))
+
     x = Column(Float)
     y = Column(Float)
     z = Column(Float)
     q = Column(Float)
 
     structure_id = Column(Integer, ForeignKey("structures.id"))
+    lennard_jones = relationship("LennardJones")
 
     def exclude_cols(self):
         return ['id']

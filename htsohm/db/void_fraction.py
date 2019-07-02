@@ -16,6 +16,8 @@ class VoidFraction(Base):
 
     # simulation output
     void_fraction = Column(Float)
+    void_fraction_geo = Column(Float)
+    void_fraction_zeo = Column(Float)
 
     def __repr__(self):
         return "(%s: %s-%s p: %s)" % (str(self.id), self.material_id,

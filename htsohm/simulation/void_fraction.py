@@ -15,6 +15,7 @@ from htsohm.material_files import write_mol_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
 from htsohm.simulation.files import load_and_subs_template
 from htsohm.db import VoidFraction
+from htsohm.void_fraction import calculate_void_fraction
 
 def write_raspa_file(filename, material, simulation_config):
     """Writes RASPA input file for calculating helium void fraction.
@@ -117,6 +118,14 @@ def run(material, simulation_config, config):
 
     # Parse output
     parse_output(output_file, material, simulation_config)
+
+    # run geometric void fraction
+    atoms = [(a.x, a.y, a.z, a.lennard_jones.sigma) for a in material.structure.atom_sites]
+    box = (material.structure.a, material.structure.b, material.structure.c)
+    material.void_fraction_geo = calculate_void_fraction(atoms, box)
+
+    # run zeo void fraction
+
     if not config['keep_configs']:
         shutil.rmtree(output_dir, ignore_errors=True)
     sys.stdout.flush()

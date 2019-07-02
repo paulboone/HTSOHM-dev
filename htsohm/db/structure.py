@@ -25,6 +25,9 @@ class Structure(Base):
     # relationship with 'lennard_jones'
     lennard_jones = relationship("LennardJones")
 
+    def get_lennard_jones(self, atom_type):
+        return [lj for lj in self.lennard_jones if lj.atom_type == atom_type][0]
+
     def exclude_cols(self):
         return ['id']
 
@@ -32,6 +35,11 @@ class Structure(Base):
         self.a = a
         self.b = b
         self.c = c
+
+        # assign lennard jones by id so relationship will work
+        for a in atom_sites:
+            a.lennard_jones = self.get_lennard_jones(a.atom_type)
+
         self.atom_sites = atom_sites
         self.lennard_jones = lennard_jones
 

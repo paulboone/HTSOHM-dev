@@ -12,7 +12,7 @@ def generate_material(run_id, config):
             populate the unit cell.
 
     Returns:
-        material (sqlalchemy.orm.query.Query): database row for storing 
+        material (sqlalchemy.orm.query.Query): database row for storing
             simulation data specific to the material. See
             `htsohm/db/material.py` for more information.
 
@@ -36,7 +36,7 @@ def generate_material(run_id, config):
 
     # store unit cell volume to row
     material.unit_cell_volume = structure.volume
-    
+
     # assign Lennard-Jones parameters
     for i in range(number_of_atom_types):
         structure.lennard_jones.append(
@@ -65,6 +65,7 @@ def generate_material(run_id, config):
         structure.atom_sites.append(
                 AtomSite(
                     atom_type = "A_{}".format(atom_type),
+                    lennard_jones = structure.get_lennard_jones("A_{}".format(atom_type)),
                     x = random(), y = random(), z = random(),
                     q = 0.))
 
