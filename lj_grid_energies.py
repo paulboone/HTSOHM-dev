@@ -14,7 +14,7 @@ lattice = 3.45
 
 # Host framework
 eps_h = 513.264
-sigmas = [1.052, 1.663, 2.884, 3.495, 4.106, 4.717, 5.327, 5.938, 6.549]
+sigmas = [1.052, 1.663, 2.274, 2.884, 3.495, 4.106, 4.717, 5.327, 5.938, 6.549]
 
 # Adsorbate eps / sigma (CH4-Methane)
 eps_a = 158.500000
@@ -87,7 +87,7 @@ def total_energy(lattice, eps_h, sigma_h, verbose=True):
 # total_energy(lattice, eps_h, sigma_h)
 
 energy_range = [-5000, 0]
-lattice_a = np.linspace(lattice_lims[0], lattice_lims[1],101)
+lattice_a = np.linspace(lattice_lims[0], lattice_lims[1],181)
 
 fig = plt.figure(figsize=(12,12), tight_layout=True)
 ax = fig.add_subplot(1, 1, 1)
@@ -98,12 +98,12 @@ ax.set_ylabel("Energy [K]")
 ax.set_yticks(-(energy_range[1] - energy_range[0]) * np.array(range(0,6))/5)
 ax.set_yticks(-(energy_range[1] - energy_range[0]) * np.array(range(0,50 + 1))/50, minor=True)
 
-ax.set_xticks(lattice_lims[0] + (lattice_lims[1] - lattice_lims[0]) * np.array(range(0,11))/(11 - 1))
+ax.set_xticks(lattice_lims[0] + (lattice_lims[1] - lattice_lims[0]) * np.array(range(0,19))/(19 - 1))
 ax.set_xticks(lattice_a, minor=True)
 
 # if show_grid:
-ax.grid(linestyle='-', color='0.9', zorder=0, which='minor')
-ax.grid(linestyle='-', color='0.3', zorder=1, which='major')
+# ax.grid(linestyle='-', color='0.9', zorder=0, which='minor')
+# ax.grid(linestyle='-', color='0.3', zorder=1, which='major')
 
 
 ax.axhline(-295, 0, 1, lw=2, linestyle="--", color="black", label="PR energy of gas", zorder=15)
@@ -114,5 +114,5 @@ for sigma in sigmas:
 
 ax.legend()
 
-fig.savefig("lattice-energies.png")
+fig.savefig("lattice-energies.png", transparent=True)
 # plt.close(fig)
