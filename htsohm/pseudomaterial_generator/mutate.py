@@ -79,7 +79,7 @@ def mutate_material(run_id, parent_id, config):
         cs.b = perturb_unweighted(cs.b, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
         cs.c = perturb_unweighted(cs.c, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
 
-        if child.perturbation in ["lattice", "all"]:
+        if "fix_atoms" not in config and child.perturbation in ["lattice", "all"]:
             new_density = len(cs.atom_sites) / cs.volume
             child.number_density = min(max(new_density, number_density_limits[0]), number_density_limits[1])
 
@@ -93,14 +93,19 @@ def mutate_material(run_id, parent_id, config):
             at.sigma = perturb_unweighted(at.sigma, strength * (sigma_limits[1] - sigma_limits[0]), sigma_limits)
             at.epsilon = perturb_unweighted(at.epsilon, strength * (epsilon_limits[1] - epsilon_limits[0]), epsilon_limits)
 
-    # perturb number density/ number of atom-sites
-    if child.perturbation in ["density", "all"]:
-        child.number_density = perturb_unweighted(parent.number_density, \
-                                (number_density_limits[1] - number_density_limits[0])*strength, \
-                                number_density_limits)
 
     # adjust # of atom sites to match density--should only be required if number density is perturbed!
-    number_of_atoms = max(1, round(child.number_density * child.unit_cell_volume))
+    if "fix_atoms" in config:
+        number_of_atoms = config['fix_atoms']
+    else:
+        # perturb number density/ number of atom-sites
+        if child.perturbation in ["density", "all"]:
+            child.number_density = perturb_unweighted(parent.number_density, \
+                                    (number_density_limits[1] - number_density_limits[0])*strength, \
+                                    number_density_limits)
+
+        number_of_atoms = max(1, round(child.number_density * child.unit_cell_volume))
+
     if number_of_atoms < len(cs.atom_sites):
         print("***** deleting atom sites")
         cs.atom_sites = np.random.choice(cs.atom_sites, number_of_atoms, replace=False).tolist()

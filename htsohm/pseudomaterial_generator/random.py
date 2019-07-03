@@ -46,7 +46,10 @@ def generate_material(run_id, config):
                     epsilon    = uniform(*epsilon_limits)))
 
     # calculate random number of atom-sites
-    number_of_atoms = random_number_density(number_density_limits, structure)
+    if "fix_atoms" in config:
+        number_of_atoms = config['fix_atoms']
+    else:
+        number_of_atoms = random_number_density(number_density_limits, structure)
 
     # store number density to row
     material.number_density = number_of_atoms / material.unit_cell_volume
