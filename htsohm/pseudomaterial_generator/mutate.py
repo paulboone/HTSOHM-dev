@@ -108,7 +108,9 @@ def mutate_material(run_id, parent_id, config):
         print("***** adding atom sites")
         for i in range(number_of_atoms - len(cs.atom_sites)):
             # TODO: new points always have ZERO charge?
-            cs.atom_sites.append(AtomSite(atom_type="A_{}".format(choice(range(number_of_atom_types))), x=random(), y=random(), z=random(), q=0.))
+            atom_type = "A_{}".format(choice(range(number_of_atom_types)))
+            cs.atom_sites.append(AtomSite(atom_type=atom_type, x=random(), y=random(), z=random(), q=0.,
+                lennard_jones=cs.get_lennard_jones(atom_type)))
 
     # remove atom-sites, if necessary
     # adjust charges if atom-sites were removed

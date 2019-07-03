@@ -26,7 +26,14 @@ class Structure(Base):
     lennard_jones = relationship("LennardJones")
 
     def get_lennard_jones(self, atom_type):
-        return [lj for lj in self.lennard_jones if lj.atom_type == atom_type][0]
+        a = [lj for lj in self.lennard_jones if lj.atom_type == atom_type][0]
+        print(a)
+        return a
+
+    def map_atom_sites_to_lj(self):
+        # assign lennard jones by id so relationship will work
+        for a in self.atom_sites:
+            a.lennard_jones = self.get_lennard_jones(a.atom_type)
 
     def exclude_cols(self):
         return ['id']
@@ -36,21 +43,22 @@ class Structure(Base):
         self.b = b
         self.c = c
 
-        # assign lennard jones by id so relationship will work
-        for a in atom_sites:
-            a.lennard_jones = self.get_lennard_jones(a.atom_type)
-
         self.atom_sites = atom_sites
         self.lennard_jones = lennard_jones
 
+        self.map_atom_sites_to_lj()
+
     def clone(self):
         copy = super(Structure, self).clone()
-        if self.atom_sites:
-            for atom_site in self.atom_sites:
-                copy.atom_sites.append(atom_site.clone())
         if self.lennard_jones:
             for lj in self.lennard_jones:
                 copy.lennard_jones.append(lj.clone())
+
+        if self.atom_sites:
+            for atom_site in self.atom_sites:
+                copy.atom_sites.append(atom_site.clone())
+
+        copy.map_atom_sites_to_lj()
         return copy
 
     def minimum_unit_cells(self, cutoff):
@@ -63,4 +71,4 @@ class Structure(Base):
         return self.a * self.b * self.c
 
     def __repr__(self):
-        return "(%d: %f, %f, %f)" % (self.id, self.a, self.b, self.c)
+        return "(%s: %f, %f, %f)" % (self.id, self.a, self.b, self.c)
