@@ -134,7 +134,7 @@ def serial_runloop(config_path):
             session.commit()
 
             box_d[i] = material.id
-            box_r[i,:] = (material.void_fraction[0].void_fraction, material.gas_loading[0].absolute_volumetric_loading)
+            box_r[i,:] = (material.void_fraction[0].void_fraction_geo, material.gas_loading[0].absolute_volumetric_loading)
             # box_r[i,:] = (material[prop1], material[prop2])
 
         random.seed() # flush the seed so that only the initial points are set, not generated points
@@ -183,7 +183,7 @@ def serial_runloop(config_path):
             session.commit()
 
             new_box_d[i] = material.id
-            new_box_r[i,:] = (material.void_fraction[0].void_fraction, material.gas_loading[0].absolute_volumetric_loading)
+            new_box_r[i,:] = (material.void_fraction[0].void_fraction_geo, material.gas_loading[0].absolute_volumetric_loading)
             # new_box_r[i,:] = (material[prop1], material[prop2])
 
         # TODO: bins for methane loading?
