@@ -4,7 +4,7 @@ from math import sqrt, ceil
 
 import numpy as np
 
-def calculate_void_fraction(atoms, box, points_per_angstrom=10):
+def calculate_void_fraction(atoms, box, points_per_angstrom=10, probe_r=0.0):
     """ assumes box starts at (0,0,0)
     """
 
@@ -19,6 +19,7 @@ def calculate_void_fraction(atoms, box, points_per_angstrom=10):
     lattice_fill = np.zeros((xi_max, yi_max, zi_max))
 
     for x, y, z, r in atoms:
+        r = (r + probe_r) / 2
         delt_i = ceil(r / dx)
         xi = int(x // dx); yi = int(y // dy); zi = int(z // dz)
 

@@ -106,6 +106,7 @@ def run(material, simulation_config, config):
     print("Time             : {}".format(datetime.now().time().isoformat()))
     print("Simulation type  : {}".format(simulation_config["type"]))
     print("Probe            : {}".format(simulation_config["adsorbate"]))
+    print("Probe radius [geo]: {}".format(simulation_config["probe_radius"]))
     print("Temperature      : {}".format(simulation_config["temperature"]))
 
     # while not Path(output_file).exists():
@@ -122,7 +123,7 @@ def run(material, simulation_config, config):
     # run geometric void fraction
     atoms = [(a.x, a.y, a.z, a.lennard_jones.sigma) for a in material.structure.atom_sites]
     box = (material.structure.a, material.structure.b, material.structure.c)
-    material.void_fraction[-1].void_fraction_geo = calculate_void_fraction(atoms, box)
+    material.void_fraction[-1].void_fraction_geo = calculate_void_fraction(atoms, box, probe_r=simulation_config["probe_radius"])
     print("GEOMETRIC void fraction: %f" % material.void_fraction[-1].void_fraction_geo)
     # run zeo void fraction here
 
