@@ -1,5 +1,6 @@
 from datetime import datetime
 from glob import glob
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -180,18 +181,30 @@ def run(material, simulation_config, config):
         # Parse output
         gas_loading, atom_blocks, atoms_uc_to_vv = parse_output(output_file, material, simulation_config)
         atom_blocks = [a * atoms_uc_to_vv / total_unit_cells for a in atom_blocks]
-        print("blocks for averaging [v/v]: ", atom_blocks)
+        print("new blocks for averaging [v/v]: ", atom_blocks)
         print("atoms_uc_to_vv = %f" % atoms_uc_to_vv)
+        print("reported V/V: %f" % gas_loading.absolute_volumetric_loading)
+        print("reported err: %f" % gas_loading.absolute_volumetric_loading_error)
+
 
         all_atom_blocks += atom_blocks
         print("all blocks: ", all_atom_blocks)
 
-        atoms_std = np.std(np.mean(np.array(all_atom_blocks).reshape(-1, i+1), axis=1))
-        print("std of all blocks avg %d: %f" % (i, np.std(all_atom_blocks)))
-        print("std of all blocks: %f" % np.std(all_atom_blocks))
+        # assign two initialization blocks to every restart run
+        run_blocks = all_atom_blocks[math.floor(i/2)*5:]
+        print("run blocks: ", run_blocks)
+        print("run blocks len: %f" % (len(run_blocks) / 5))
 
-        error_vv = atoms_std * atoms_uc_to_vv / total_unit_cells
+        blocks_for_averaging = np.mean(np.array(run_blocks).reshape(-1, int(len(run_blocks) / 5)), axis=1)
+        print("incorporated blocks for averaging [v/v]: ", blocks_for_averaging)
+        atoms_std = np.std(blocks_for_averaging)
+        print("2*std of all blocks avg %d: %f" % (i, atoms_std*2))
+        print("2*std of all blocks: %f" % (2 * np.std(run_blocks)))
+
+        error_vv = 2*atoms_std * atoms_uc_to_vv / total_unit_cells
+        gas_loading.absolute_volumetric_loading = np.mean(blocks_for_averaging)
         gas_loading.absolute_volumetric_loading_error = error_vv
+        print("calculated V/V: %f" % gas_loading.absolute_volumetric_loading)
         print("calculated error: %f" % error_vv)
 
         print("Copying restart to RestartInitial...")
