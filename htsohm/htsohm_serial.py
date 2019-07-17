@@ -67,6 +67,7 @@ def serial_runloop(config_path):
     prop1range = config['prop1range']
     prop2range = config['prop2range']
     verbose = config['verbose'] if 'verbose' in config else False
+    vf_subtype = config['void_fraction_subtype'] if 'void_fraction_subtype' in config else 'raspa'
     num_bins = config['number_of_convergence_bins']
     benchmarks = config['benchmarks']
     next_benchmark = benchmarks.pop(0)
@@ -134,7 +135,14 @@ def serial_runloop(config_path):
             session.commit()
 
             box_d[i] = material.id
-            box_r[i,:] = (material.void_fraction[0].void_fraction_geo, material.gas_loading[0].absolute_volumetric_loading)
+            if vf_subtype == "raspa":
+                vf = material.void_fraction[0].void_fraction
+            elif vf_subtype == "geo":
+                vf = material.void_fraction[0].void_fraction_geo
+            else:
+                raise(Exception("void fraction subtype not recognized"))
+
+            box_r[i,:] = (vf, material.gas_loading[0].absolute_volumetric_loading)
             # box_r[i,:] = (material[prop1], material[prop2])
 
         random.seed() # flush the seed so that only the initial points are set, not generated points
@@ -183,7 +191,13 @@ def serial_runloop(config_path):
             session.commit()
 
             new_box_d[i] = material.id
-            new_box_r[i,:] = (material.void_fraction[0].void_fraction_geo, material.gas_loading[0].absolute_volumetric_loading)
+            if vf_subtype == "raspa":
+                vf = material.void_fraction[0].void_fraction
+            elif vf_subtype == "geo":
+                vf = material.void_fraction[0].void_fraction_geo
+            else:
+                raise(Exception("void fraction subtype not recognized"))
+            new_box_r[i,:] = (vf, material.gas_loading[0].absolute_volumetric_loading)
             # new_box_r[i,:] = (material[prop1], material[prop2])
 
         # TODO: bins for methane loading?
