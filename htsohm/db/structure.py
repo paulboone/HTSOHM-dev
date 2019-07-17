@@ -27,7 +27,6 @@ class Structure(Base):
 
     def get_lennard_jones(self, atom_type):
         a = [lj for lj in self.lennard_jones if lj.atom_type == atom_type][0]
-        print(a)
         return a
 
     def map_atom_sites_to_lj(self):
