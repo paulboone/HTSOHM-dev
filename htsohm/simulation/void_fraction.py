@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import subprocess
+import time
 
 from datetime import datetime
 from uuid import uuid4
@@ -60,30 +61,24 @@ def write_output_files(material, simulation_config, output_dir):
     # Overwritten interactions, force_field.def (none overwritten by default)
     write_force_field(output_dir)
 
-def parse_output(output_file, material, simulation_config):
+def parse_output(output_file, material, void_fraction):
     """Parse output file for void fraction data.
 
     Args:
         output_file (str): path to simulation output file.
+        material: material that was simulated
+        void_fraction: current void fraction object. This gets modified to include the result data.
 
     Returns:
-        results (dict): average Widom Rosenbluth-weight.
-
+        nothing
     """
-    void_fraction = VoidFraction()
-    void_fraction.adsorbate = simulation_config["adsorbate"]
-    void_fraction.temperature = simulation_config["temperature"]
 
     with open(output_file) as origin:
         for line in origin:
             if not "Average Widom Rosenbluth-weight:" in line:
                 continue
             void_fraction.void_fraction = float(line.split()[4])
-        print("\nVOID FRACTION : {}".format(void_fraction.void_fraction))
-        if material.parent:
-            print("(parent VOID FRACTION : {})".format(material.parent.void_fraction[0].void_fraction))
-        print("\n")
-    material.void_fraction.append(void_fraction)
+
 
 def run(material, simulation_config, config):
     """Runs void fraction simulation.
@@ -102,6 +97,7 @@ def run(material, simulation_config, config):
     write_output_files(material, simulation_config, output_dir)
 
     # Run simulations
+    print("--")
     print("Date             : {}".format(datetime.now().date().isoformat()))
     print("Time             : {}".format(datetime.now().time().isoformat()))
     print("Simulation type  : {}".format(simulation_config["type"]))
@@ -110,27 +106,40 @@ def run(material, simulation_config, config):
         print("Probe radius [geo]: {}".format(simulation_config["probe_radius"]))
     print("Temperature      : {}".format(simulation_config["temperature"]))
 
-    # while not Path(output_file).exists():
-    process = subprocess.run(["simulate", "-i", "./void_fraction.input"], check=True, cwd=output_dir)
+    void_fraction = VoidFraction()
+    void_fraction.adsorbate = simulation_config["adsorbate"]
+    void_fraction.temperature = simulation_config["temperature"]
 
-    data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
-    if len(data_files) != 1:
-        raise Exception("ERROR: There should only be one data file in the output directory for %s. Check code!" % output_dir)
-    output_file = data_files[0]
+    if "do_raspa" in simulation_config and simulation_config["do_raspa"]:
+        tbegin = time.perf_counter()
+        process = subprocess.run(["simulate", "-i", "./void_fraction.input"], check=True, cwd=output_dir)
 
-    # Parse output
-    parse_output(output_file, material, simulation_config)
+        data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
+        if len(data_files) != 1:
+            raise Exception("ERROR: There should only be one data file in the output directory for %s. Check code!" % output_dir)
+        output_file = data_files[0]
+
+        # Parse output
+        parse_output(output_file, material, void_fraction)
+        print("RASPA void fraction simulation time: %5.2f seconds" % (time.perf_counter() - tbegin))
+        print("RASPA VOID FRACTION : {}".format(void_fraction.void_fraction))
+        if material.parent:
+            print("(parent VOID FRACTION : {})".format(material.parent.void_fraction[0].void_fraction))
+
 
     # run geometric void fraction
-    if "do_geo" in simulation_config:
+    if "do_geo" in simulation_config and simulation_config["do_geo"]:
+        tbegin = time.perf_counter()
         atoms = [(a.x * material.structure.a, a.y * material.structure.b, a.z * material.structure.c, a.lennard_jones.sigma) for a in material.structure.atom_sites]
         box = (material.structure.a, material.structure.b, material.structure.c)
-        material.void_fraction[-1].void_fraction_geo = calculate_void_fraction(atoms, box, probe_r=simulation_config["probe_radius"])
-        print("GEOMETRIC void fraction: %f" % material.void_fraction[-1].void_fraction_geo)
-
+        void_fraction.void_fraction_geo = calculate_void_fraction(atoms, box, probe_r=simulation_config["probe_radius"])
+        print("GEOMETRIC void fraction: %f" % void_fraction.void_fraction_geo)
+        print("GEOMETRIC void fraction simulation time: %5.2f   seconds" % (time.perf_counter() - tbegin))
     if "do_zeo" in simulation_config:
         pass
         # run zeo void fraction here
+
+    material.void_fraction.append(void_fraction)
 
     if not config['keep_configs']:
         shutil.rmtree(output_dir, ignore_errors=True)
