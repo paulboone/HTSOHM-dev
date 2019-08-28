@@ -15,6 +15,8 @@ from htsohm.figures import delaunay_figure
 import htsohm.select.triangulation as selector_tri
 import htsohm.select.density_bin as selector_bin
 import htsohm.select.best as selector_best
+import htsohm.select.specific as selector_specific
+
 
 
 def print_block(string):
@@ -179,7 +181,8 @@ def serial_runloop(config_path):
             parents_d, parents_r, bin_scores = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials, score_by_empty_neighbors=True)
         elif config['selector_type'] == 'best':
             parents_d, parents_r, _ = selector_best.choose_parents(children_per_generation, box_d, box_r)
-
+        elif config['selector_type'] == 'specific':
+            parents_d, parents_r, _ = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
 
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
