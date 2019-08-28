@@ -123,11 +123,10 @@ def parse_output(output_file, material, simulation_config):
             elif "Conversion factor molecules/unit cell -> cm^3 STP/cm^3:" in line:
                 atoms_uc_to_vv = float(line.split()[7])
 
-        print("\n{} LOADING : {} v/v (STP)".format(simulation_config["adsorbate"],
+        print("{} LOADING : {} v/v (STP)".format(simulation_config["adsorbate"],
                                             gas_loading.absolute_volumetric_loading))
         if material.parent:
             print("(parent LOADING : {} v/v (STP))".format(material.parent.gas_loading[0].absolute_volumetric_loading))
-        print("\n")
 
 
     return gas_loading, atom_blocks, atoms_uc_to_vv
@@ -159,6 +158,7 @@ def run(material, simulation_config, config):
     write_output_files(material, simulation_config, output_dir, restart=True, filename=os.path.join(output_dir, raspa_restart_config))
 
     # Run simulations
+    print("--")
     print("Date             : {}".format(datetime.now().date().isoformat()))
     print("Time             : {}".format(datetime.now().time().isoformat()))
     print("Simulation type  : {}".format(simulation_config["type"]))
