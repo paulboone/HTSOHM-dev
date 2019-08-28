@@ -14,6 +14,8 @@ def load_config_file(file_name):
     with open(file_name) as config_file:
          config = yaml.load(config_file)
 
+    if not 'override_restart_errors' in config:
+        config['override_restart_errors'] = False
     if not 'keep_configs' in config:
         config['keep_configs'] = False
     if not "output_dir" in config or not config["output_dir"]:

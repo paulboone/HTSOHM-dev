@@ -77,6 +77,7 @@ def serial_runloop(config_path):
     dbcs = config["database_connection_string"]
     db.init_database(dbcs, backup=(load_restart_path != False))
     session = db.get_session()
+    engine = db.get_engine()
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
@@ -98,15 +99,21 @@ def serial_runloop(config_path):
 
         extra_materials = session.query(Material).filter(Material.id > len(box_r)).all()
         if len(extra_materials) > 0:
-            if len(extra_materials) > children_per_generation:
+            if len(extra_materials) > children_per_generation and not config['override_restart_errors']:
                 print("There are %d extra materials in the database, which is more than the %d " \
                       "children per generation. Is this the right restart file?" %
                       (len(extra_materials), children_per_generation))
                 sys.exit(1)
             print("The database has an extra %d materials in it; deleting..." % len(extra_materials))
-            for m in extra_materials:
-                session.delete(m)
-            session.commit()
+
+            print("delete from materials where id > %d" % len(box_r))
+            engine.execute("delete from materials where id > %d" % len(box_r))
+            engine.execute("delete from gas_loadings where material_id > %d" % len(box_r))
+            engine.execute("delete from surface_areas where material_id > %d" % len(box_r))
+            engine.execute("delete from void_fractions where material_id > %d" % len(box_r))
+            engine.execute("delete from structures where material_id > %d" % len(box_r))
+            engine.execute("delete from lennard_jones where structure_id > %d" % len(box_r))
+            engine.execute("delete from atom_sites where structure_id > %d" % len(box_r))
 
     else:
         if session.query(Material).count() > 0:
