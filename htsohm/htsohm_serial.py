@@ -191,6 +191,7 @@ def serial_runloop(config_path):
             print("Material Index: ", i + gen * children_per_generation)
             if config['generator_type'] == 'random':
                 material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
+                perturbation_methods = None
             elif config['generator_type'] == 'mutate':
                 material = pseudomaterial_generator.mutate.mutate_material(run_id, parents_d[i], config["structure_parameters"])
                 perturbation_methods[i] = material.perturbation
