@@ -21,6 +21,7 @@ setup(
     entry_points={
           'console_scripts': [
               'dps = htsohm.bin.dps:cmdline',
+              'psm-prop-histogram = htsohm.bin.prop_histogram:bin_graph',
               'psm-graph-bins = htsohm.bin.bin_graph:bin_graph',
               'psm-graph-a-ml = htsohm.bin.graph_sig_eps_a_ml:bin_graph',
               'psm-output-config-files = htsohm.bin.config_files:output_config_files',
