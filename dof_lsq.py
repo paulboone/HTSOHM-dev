@@ -30,13 +30,15 @@ def lsq_error_deltas(a, hlimit=1.0, normalization_constant=1):
     pairs = itertools.combinations(a, 2)
     a_np = np.array(list(pairs))
     deltas = a_np[:,1] - a_np[:,0]
-    return np.sum(deltas ** 2) / normalization_constant **2
+    return np.sum(deltas ** 2) / (normalization_constant**2)
 
-def run_simulations(template_a, max_mult, ms):
+def run_simulations(template_a, max_mult, ms, num_children=1000):
     start_time = perf_counter()
 
-    agg_results = np.zeros((max_mult, 1000))
+    agg_results = np.zeros((max_mult, num_children))
     orig_error = lsq_error_deltas(template_a)
+    exp_improvements = []
+    print("orig_error:", orig_error)
 
     for dofmult in range(1, max_mult + 1):
         print("------------------------------")
@@ -45,7 +47,7 @@ def run_simulations(template_a, max_mult, ms):
         print(("starting: err %f; mean %f points" % (orig_error, np.mean(a))), a)
         errors = []
         arrays = []
-        for _ in range(1000):
+        for _ in range(num_children):
             a1 = [perturb_circular(v, ms) for v in a]
             arrays += [a1]
             errors += [lsq_error_deltas(a1, normalization_constant=dofmult)]
@@ -53,12 +55,18 @@ def run_simulations(template_a, max_mult, ms):
         num_better = np.where(np.array(errors) < orig_error)[0]
         print("%d/%d improved: %4.2f" % (len(num_better), len(arrays), len(num_better) / len(arrays)))
 
+        error_improvement = np.array(errors) - orig_error
+        exp_improvement = np.sum(error_improvement[error_improvement < 0.0]) / num_children
+        exp_improvements += [exp_improvement]
+        print("Expected improvement: %6.5f / material" % exp_improvement)
         best_error = np.amin(errors)
         best_index = np.where(errors == best_error)[0][0]
         print(("best: err %f; mean %f points" % (best_error, np.mean(arrays[best_index]))), arrays[best_index])
         agg_results[dofmult - 1,:] = errors
 
-    figure_lsq_vs_dof(agg_results, orig_error, "ms%d_%6.5f_%d.png" % (200*ms, orig_error, max_mult), ms*2)
+    template_max_delta = np.max(template_a - np.mean(template_a))
+    figure_lsq_vs_dof(agg_results, orig_error, "ms%d_%6.5f_%d.png" % (200*ms, orig_error, max_mult),
+        ms*2, template_max_delta, exp_improvements=exp_improvements)
     np.savetxt("ms%d_%6.5f_%d.np" % (200*ms, orig_error, max_mult), agg_results)
 
     end_time = perf_counter()
