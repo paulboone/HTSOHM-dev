@@ -7,3 +7,6 @@ def choose_parents(num_parents, box_d, box_range):
     parent_indices = [i for i,m in mats]
 
     return [box_d[i] for i in parent_indices], [box_range[i] for i in parent_indices], None
+
+def choose_specific_parent(num_parents, box_d, box_range, specific_index):
+    return [box_d[specific_index] for _ in num_parents], [box_range[specific_index] for _ in num_parents], None
