@@ -18,11 +18,14 @@ def test_void_fraction_huger_atom():
 
 def test_void_fraction_one_sphere():
     atoms = [(2,2,2,2)]
+    # NOTE on approx void fraction calculations:
+    # the volume of one sphere of radius r = 1 is equal to r1volume. The % of the volume taken up by
+    # the sphere is equal to r1volume / box volume = r1volume/4**3
     assert calculate_void_fraction(atoms, (4,4,4)) == approx(1 - r1volume/4**3, 0.01)
 
 def test_void_fraction_one_sphere_w_he_probe():
     atoms = [(2,2,2,2)]
-    assert calculate_void_fraction(atoms, (4,4,4), probe_r=2.105) == approx(1 - r1volume*((4.105/2)/4)**3, 0.01)
+    assert calculate_void_fraction(atoms, (4,4,4), probe_r=1.0) == approx(1 - r1volume*2**3/4**3, 0.01)
 
 def test_void_fraction_two_identical_spheres():
     atoms = [(2,2,2,2), (2,2,2,2)]

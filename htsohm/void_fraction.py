@@ -18,8 +18,8 @@ def calculate_void_fraction(atoms, box, points_per_angstrom=10, probe_r=0.0):
 
     lattice_fill = np.zeros((xi_max, yi_max, zi_max))
 
-    for x, y, z, r in atoms:
-        r = (r + probe_r) / 2
+    for x, y, z, d in atoms:
+        r = d/2 + probe_r
         delt_i = ceil(r / dx)
         xi = int(x // dx); yi = int(y // dy); zi = int(z // dz)
 
