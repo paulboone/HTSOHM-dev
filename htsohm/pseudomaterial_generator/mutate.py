@@ -65,21 +65,24 @@ def mutate_material(run_id, parent_id, config):
     child = parent.clone()
     cs = child.structure
 
-    if perturb == "random":
-        child.perturbation = choice(["lattice", "lattice_nodens", "atom_types", "atom_sites", "density", "all"])
+    perturb = set(config["perturb"])
+
+    if config["perturb_type"] == "random":
+        child.perturbation = choice(perturb)
+        perturb = {child.perturbation}
     else:
-        child.perturbation = perturb
+        child.perturbation = "all"
 
     print("Parent ID: %d" % (child.parent_id))
-    print("PERTURBING: ", child.perturbation)
+    print("PERTURBING: %s [%s]" % (child.perturbation, perturb))
 
     # perturb lattice constants
-    if child.perturbation in ["lattice", "lattice_nodens", "all"]:
+    if perturb & {"lattice", "lattice_nodens"}:
         cs.a = perturb_unweighted(cs.a, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
         cs.b = perturb_unweighted(cs.b, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
         cs.c = perturb_unweighted(cs.c, strength * (lattice_limits[1] - lattice_limits[0]), lattice_limits)
 
-        if "fix_atoms" not in config and child.perturbation in ["lattice", "all"]:
+        if "fix_atoms" not in config and perturb & {"lattice"}:
             new_density = len(cs.atom_sites) / cs.volume
             child.number_density = min(max(new_density, number_density_limits[0]), number_density_limits[1])
 
@@ -88,7 +91,7 @@ def mutate_material(run_id, parent_id, config):
     child.unit_cell_volume = cs.volume
 
     # perturb lennard-jones parameters
-    if child.perturbation in ["atom_types", "all"]:
+    if perturb & {"atom_types"}:
         for at in cs.lennard_jones:
             at.sigma = perturb_unweighted(at.sigma, strength * (sigma_limits[1] - sigma_limits[0]), sigma_limits)
             at.epsilon = perturb_unweighted(at.epsilon, strength * (epsilon_limits[1] - epsilon_limits[0]), epsilon_limits)
@@ -99,7 +102,7 @@ def mutate_material(run_id, parent_id, config):
         number_of_atoms = config['fix_atoms']
     else:
         # perturb number density/ number of atom-sites
-        if child.perturbation in ["density", "all"]:
+        if perturb & ["density"]:
             child.number_density = perturb_unweighted(parent.number_density, \
                                     (number_density_limits[1] - number_density_limits[0])*strength, \
                                     number_density_limits)
@@ -130,7 +133,7 @@ def mutate_material(run_id, parent_id, config):
     #             cs.atom_sites[i].q -= dq
 
     # perturb atom-site positions
-    if child.perturbation in ["atom_sites", "all"]:
+    if perturb & {"atom_sites"}:
         for a in cs.atom_sites:
             a.x = random_position(a.x, random(), strength)
             a.y = random_position(a.y, random(), strength)
