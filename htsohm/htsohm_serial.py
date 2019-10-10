@@ -183,6 +183,8 @@ def serial_runloop(config_path):
             parents_d, parents_r, _ = selector_best.choose_parents(children_per_generation, box_d, box_r)
         elif config['selector_type'] == 'specific':
             parents_d, parents_r, _ = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
+        else:
+            raise(Exception("config 'selector_type' = %s not recognized" % config["selector_type"]))
 
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
