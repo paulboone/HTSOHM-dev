@@ -24,6 +24,7 @@ setup(
               'psm-prop-histogram = htsohm.bin.prop_histogram:bin_graph',
               'psm-graph-bins = htsohm.bin.bin_graph:bin_graph',
               'psm-graph-a-ml = htsohm.bin.graph_sig_eps_a_ml:bin_graph',
+              'psm-graph-max-prop-by-num-materials = htsohm.bin.graph_max_prop_by_num_materials:bin_graph',
               'psm-output-config-files = htsohm.bin.config_files:output_config_files',
               'psm-csv = htsohm.bin.csv:output_csv',
               'psm-dof-analysis = htsohm.bin.dof_analysis:dof_analysis',
