@@ -40,10 +40,13 @@ def csv_add_bin(csv_path, bin):
         header = next(csv_in)
 
         bin_col_labels = ["bin%d" % col for col, _, _, _ in bin]
-        csv_out.writerow(header + bin_col_labels)
+        csv_out.writerow(header + bin_col_labels + ["unique_bins"])
+        unique_bins = set()
         for row in csv_in:
             calcd_bins = [calc_bin(float(row[col]), lb, ub, nb) for col, lb, ub, nb in bin]
-            csv_out.writerow(row + calcd_bins)
+            unique_bins = unique_bins.union(set([tuple(calcd_bins)]))
+            csv_out.writerow(row + calcd_bins + [len(unique_bins)])
+
 
 if __name__ == '__main__':
     output_csv()
