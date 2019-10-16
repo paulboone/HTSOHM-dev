@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 @click.option('-c', '--col', type=int)
 @click.option('-o', '--output-path', type=click.Path(), default="comparison_graph.png")
 @click.option('--ylabel')
-def bin_graph(csv_path, col, output_path, ylabel=""):
-
+@click.option('--ymax', type=float)
+def bin_graph(csv_path, col, output_path, ylabel="", ymax=None):
     all_data = []
     max_mats = 0
 
@@ -26,7 +26,7 @@ def bin_graph(csv_path, col, output_path, ylabel=""):
         np_data[:,i] = dataset
 
     print("plotting...")
-    fig = plt.figure(figsize=(12,12), tight_layout=True)
+    fig = plt.figure(figsize=(3.75,3.75), tight_layout=True)
     ax = fig.add_subplot(1, 1, 1)
 
     ax.set_xlabel("# materials")
@@ -34,9 +34,12 @@ def bin_graph(csv_path, col, output_path, ylabel=""):
 
     ax.grid(linestyle='-', color='0.8', zorder=0)
     ax.plot(range(max_mats), np_data)
+    if ymax:
+        ax.axhline(ymax, linestyle="--", lw=3, color="black", label="Max")
+
     ax.legend(csv_path)
 
-    fig.savefig(output_path)
+    fig.savefig(output_path, dpi=300)
     plt.close(fig)
 
 
