@@ -85,10 +85,6 @@ def mutate_material(parent_id, config):
             new_density = len(cs.atom_sites) / cs.volume
             child.number_density = min(max(new_density, number_density_limits[0]), number_density_limits[1])
 
-
-    # store unit cell volume to row
-    child.unit_cell_volume = cs.volume
-
     # perturb lennard-jones parameters
     if perturb & {"atom_types"}:
         for at in cs.lennard_jones:
@@ -106,7 +102,7 @@ def mutate_material(parent_id, config):
                                     (number_density_limits[1] - number_density_limits[0])*strength, \
                                     number_density_limits)
 
-        number_of_atoms = max(1, round(child.number_density * child.unit_cell_volume))
+        number_of_atoms = max(1, round(child.number_density * child.structure.volume))
 
     if number_of_atoms < len(cs.atom_sites):
         print("***** deleting atom sites")
@@ -168,7 +164,7 @@ def mutate_material(parent_id, config):
     print("CHILD UUID  :\t{}".format(child.uuid))
     print("lattice constants: (%.2f, %.2f, %.2f) => (%.2f, %.2f, %.2f)" % (ps.a, ps.b, ps.c, cs.a, cs.b, cs.c))
     print("number_density: %.2e => %.2e" % (parent.number_density, child.number_density))
-    print("number of atoms: %.2f => %.2f" % (int(parent.number_density * parent.unit_cell_volume), number_of_atoms))
+    print("number of atoms: %.2f => %.2f" % (int(parent.number_density * parent.structure.volume), number_of_atoms))
     parent_ljs = ", ".join(["(%.1f, %.1f)" % (ljs.epsilon, ljs.sigma) for ljs in ps.lennard_jones])
     child_ljs = ", ".join(["(%.1f, %.1f)" % (ljs.epsilon, ljs.sigma) for ljs in cs.lennard_jones])
     print("lennard jones: %s => %s" % (parent_ljs, child_ljs))

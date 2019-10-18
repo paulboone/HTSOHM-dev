@@ -21,9 +21,6 @@ def new_material(config):
     structure.b = uniform(*lattice_limits)
     structure.c = uniform(*lattice_limits)
 
-    # store unit cell volume to row
-    material.unit_cell_volume = structure.volume
-
     # assign Lennard-Jones parameters
     for i in range(number_of_atom_types):
         structure.lennard_jones.append(
@@ -39,7 +36,7 @@ def new_material(config):
         number_of_atoms = random_number_density(number_density_limits, structure)
 
     # store number density to row
-    material.number_density = number_of_atoms / material.unit_cell_volume
+    material.number_density = number_of_atoms / material.structure.volume
 
     # assign atom-site positions and calculate avg. sigma/epsilon values
     sigma_sum, epsilon_sum = 0, 0

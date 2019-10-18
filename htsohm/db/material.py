@@ -16,7 +16,6 @@ class Material(Base):
     generation   = Column(Integer)
 
     # structure properties
-    unit_cell_volume     = Column(Float)
     number_density       = Column(Float)
     average_epsilon      = Column(Float)
     average_sigma        = Column(Float)
