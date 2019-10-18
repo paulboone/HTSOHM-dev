@@ -1,13 +1,7 @@
-from math import isclose
-from random import choice, random, uniform
+from random import choice, random, uniform, sample
 
-import numpy as np
-from scipy.spatial import Delaunay, distance
-from sqlalchemy import text
-from sqlalchemy.orm.session import make_transient
+# import numpy as np
 
-from htsohm import db
-from htsohm.db import Material, Structure, LennardJones, AtomSite
 from htsohm.generator.random import random_atom_sites, random_number_density
 
 def random_position(x0, x1, mutation_strength):
@@ -90,7 +84,7 @@ def mutate_material(parent, config):
         number_of_atoms = max(1, round(child.number_density * child.structure.volume))
 
     if number_of_atoms < len(cs.atom_sites):
-        cs.atom_sites = np.random.choice(cs.atom_sites, number_of_atoms, replace=False).tolist()
+        cs.atom_sites = sample(cs.atom_sites, number_of_atoms)
     elif number_of_atoms > len(cs.atom_sites):
         cs.atom_sites += random_atom_sites(number_of_atoms - len(cs.atom_sites), cs.lennard_jones)
 

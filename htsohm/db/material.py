@@ -88,4 +88,4 @@ class Material(Base):
         return ['uuid', 'id']
 
     def __repr__(self):
-        return "(%s: %s-%s p: %s)" % (str(self.id), self.uuid, self.parent_id)
+        return "(%s: %s p: %s)" % (str(self.id), self.uuid, self.parent_id)
