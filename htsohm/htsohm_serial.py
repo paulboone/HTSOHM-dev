@@ -61,20 +61,19 @@ def serial_runloop(config_path):
 
     run_id = datetime.now().isoformat()
     config = load_config_file(config_path)
+    os.makedirs(config['output_dir'], exist_ok=True)
     print(config)
 
     children_per_generation = config['children_per_generation']
-    # prop1 = config['prop1']
-    # prop2 = config['prop2']
     prop1range = config['prop1range']
     prop2range = config['prop2range']
-    verbose = config['verbose'] if 'verbose' in config else False
-    vf_subtype = config['void_fraction_subtype'] if 'void_fraction_subtype' in config else 'raspa'
+    verbose = config['verbose']
+    vf_subtype = config['void_fraction_subtype']
     num_bins = config['number_of_convergence_bins']
     benchmarks = config['benchmarks']
     next_benchmark = benchmarks.pop(0)
     last_benchmark_reached = False
-    load_restart_path = config['load_restart_path'] if 'load_restart_path' in config else False
+    load_restart_path = config['load_restart_path']
 
     dbcs = config["database_connection_string"]
     db.init_database(dbcs, backup=(load_restart_path != False))

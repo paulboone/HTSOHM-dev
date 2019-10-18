@@ -1,25 +1,27 @@
 import os
 import yaml
 
-def load_config_file(file_name):
-    """Reads input file.
+def default_configuration():
+    return {
+        'override_restart_errors': False,
+        'keep_configs': False,
+        'output_dir': os.getcwd(),
+        'verbose': False,
+        'void_fraction_subtype': 'raspa',
+        'load_restart_path': False,
+    }
+
+def load_config_file(path):
+    """Loads the config file.
 
     Args:
-        file_name (str): auto-created config filename (ex. htsohm.sample.yaml).
+        path (str): config path.
 
     Returns:
         config (dict): parameters specified in config.
-
     """
-    with open(file_name) as config_file:
-         config = yaml.load(config_file)
+    config = default_configuration()
+    with open(path) as config_file:
+         config.update(yaml.load(config_file))
 
-    if not 'override_restart_errors' in config:
-        config['override_restart_errors'] = False
-    if not 'keep_configs' in config:
-        config['keep_configs'] = False
-    if not "output_dir" in config or not config["output_dir"]:
-        config["output_dir"] = os.getcwd()
-    else:
-        os.makedirs(config['output_dir'], exist_ok=True)
     return config
