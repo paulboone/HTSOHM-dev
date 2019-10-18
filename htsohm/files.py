@@ -24,4 +24,9 @@ def load_config_file(path):
     with open(path) as config_file:
          config.update(yaml.load(config_file))
 
+    enforce_config_ok(config)
+
     return config
+
+def enforce_config_ok(config):
+    assert config['void_fraction_subtype'] in ["raspa", "geo", "zeo"]

@@ -9,7 +9,7 @@ import sys
 import numpy as np
 
 from htsohm import pseudomaterial_generator, load_config_file, db
-from htsohm.db import Material
+from htsohm.db import Material, VoidFraction
 from htsohm.simulation.run_all import run_all_simulations
 from htsohm.figures import delaunay_figure
 import htsohm.select.triangulation as selector_tri
@@ -91,7 +91,7 @@ def serial_runloop(config_path):
     prop1range = config['prop1range']
     prop2range = config['prop2range']
     verbose = config['verbose']
-    vf_subtype = config['void_fraction_subtype']
+    VoidFraction.set_column_for_void_fraction(config['void_fraction_subtype'])
     num_bins = config['number_of_convergence_bins']
     benchmarks = config['benchmarks']
     next_benchmark = benchmarks.pop(0)
@@ -135,14 +135,8 @@ def serial_runloop(config_path):
             session.commit()
 
             box_d[i] = material.id
-            if vf_subtype == "raspa":
-                vf = material.void_fraction[0].void_fraction
-            elif vf_subtype == "geo":
-                vf = material.void_fraction[0].void_fraction_geo
-            else:
-                raise(Exception("void fraction subtype not recognized"))
-
-            box_r[i,:] = (vf, material.gas_loading[0].absolute_volumetric_loading)
+            box_r[i,:] = (material.void_fraction[0].get_void_fraction(),
+                          material.gas_loading[0].absolute_volumetric_loading)
             # box_r[i,:] = (material[prop1], material[prop2])
 
         random.seed() # flush the seed so that only the initial points are set, not generated points
@@ -195,13 +189,8 @@ def serial_runloop(config_path):
             session.commit()
 
             new_box_d[i] = material.id
-            if vf_subtype == "raspa":
-                vf = material.void_fraction[0].void_fraction
-            elif vf_subtype == "geo":
-                vf = material.void_fraction[0].void_fraction_geo
-            else:
-                raise(Exception("void fraction subtype not recognized"))
-            new_box_r[i,:] = (vf, material.gas_loading[0].absolute_volumetric_loading)
+            new_box_r[i,:] = (material.void_fraction[0].get_void_fraction(),
+                              material.gas_loading[0].absolute_volumetric_loading)
             # new_box_r[i,:] = (material[prop1], material[prop2])
 
         # TODO: bins for methane loading?
