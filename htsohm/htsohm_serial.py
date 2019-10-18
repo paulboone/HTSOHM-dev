@@ -176,7 +176,7 @@ def serial_runloop(config_path):
                 elif config['selector_type'] == 'specific':
                     parents_d, parents_r, _ = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
 
-                material = generator.mutate.mutate_material(parents_d[i], config["structure_parameters"])
+                material = generator.mutate.mutate_material(session.query(Material).get(parents_d[i]), config["structure_parameters"])
                 perturbation_methods[i] = material.perturbation
 
             run_all_simulations(material, config)
