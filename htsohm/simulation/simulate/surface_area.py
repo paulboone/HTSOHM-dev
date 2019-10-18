@@ -7,8 +7,8 @@ from uuid import uuid4
 from string import Template
 from pathlib import Path
 
-from htsohm.material_files import write_mol_file, write_mixing_rules
-from htsohm.material_files import write_pseudo_atoms, write_force_field
+from htsohm.simulation.raspa import write_mol_file, write_mixing_rules
+from htsohm.simulation.raspa import write_pseudo_atoms, write_force_field
 from htsohm.simulation.templates import load_and_subs_template
 from htsohm.db import SurfaceArea
 
