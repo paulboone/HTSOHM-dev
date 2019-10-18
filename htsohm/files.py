@@ -30,3 +30,5 @@ def load_config_file(path):
 
 def enforce_config_ok(config):
     assert config['void_fraction_subtype'] in ["raspa", "geo", "zeo"]
+    assert config['selector_type'] in ["simplices-or-hull", "density-bin", "density-bin-neighbor-radius",
+                                        "best", "specific", "random"]

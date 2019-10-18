@@ -158,18 +158,6 @@ def serial_runloop(config_path):
         parents_r = parents_d = []
         perturbation_methods = [""] * children_per_generation
         bin_scores = None
-        if config['selector_type'] == 'simplices-or-hull':
-            parents_d, parents_r = selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
-        elif config['selector_type'] == 'density-bin':
-            parents_d, parents_r, _ = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
-        elif config['selector_type'] == 'density-bin-neighbor-radius':
-            parents_d, parents_r, bin_scores = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials, score_by_empty_neighbors=True)
-        elif config['selector_type'] == 'best':
-            parents_d, parents_r, _ = selector_best.choose_parents(children_per_generation, box_d, box_r)
-        elif config['selector_type'] == 'specific':
-            parents_d, parents_r, _ = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
-        else:
-            raise(Exception("config 'selector_type' = %s not recognized" % config["selector_type"]))
 
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
@@ -180,6 +168,17 @@ def serial_runloop(config_path):
                 material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
                 perturbation_methods = None
             elif config['generator_type'] == 'mutate':
+                if config['selector_type'] == 'simplices-or-hull':
+                    parents_d, parents_r = selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
+                elif config['selector_type'] == 'density-bin':
+                    parents_d, parents_r, _ = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
+                elif config['selector_type'] == 'density-bin-neighbor-radius':
+                    parents_d, parents_r, bin_scores = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials, score_by_empty_neighbors=True)
+                elif config['selector_type'] == 'best':
+                    parents_d, parents_r, _ = selector_best.choose_parents(children_per_generation, box_d, box_r)
+                elif config['selector_type'] == 'specific':
+                    parents_d, parents_r, _ = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
+
                 material = pseudomaterial_generator.mutate.mutate_material(run_id, parents_d[i], config["structure_parameters"])
                 perturbation_methods[i] = material.perturbation
 
