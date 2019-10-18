@@ -8,7 +8,8 @@ import sys
 
 import numpy as np
 
-from htsohm import pseudomaterial_generator, load_config_file, db
+from htsohm import pseudomaterial_generator, db
+from htsohm.config import load_config_file
 from htsohm.db import Material, VoidFraction
 from htsohm.simulation.run_all import run_all_simulations
 from htsohm.figures import delaunay_figure
