@@ -31,11 +31,10 @@ def perturb_unweighted(curr_val, max_change, var_limits):
     return min(max(new_val, var_limits[0]), var_limits[1])
 
 
-def mutate_material(run_id, parent_id, config):
+def mutate_material(parent_id, config):
     """Create records for pseudomaterial simulation and structure data."
 
     Args:
-        run_id (str): identification string for run.
         number_of_atomtypes (int): number of different chemical species used to
             populate the unit cell.
 

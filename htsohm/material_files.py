@@ -32,9 +32,7 @@ def write_mol_file(material, simulation_path):
                 "\n")
 
 def write_mixing_rules(structure, simulation_path):
-    """Writes .def file for forcefield information.
-
-    """
+    """Writes .def file for forcefield information."""
     adsorbate_LJ_atoms = [
             ['N_n2',    36.0,       3.31],
             ['C_co2',   27.0,       2.80],
@@ -45,7 +43,7 @@ def write_mixing_rules(structure, simulation_path):
             ['Kr',      167.06,     3.924],
             ['Xe',      110.704,    3.690]
     ]
- 
+
     adsorbate_none_atoms = ['N_com', 'H_h2']
 
     file_name = os.path.join(simulation_path, 'force_field_mixing_rules.def')
@@ -81,20 +79,9 @@ def write_pseudo_atoms(structure, simulation_path):
     """Writes .def file for chemical information.
 
     Args:
-        file_name (str): path to pseudo atoms definitions file, for example:
-            `$(raspa-dir)/forcefield/(run_id)-(uuid)/pseudo_atoms.def`
-        atom_types (list): dictionaries for each chemical species, including
-            an identification string and charge, for example:
-            interactions, for example:
-            {"chemical-id" : chemical_ids[i],
-             "charge"      : 0.,
-             "epsilon"     : epsilon,
-             "sigma"       : sigma}
+        simulation_path (str): path to pseudo atoms definitions file
 
     Returns:
-        Writes file within RASPA's library,
-        `$(raspa-dir)/forcefield/(run_id)-(uuid)/pseudo_atoms.def`
-
         NOTE: ALL CHARGES ARE 0. IN THIS VERSION.
 
     """
@@ -128,11 +115,7 @@ def write_force_field(simulation_path):
     """Writes .def file to overwrite LJ-type interactions.
 
     Args:
-        file_name (str): path to .def-file, for example:
-            `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field.def`
-
-    Writes file within RASPA's library:
-        `$(raspa-dir)/forcefield/(run_id)-(uuid)/force_field.def`
+        file_name (str): path to write .def-file
 
     NOTE: NO INTERACTIONS ARE OVERWRITTEN BY DEFAULT.
 

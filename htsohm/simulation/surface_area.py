@@ -17,7 +17,6 @@ def write_raspa_file(filename, material, simulation_config):
 
     Args:
         filename (str): path to input file.
-        run_id (str): identification string for run.
         material_id (str): uuid for material.
 
     Writes RASPA input-file.

@@ -76,13 +76,6 @@ def check_db_materials_for_restart(expected_num_materials, session, delete_exces
         sys.exit(1)
 
 def serial_runloop(config_path):
-    """
-    Args:
-        run_id (str): identification string for run.
-
-    """
-
-    run_id = datetime.now().isoformat()
     config = load_config_file(config_path)
     os.makedirs(config['output_dir'], exist_ok=True)
     print(config)
@@ -113,7 +106,6 @@ def serial_runloop(config_path):
             print("ERROR: cannot have existing materials in the database for a new run")
             sys.exit(1)
 
-
         # define variables that are needed for state
         bin_counts = np.zeros((num_bins, num_bins))
         bin_materials = empty_lists_2d(num_bins, num_bins)
@@ -125,10 +117,13 @@ def serial_runloop(config_path):
         if config['initial_points_random_seed']:
             print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
             random.seed(config['initial_points_random_seed'])
+        # generator_f = pseudomaterial_generator.random.new_material
+        # box_d, box_r = run_generation(generator_f, )
 
         for i in range(children_per_generation):
+            # generator, config, gen, session => box_d, box_r
             print("Material Index: ", i)
-            material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
+            material = pseudomaterial_generator.random.new_material(config["structure_parameters"])
             run_all_simulations(material, config)
             material.generation = 0
             session.add(material)
@@ -163,9 +158,10 @@ def serial_runloop(config_path):
         new_box_d = np.zeros(children_per_generation)
         new_box_r = -1 * np.ones((children_per_generation, 2))
         for i in range(children_per_generation):
+            # generator, selector, config, gen, session, box_d, box_r, bin_materials => new_box_d, new_box_r
             print("Material Index: ", i + gen * children_per_generation)
             if config['generator_type'] == 'random':
-                material = pseudomaterial_generator.random.new_material(run_id, config["structure_parameters"])
+                material = pseudomaterial_generator.random.new_material(config["structure_parameters"])
                 perturbation_methods = None
             elif config['generator_type'] == 'mutate':
                 if config['selector_type'] == 'simplices-or-hull':
@@ -179,7 +175,7 @@ def serial_runloop(config_path):
                 elif config['selector_type'] == 'specific':
                     parents_d, parents_r, _ = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
 
-                material = pseudomaterial_generator.mutate.mutate_material(run_id, parents_d[i], config["structure_parameters"])
+                material = pseudomaterial_generator.mutate.mutate_material(parents_d[i], config["structure_parameters"])
                 perturbation_methods[i] = material.perturbation
 
             run_all_simulations(material, config)
@@ -204,7 +200,7 @@ def serial_runloop(config_path):
         # evaluate algorithm effectiveness
         bin_fraction_explored = len(bins) / num_bins ** 2
         if verbose:
-            print_block('%s GENERATION %s: %5.2f%%' % (run_id, gen, bin_fraction_explored * 100))
+            print_block('GENERATION %s: %5.2f%%' % (gen, bin_fraction_explored * 100))
         while bin_fraction_explored >= next_benchmark:
             print_block("%s: %5.2f%% exploration accomplished at generation %d" %
                 ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()), bin_fraction_explored * 100, gen))

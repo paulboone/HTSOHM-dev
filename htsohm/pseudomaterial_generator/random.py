@@ -3,20 +3,7 @@ from random import choice, random, randrange, uniform
 from htsohm.db import Material, Structure, LennardJones, AtomSite
 from htsohm.pseudomaterial_generator.utilities import random_number_density
 
-def generate_material(run_id, config):
-    """Create records for pseudomaterial simulation and structure data."
-
-    Args:
-        run_id (str): identification string for run.
-        number_of_atomtypes (int): number of different chemical species used to
-            populate the unit cell.
-
-    Returns:
-        material (sqlalchemy.orm.query.Query): database row for storing
-            simulation data specific to the material. See
-            `htsohm/db/material.py` for more information.
-
-    """
+def new_material(config):
     number_of_atom_types    = config["number_of_atom_types"]
     lattice_limits          = config["lattice_constant_limits"]
     number_density_limits   = config["number_density_limits"]
@@ -26,7 +13,7 @@ def generate_material(run_id, config):
 
     ########################################################################
     # create database row
-    material = Material(run_id, None)
+    material = Material()
     structure = material.structure
 
     # assign lattice constants
@@ -87,6 +74,3 @@ def generate_material(run_id, config):
 
     print("FRAMEWORK NET CHARGE :\t{}".format(sum([e.q for e in structure.atom_sites])))
     return material
-
-def new_material(run_id, config):
-    return generate_material(run_id, config)

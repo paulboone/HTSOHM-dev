@@ -12,7 +12,7 @@ from htsohm import load_config_file, db
 from htsohm.db import Material
 from htsohm.htsohm_serial import calc_bins
 
-def dof_analysis(config_path, output_directory, run_id=None):
+def dof_analysis(config_path, output_directory):
     config = load_config_file(config_path)
     db.init_database(config["database_connection_string"])
     session = db.get_session()
@@ -28,8 +28,6 @@ def dof_analysis(config_path, output_directory, run_id=None):
     ml_binunits = (prop2range[1] - prop2range[0]) / num_bins
 
     materials = session.query(Material)
-    if run_id:
-        materials = materials.filter(Material.run_id==run_id)
 
     perturbation_types = ["lattice", "lattice_nodens", "atom_types", "atom_sites", "density", "all"]
 
@@ -97,9 +95,8 @@ def dof_analysis(config_path, output_directory, run_id=None):
 @click.command()
 @click.argument('config_path', type=click.Path())
 @click.argument('output_directory', type=click.Path())
-@click.option('--run_id', type=click.STRING, default=None)
-def dof(config_path, output_directory, run_id):
-    dof_analysis(config_path, output_directory, run_id)
+def dof(config_path, output_directory):
+    dof_analysis(config_path, output_directory)
 
 if __name__ == '__main__':
     dof()
