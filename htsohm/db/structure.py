@@ -11,28 +11,14 @@ class Structure(Base):
     __tablename__ = "structures"
 
     id = Column(Integer, primary_key=True)
+    material_id = Column(Integer, ForeignKey("materials.id"))
+
     a = Column(Float)
     b = Column(Float)
     c = Column(Float)
 
-    # relationship with 'materials'
-    material_id = Column(Integer, ForeignKey("materials.id"))
-    material = relationship("Material", back_populates="structure")
-
-    # relationship with 'atom_sites'
-    atom_sites = relationship("AtomSite")
-
-    # relationship with 'lennard_jones'
-    lennard_jones = relationship("LennardJones")
-
-    def get_lennard_jones(self, atom_type):
-        a = [lj for lj in self.lennard_jones if lj.atom_type == atom_type][0]
-        return a
-
-    def map_atom_sites_to_lj(self):
-        # assign lennard jones by id so relationship will work
-        for a in self.atom_sites:
-            a.lennard_jones = self.get_lennard_jones(a.atom_type)
+    atom_sites = relationship("AtomSite", backref="structure")
+    lennard_jones = relationship("LennardJones", backref="structure")
 
     def exclude_cols(self):
         return ['id']
@@ -45,8 +31,6 @@ class Structure(Base):
         self.atom_sites = atom_sites
         self.lennard_jones = lennard_jones
 
-        self.map_atom_sites_to_lj()
-
     def clone(self):
         copy = super(Structure, self).clone()
         if self.lennard_jones:
@@ -55,9 +39,9 @@ class Structure(Base):
 
         if self.atom_sites:
             for atom_site in self.atom_sites:
-                copy.atom_sites.append(atom_site.clone())
+                lennard_jones = copy.lennard_jones[atom_site.lennard_jones.atom_type_index()]
+                copy.atom_sites.append(atom_site.clone(lennard_jones))
 
-        copy.map_atom_sites_to_lj()
         return copy
 
     def minimum_unit_cells(self, cutoff):

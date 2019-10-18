@@ -17,17 +17,16 @@ class Material(Base):
 
     # structure properties
     number_density       = Column(Float)
-    average_epsilon      = Column(Float)
-    average_sigma        = Column(Float)
 
     # relationships
+    parent            = relationship("Material", remote_side=[id])
+    structure         = relationship("Structure", uselist=False, backref="material", cascade="all, delete-orphan")
+
     gas_loading       = relationship("GasLoading", cascade="all, delete-orphan")
     surface_area      = relationship("SurfaceArea", cascade="all, delete-orphan")
     void_fraction     = relationship("VoidFraction", cascade="all, delete-orphan")
-    structure         = relationship("Structure", uselist=False, back_populates="material", cascade="all, delete-orphan")
-    parent            = relationship("Material", remote_side=[id])
 
-    def __init__(self, parent=None, structure=None):
+    def __init__(self, parent=None, structure=None, number_density=None):
         """Init material-row.
 
         Args:
@@ -44,6 +43,9 @@ class Material(Base):
             self.structure = Structure()
         else:
             self.structure = structure
+
+        if number_density:
+            self.number_density = number_density
 
     @staticmethod
     def one_atom_new(sigma, epsilon, a, b, c):

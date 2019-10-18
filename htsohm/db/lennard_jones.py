@@ -7,12 +7,16 @@ class LennardJones(Base):
     __tablename__ = "lennard_jones"
 
     id = Column(Integer, primary_key=True)
-    atom_type = Column(String(10))
+    structure_id = Column(Integer, ForeignKey("structures.id"))
+
     sigma = Column(Float)
     epsilon = Column(Float)
 
-    # relationship with 'structures'
-    structure_id = Column(Integer, ForeignKey("structures.id"))
+    def atom_type_index(self):
+        if self.id:
+            return self.id - self.structure.lennard_jones[0].id
+        else:
+            return self.structure.lennard_jones.index(self)
 
     def exclude_cols(self):
         return ['id']
@@ -22,4 +26,4 @@ class LennardJones(Base):
         return copy
 
     def __repr__(self):
-        return "(%s: %s, sigma: %f, epsilon: %f)" % (str(self.id), self.atom_type, self.sigma, self.epsilon)
+        return "(%s, sigma: %f, epsilon: %f)" % (str(self.id), self.sigma, self.epsilon)

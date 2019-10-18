@@ -17,7 +17,7 @@ def write_mol_file(material, simulation_path):
             mol_file.write(
                     "{:6} {:10.4f} {:10.4f} {:10.4f}  {:5} {:10.8f}  0  0\n".format(
                         i + 1, round(a.x * s.a, 4), round(a.y * s.b, 4), round(a.z * s.c, 4),
-                        a.atom_type, round(a.q, 8)))
+                        str(a.lennard_jones.atom_type_index()), round(a.q, 8)))
         mol_file.write(
                 "\n" +
                 "\n" +
@@ -61,7 +61,7 @@ def write_mixing_rules(structure, simulation_path):
         )
         for lj in structure.lennard_jones:
             mixing_rules_file.write(
-                "{0:12} lennard-jones {1:8f} {2:8f}\n".format(lj.atom_type,
+                "{0:12} lennard-jones {1:8f} {2:8f}\n".format(lj.atom_type_index(),
                     round(lj.epsilon, 4), round(lj.sigma, 4)))
         for at in adsorbate_LJ_atoms:
             mixing_rules_file.write(
@@ -97,7 +97,7 @@ def write_pseudo_atoms(structure, simulation_path):
         for a in structure.lennard_jones:
             pseudo_atoms_file.write(
                 "{0:7}  yes  C   C   0   12.0       0.0  0.0  1.0  1.0    0  0  absolute  0\n".format(
-                    a.atom_type))
+                    str(a.atom_type_index())))
         pseudo_atoms_file.write(
             "N_n2     yes  N   N   0   14.00674   -0.4048   0.0  1.0  0.7    0  0  relative  0\n" +
             "N_com    no   N   -   0    0.0        0.8096   0.0  1.0  0.7    0  0  relative  0\n" +

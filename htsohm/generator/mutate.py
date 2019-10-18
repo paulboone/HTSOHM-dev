@@ -49,7 +49,7 @@ def mutate_material(parent_id, config):
     number_density_limits   = config["number_density_limits"]
     epsilon_limits          = config["epsilon_limits"]
     sigma_limits            = config["sigma_limits"]
-    max_charge              = config["charge_limit"]
+    # max_charge              = config["charge_limit"]
     strength                = config["mutation_strength"]
     perturb                 = config["perturb"]
 
@@ -91,7 +91,6 @@ def mutate_material(parent_id, config):
             at.sigma = perturb_unweighted(at.sigma, strength * (sigma_limits[1] - sigma_limits[0]), sigma_limits)
             at.epsilon = perturb_unweighted(at.epsilon, strength * (epsilon_limits[1] - epsilon_limits[0]), epsilon_limits)
 
-
     # adjust # of atom sites to match density--should only be required if number density is perturbed!
     if "fix_atoms" in config:
         number_of_atoms = config['fix_atoms']
@@ -111,9 +110,11 @@ def mutate_material(parent_id, config):
         print("***** adding atom sites")
         for i in range(number_of_atoms - len(cs.atom_sites)):
             # TODO: new points always have ZERO charge?
-            atom_type = "A_{}".format(choice(range(number_of_atom_types)))
-            cs.atom_sites.append(AtomSite(atom_type=atom_type, x=random(), y=random(), z=random(), q=0.,
-                lennard_jones=cs.get_lennard_jones(atom_type)))
+            atom_type_index = choice(range(config["number_of_atom_types"]))
+            cs.atom_sites.append(
+                AtomSite(x=random(), y=random(), z=random(), q=0.,
+                lennard_jones=cs.lennard_jones[atom_type_index]
+            ))
 
     # remove atom-sites, if necessary
     # adjust charges if atom-sites were removed
@@ -133,16 +134,6 @@ def mutate_material(parent_id, config):
             a.x = random_position(a.x, random(), strength)
             a.y = random_position(a.y, random(), strength)
             a.z = random_position(a.z, random(), strength)
-
-
-    # calculate avg. sigma/epsilon values
-    sigma_sum, epsilon_sum = 0, 0
-    for a in cs.atom_sites:
-        index = int(a.atom_type[2:])
-        sigma_sum += cs.lennard_jones[index].sigma
-        epsilon_sum += cs.lennard_jones[index].epsilon
-    child.average_sigma = sigma_sum / number_of_atoms
-    child.average_epsilon = epsilon_sum / number_of_atoms
 
     # TODO: USE NON-WEIGHTED PERTURBATION
     # perturb partial charges
