@@ -13,7 +13,7 @@ import numpy as np
 
 from htsohm.material_files import write_mol_file, write_mixing_rules
 from htsohm.material_files import write_pseudo_atoms, write_force_field
-from htsohm.simulation.files import load_and_subs_template
+from htsohm.simulation.templates import load_and_subs_template
 from htsohm.db import GasLoading
 
 def write_raspa_file(filename, material, simulation_config, restart):
