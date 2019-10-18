@@ -1,7 +1,7 @@
 from random import choice, random, randrange, uniform
 
 from htsohm.db import Material, Structure, LennardJones, AtomSite
-from htsohm.pseudomaterial_generator.utilities import random_number_density
+from htsohm.generator.utilities import random_number_density
 
 def new_material(config):
     number_of_atom_types    = config["number_of_atom_types"]

@@ -8,7 +8,7 @@ from sqlalchemy.orm.session import make_transient
 
 from htsohm import db
 from htsohm.db import Material, Structure, LennardJones, AtomSite
-from htsohm.pseudomaterial_generator.utilities import random_number_density
+from htsohm.generator.utilities import random_number_density
 
 def random_position(x0, x1, strength):
     # get minimum distance between two points of (1) within the box, and (2) across the box boundary

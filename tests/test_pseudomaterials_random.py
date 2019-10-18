@@ -2,7 +2,7 @@ from random import choice, random, randrange, uniform
 import pytest
 
 from htsohm.db import Structure
-from htsohm.pseudomaterial_generator.utilities import random_number_density
+from htsohm.generator.utilities import random_number_density
 
 @pytest.fixture
 def lcs():

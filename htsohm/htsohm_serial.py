@@ -8,7 +8,7 @@ import sys
 
 import numpy as np
 
-from htsohm import pseudomaterial_generator, db
+from htsohm import generator, db
 from htsohm.config import load_config_file
 from htsohm.db import Material, VoidFraction
 from htsohm.simulation.run_all import run_all_simulations
@@ -118,13 +118,13 @@ def serial_runloop(config_path):
         if config['initial_points_random_seed']:
             print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
             random.seed(config['initial_points_random_seed'])
-        # generator_f = pseudomaterial_generator.random.new_material
+        # generator_f = generator.random.new_material
         # box_d, box_r = run_generation(generator_f, )
 
         for i in range(children_per_generation):
             # generator, config, gen, session => box_d, box_r
             print("Material Index: ", i)
-            material = pseudomaterial_generator.random.new_material(config["structure_parameters"])
+            material = generator.random.new_material(config["structure_parameters"])
             run_all_simulations(material, config)
             material.generation = 0
             session.add(material)
@@ -162,7 +162,7 @@ def serial_runloop(config_path):
             # generator, selector, config, gen, session, box_d, box_r, bin_materials => new_box_d, new_box_r
             print("Material Index: ", i + gen * children_per_generation)
             if config['generator_type'] == 'random':
-                material = pseudomaterial_generator.random.new_material(config["structure_parameters"])
+                material = generator.random.new_material(config["structure_parameters"])
                 perturbation_methods = None
             elif config['generator_type'] == 'mutate':
                 if config['selector_type'] == 'simplices-or-hull':
@@ -176,7 +176,7 @@ def serial_runloop(config_path):
                 elif config['selector_type'] == 'specific':
                     parents_d, parents_r, _ = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
 
-                material = pseudomaterial_generator.mutate.mutate_material(parents_d[i], config["structure_parameters"])
+                material = generator.mutate.mutate_material(parents_d[i], config["structure_parameters"])
                 perturbation_methods[i] = material.perturbation
 
             run_all_simulations(material, config)
