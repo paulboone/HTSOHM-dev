@@ -17,22 +17,19 @@ def random_atom_sites(num_sites, atom_types):
     ) for i in range(num_sites)]
 
 def new_material(config):
-    lj_atom_types = random_atom_types(config["number_of_atom_types"], config)
+    structure=Structure(
+        a = uniform(*config["lattice_constant_limits"]),
+        b = uniform(*config["lattice_constant_limits"]),
+        c = uniform(*config["lattice_constant_limits"]),
+        lennard_jones = random_atom_types(config["number_of_atom_types"], config),
+    )
 
     if "fix_atoms" in config:
         number_of_atoms = config['fix_atoms']
     else:
         number_of_atoms = random_number_density(config["number_density_limits"], structure.volume)
 
-    atom_sites = random_atom_sites(number_of_atoms, lj_atom_types)
-
-    structure=Structure(
-        a = uniform(*config["lattice_constant_limits"]),
-        b = uniform(*config["lattice_constant_limits"]),
-        c = uniform(*config["lattice_constant_limits"]),
-        lennard_jones = lj_atom_types,
-        atom_sites = atom_sites
-    )
+    structure.atom_sites = random_atom_sites(number_of_atoms, structure.lennard_jones)
 
     return Material(structure=structure, number_density=number_of_atoms / structure.volume)
 

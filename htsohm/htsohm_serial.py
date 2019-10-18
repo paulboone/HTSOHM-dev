@@ -18,8 +18,6 @@ import htsohm.select.density_bin as selector_bin
 import htsohm.select.best as selector_best
 import htsohm.select.specific as selector_specific
 
-
-
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
 
@@ -158,6 +156,18 @@ def serial_runloop(config_path):
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
         new_box_r = -1 * np.ones((children_per_generation, 2))
+
+        if config['selector_type'] == 'simplices-or-hull':
+            parents_d, parents_r = selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
+        elif config['selector_type'] == 'density-bin':
+            parents_d, parents_r, _ = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
+        elif config['selector_type'] == 'density-bin-neighbor-radius':
+            parents_d, parents_r, bin_scores = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials, score_by_empty_neighbors=True)
+        elif config['selector_type'] == 'best':
+            parents_d, parents_r, _ = selector_best.choose_parents(children_per_generation, box_d, box_r)
+        elif config['selector_type'] == 'specific':
+            parents_d, parents_r, _ = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
+
         for i in range(children_per_generation):
             # generator, selector, config, gen, session, box_d, box_r, bin_materials => new_box_d, new_box_r
             print("Material Index: ", i + gen * children_per_generation)
@@ -165,18 +175,8 @@ def serial_runloop(config_path):
                 material = generator.random.new_material(config["structure_parameters"])
                 perturbation_methods = None
             elif config['generator_type'] == 'mutate':
-                if config['selector_type'] == 'simplices-or-hull':
-                    parents_d, parents_r = selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
-                elif config['selector_type'] == 'density-bin':
-                    parents_d, parents_r, _ = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
-                elif config['selector_type'] == 'density-bin-neighbor-radius':
-                    parents_d, parents_r, bin_scores = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials, score_by_empty_neighbors=True)
-                elif config['selector_type'] == 'best':
-                    parents_d, parents_r, _ = selector_best.choose_parents(children_per_generation, box_d, box_r)
-                elif config['selector_type'] == 'specific':
-                    parents_d, parents_r, _ = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
-
-                material = generator.mutate.mutate_material(session.query(Material).get(parents_d[i]), config["structure_parameters"])
+                parent = session.query(Material).get(int(parents_d[i]))
+                material = generator.mutate.mutate_material(parent, config["structure_parameters"])
                 perturbation_methods[i] = material.perturbation
 
             run_all_simulations(material, config)
