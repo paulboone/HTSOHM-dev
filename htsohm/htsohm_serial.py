@@ -76,9 +76,7 @@ def serial_runloop(config_path):
     load_restart_path = config['load_restart_path']
 
     dbcs = config["database_connection_string"]
-    db.init_database(dbcs, backup=(load_restart_path != False))
-    session = db.get_session()
-    engine = db.get_engine()
+    engine, session = db.init_database(config["database_connection_string"], backup=(load_restart_path != False))
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 

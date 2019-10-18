@@ -51,6 +51,8 @@ def init_database(connection_string, backup=False):
     Base.metadata.create_all(__engine__)
     Base.metadata.bind = __engine__
 
+    return __engine__, __session__
+
 # Import all models
 from htsohm.db.base import Base
 from htsohm.db.atom_sites import AtomSite
