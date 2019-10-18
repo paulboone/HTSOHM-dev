@@ -49,8 +49,31 @@ def dump_restart(path, box_d, box_r, bin_counts, bin_materials, bins, gen):
     np.savez(path, box_d, box_r, bin_counts, bin_materials, bins, gen)
 
 def load_restart(path):
+    if path == "auto":
+        restart_files = glob("*.txt.npz")
+        restart_files.sort(key=os.path.getmtime)
+        if len(restart_files) == 0:
+            raise(Exception("ERROR: no txt.npz restart file in the current directory; auto cannot be used."))
+        path = restart_files[-1]
+        if len(restart_files) > 1:
+            print("WARNING: more than one txt.npz file found in this directory. Using last one: %s" % path)
+
     npzfile = np.load(path, allow_pickle=True)
     return [npzfile[v] if npzfile[v].size != 1 else npzfile[v].item() for v in npzfile.files]
+
+def check_db_materials_for_restart(expected_num_materials, session, delete_excess=False):
+    """Checks for if there are enough or extra materials in the database."""
+    extra_materials = session.query(Material).filter(Material.id > expected_num_materials).all()
+    if len(extra_materials) > 0:
+        print("The database has an extra %d materials in it; deleting..." % len(extra_materials))
+        print("delete from materials where id > %d" % expected_num_materials)
+        db.delete_extra_materials(expected_num_materials)
+
+    num_materials = session.query(Material).count()
+    if num_materials < expected_num_materials:
+        print("The database has fewer materials in it than the restart file indicated.")
+        print("Is this the right database and restart file?")
+        sys.exit(1)
 
 def serial_runloop(config_path):
     """
@@ -81,39 +104,10 @@ def serial_runloop(config_path):
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
     if load_restart_path:
-        if load_restart_path == "auto":
-            restart_files = glob("*.txt.npz")
-            restart_files.sort(key=os.path.getmtime)
-            if len(restart_files) == 0:
-                print("ERROR: no txt.npz restart file in the current directory; auto cannot be used.")
-                return
-            load_restart_path = restart_files[-1]
-            if len(restart_files) > 1:
-                print("WARNING: more than one txt.npz file found in this directory. Using last one: %s" % load_restart_path)
-
         print("Restarting from file: %s" % load_restart_path)
         box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart(load_restart_path)
-        print("Restarting at generation %d" % start_gen)
-        print("There are currently %d materials" % len(box_r))
-
-        extra_materials = session.query(Material).filter(Material.id > len(box_r)).all()
-        if len(extra_materials) > 0:
-            if len(extra_materials) > children_per_generation and not config['override_restart_errors']:
-                print("There are %d extra materials in the database, which is more than the %d " \
-                      "children per generation. Is this the right restart file?" %
-                      (len(extra_materials), children_per_generation))
-                sys.exit(1)
-            print("The database has an extra %d materials in it; deleting..." % len(extra_materials))
-
-            print("delete from materials where id > %d" % len(box_r))
-            engine.execute("delete from materials where id > %d" % len(box_r))
-            engine.execute("delete from gas_loadings where material_id > %d" % len(box_r))
-            engine.execute("delete from surface_areas where material_id > %d" % len(box_r))
-            engine.execute("delete from void_fractions where material_id > %d" % len(box_r))
-            engine.execute("delete from structures where material_id > %d" % len(box_r))
-            engine.execute("delete from lennard_jones where structure_id > %d" % len(box_r))
-            engine.execute("delete from atom_sites where structure_id > %d" % len(box_r))
-
+        print("Restarting at generation %d\nThere are currently %d materials" % (start_gen, len(box_r)))
+        check_db_materials_for_restart(len(box_r), session, delete_excess=config['override_restart_errors'])
     else:
         if session.query(Material).count() > 0:
             print("ERROR: cannot have existing materials in the database for a new run")
