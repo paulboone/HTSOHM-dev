@@ -148,6 +148,7 @@ def serial_runloop(config_path):
         start_gen = 1
 
     for gen in range(start_gen, config['max_generations'] + 1):
+        benchmark_just_reached = False
         parents_r = parents_d = []
         perturbation_methods = [""] * children_per_generation
         bin_scores = None
@@ -202,6 +203,7 @@ def serial_runloop(config_path):
         if verbose:
             print_block('GENERATION %s: %5.2f%%' % (gen, bin_fraction_explored * 100))
         while bin_fraction_explored >= next_benchmark:
+            benchmark_just_reached = True
             print_block("%s: %5.2f%% exploration accomplished at generation %d" %
                 ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()), bin_fraction_explored * 100, gen))
             if benchmarks:
@@ -209,7 +211,10 @@ def serial_runloop(config_path):
             else:
                 last_benchmark_reached = True
 
-        if 'output_all_graphs' in config and config['output_all_graphs']:
+        if config['bin_graph_on'] and (
+            (benchmark_just_reached or gen == config['max_generations']) or \
+            (config['bin_graph_every'] > 0  and gen % config['bin_graph_every'] == 0)):
+
             output_path = os.path.join(config['output_dir'], "binplot_%d.png" % gen)
             delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
                             bins=bin_counts, new_bins=new_bins,
@@ -220,8 +225,10 @@ def serial_runloop(config_path):
                             perturbation_methods=perturbation_methods, show_triangulation=False, show_hull=False,
                             bin_scores=bin_scores)
 
-        if 'output_tri_graph' in config and config['output_tri_graph'] and (gen <= 10 or (gen <=50 and gen % 10 == 0) or
-            (gen <=500 and gen % 50 == 0) or gen % 100 == 0 or last_benchmark_reached):
+        if config['tri_graph_on'] and (
+            (benchmark_just_reached or gen == config['max_generations']) or \
+            (config['tri_graph_every'] > 0  and gen % config['tri_graph_every'] == 0)):
+
             output_path = os.path.join(config['output_dir'], "triplot_%d.png" % gen)
             delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
                             bins=bin_counts, new_bins=new_bins,
