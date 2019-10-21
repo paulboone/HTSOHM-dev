@@ -90,34 +90,10 @@ def parse_output(output_file, material, simulation_config):
     with open(output_file) as origin:
         lines = origin.read().split('\n')
         for i, line in enumerate(lines):
-            if "absolute [mol/kg" in line:
-                gas_loading.absolute_molar_loading = float(line.split()[5])
-            elif "absolute [cm^3 (STP)/g" in line:
-                gas_loading.absolute_gravimetric_loading = float(line.split()[6])
-            elif "absolute [cm^3 (STP)/c" in line:
+
+            if "absolute [cm^3 (STP)/c" in line:
                 gas_loading.absolute_volumetric_loading = float(line.split()[6])
                 gas_loading.absolute_volumetric_loading_error = float(line.split()[8])
-            elif "excess [mol/kg" in line:
-                gas_loading.excess_molar_loading = float(line.split()[5])
-            elif "excess [cm^3 (STP)/g" in line:
-                gas_loading.excess_gravimetric_loading = float(line.split()[6])
-            elif "excess [cm^3 (STP)/c" in line:
-                gas_loading.excess_volumetric_loading  = float(line.split()[6])
-            elif "Average Host-Host energy:" in line:
-                line = lines[i + 8]
-                gas_loading.host_host_avg = float(line.split()[1])
-                gas_loading.host_host_vdw = float(line.split()[5])
-                gas_loading.host_host_cou = float(line.split()[7])
-            elif "Average Adsorbate-Adsorbate energy:" in line:
-                line = lines[i + 8]
-                gas_loading.adsorbate_adsorbate_avg = float(line.split()[1])
-                gas_loading.adsorbate_adsorbate_vdw = float(line.split()[5])
-                gas_loading.adsorbate_adsorbate_cou = float(line.split()[7])
-            elif "Average Host-Adsorbate energy:" in line:
-                line = lines[i + 8]
-                gas_loading.host_adsorbate_avg  = float(line.split()[1])
-                gas_loading.host_adsorbate_vdw  = float(line.split()[5])
-                gas_loading.host_adsorbate_cou  = float(line.split()[7])
             elif "Number of molecules:" in line:
                 atom_blocks = [float(lines[offset + i + 5].split()[2]) for offset in range(5)]
             elif "Conversion factor molecules/unit cell -> cm^3 STP/cm^3:" in line:
