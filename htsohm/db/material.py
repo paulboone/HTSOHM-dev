@@ -11,7 +11,7 @@ class Material(Base):
     __tablename__ = 'materials'
 
     id           = Column(Integer, primary_key=True)
-    uuid         = Column(String(40))
+    uuid         = Column(String(36))
     parent_id    = Column(Integer, ForeignKey('materials.id'))
     perturbation = Column(String(10))
     generation   = Column(Integer)
