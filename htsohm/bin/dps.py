@@ -7,7 +7,9 @@ from htsohm.htsohm_serial import serial_runloop
 
 @click.command()
 @click.argument('config_path', type=click.Path())
-def cmdline(config_path):
+@click.option('-r', '--restart',  type=int, default=0, help="generation to restart at")
+@click.option('-f', '--override-database-errors',  is_flag=True, default=False)
+def cmdline(config_path, restart, override_database_errors):
     if config_path == "auto":
         yaml_files = glob("*.yaml")
         if len(yaml_files) == 0:
@@ -17,7 +19,7 @@ def cmdline(config_path):
         if len(yaml_files) > 1:
             print("WARNING: more than one YAML file found in this directory. Using first one: %s" % config_path)
 
-    serial_runloop(config_path)
+    serial_runloop(config_path, restart, override_database_errors)
 
 if __name__ == '__main__':
     cmdline()

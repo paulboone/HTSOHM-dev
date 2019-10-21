@@ -4,9 +4,11 @@ from glob import glob
 import math
 import os
 import random
+import shutil
 import sys
 
 import numpy as np
+from sqlalchemy.orm import joinedload
 
 from htsohm import generator, load_config_file, db
 from htsohm.db import Material, VoidFraction
@@ -59,13 +61,35 @@ def load_restart(path):
     npzfile = np.load(path, allow_pickle=True)
     return [npzfile[v] if npzfile[v].size != 1 else npzfile[v].item() for v in npzfile.files]
 
+def load_restart_db(gen, num_bins, prop1range, prop2range, session):
+    mats = session.query(Material).options(joinedload("void_fraction"), joinedload("gas_loading")) \
+                    .filter(Material.generation <= gen).all()
+    box_d = np.array([m.id for m in mats])
+    box_r = np.array([(m.void_fraction[0].get_void_fraction(), m.gas_loading[0].absolute_volumetric_loading)
+                     for m in mats])
+
+    bin_counts = np.zeros((num_bins, num_bins))
+    bin_materials = empty_lists_2d(num_bins, num_bins)
+
+    bins = calc_bins(box_r[0:gen], num_bins, prop1range=prop1range, prop2range=prop2range)
+    for i, (bx, by) in enumerate(bins):
+        bin_counts[bx,by] += 1
+        bin_materials[bx][by].append(i)
+
+    start_gen = gen + 1
+    return box_d, box_r, bin_counts, bin_materials, set(bins), start_gen
+
 def check_db_materials_for_restart(expected_num_materials, session, delete_excess=False):
     """Checks for if there are enough or extra materials in the database."""
     extra_materials = session.query(Material).filter(Material.id > expected_num_materials).all()
     if len(extra_materials) > 0:
-        print("The database has an extra %d materials in it; deleting..." % len(extra_materials))
-        print("delete from materials where id > %d" % expected_num_materials)
-        db.delete_extra_materials(expected_num_materials)
+        print("The database has an extra %d materials in it." % len(extra_materials))
+        if (delete_excess):
+            print("deleting from materials where id > %d" % expected_num_materials)
+            db.delete_extra_materials(expected_num_materials)
+        else:
+            print("Is this the right database and restart file?")
+            sys.exit(1)
 
     num_materials = session.query(Material).count()
     if num_materials < expected_num_materials:
@@ -73,7 +97,7 @@ def check_db_materials_for_restart(expected_num_materials, session, delete_exces
         print("Is this the right database and restart file?")
         sys.exit(1)
 
-def serial_runloop(config_path):
+def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
     config = load_config_file(config_path)
     os.makedirs(config['output_dir'], exist_ok=True)
     print(config)
@@ -90,15 +114,23 @@ def serial_runloop(config_path):
     load_restart_path = config['load_restart_path']
 
     dbcs = config["database_connection_string"]
-    engine, session = db.init_database(config["database_connection_string"], backup=(load_restart_path != False))
+    engine, session = db.init_database(config["database_connection_string"],
+                backup=(load_restart_path != False or restart_generation > 0))
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
-    if load_restart_path:
+    if restart_generation > 0:
+        print("Restarting from database using generation: %s" % restart_generation)
+        box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart_db(
+            restart_generation, num_bins, prop1range, prop2range, session)
+
+        print("Restarting at generation %d\nThere are currently %d materials" % (start_gen, len(box_r)))
+        check_db_materials_for_restart(len(box_r), session, delete_excess=override_db_errors)
+    elif load_restart_path:
         print("Restarting from file: %s" % load_restart_path)
         box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart(load_restart_path)
         print("Restarting at generation %d\nThere are currently %d materials" % (start_gen, len(box_r)))
-        check_db_materials_for_restart(len(box_r), session, delete_excess=config['override_restart_errors'])
+        check_db_materials_for_restart(len(box_r), session, delete_excess=override_db_errors)
     else:
         if session.query(Material).count() > 0:
             print("ERROR: cannot have existing materials in the database for a new run")
@@ -241,8 +273,10 @@ def serial_runloop(config_path):
         box_d = np.append(box_d, new_box_d, axis=0)
         box_r = np.append(box_r, new_box_r, axis=0)
 
-        restart_path = os.path.join(config['output_dir'], "restart_%d.txt.npz" % gen)
+        restart_path = os.path.join(config['output_dir'], "restart.txt.npz")
         dump_restart(restart_path, box_d, box_r, bin_counts, bin_materials, bins, gen + 1)
+        if benchmark_just_reached or gen == config['max_generations']:
+            shutil.move(restart_path, os.path.join(config['output_dir'], "restart%d.txt.npz" % gen))
 
         if last_benchmark_reached:
             break
