@@ -1,3 +1,4 @@
+from itertools import product
 import uuid
 
 from sqlalchemy import ForeignKey, Column, Integer, String, Float
@@ -49,33 +50,34 @@ class Material(Base):
 
     @staticmethod
     def one_atom_new(sigma, epsilon, a, b, c):
-        structure = Structure(a, b, c,
-                [AtomSite(atom_type="A_0", x=1.0, y=1.0, z=1.0, q=0.0)],
-                [LennardJones(atom_type="A_0", sigma=sigma, epsilon=epsilon)])
-        m = Material(structure=structure)
-        return m
+        structure=Structure(a=a, b=b, c=c,
+                            lennard_jones=[LennardJones(sigma=sigma, epsilon=epsilon)])
+
+        structure.atom_sites = [AtomSite(x=1.0, y=1.0, z=1.0, q=0.0,
+                                lennard_jones=structure.lennard_jones[0])]
+
+        return Material(structure=structure)
 
     @staticmethod
     def cube_pore_new(sigma, epsilon, num_atoms, atom_diameter):
         # lattice constant a is calculated from number of atoms times the atom_diameter
         a = num_atoms * atom_diameter
 
-        atom_sites = []
-        for xi in range(num_atoms):
-            for yi in range(num_atoms):
-                for zi in range(num_atoms):
-                    # only add indices that are in one of the three boundary planes, i.e index == 0
-                    if min(xi, yi, zi) == 0:
-                        x = xi * atom_diameter / a
-                        y = yi * atom_diameter / a
-                        z = zi * atom_diameter / a
-                        atom_sites.append(AtomSite(atom_type="A_0", x=x, y=y, z=z, q=0.0))
+        structure=Structure(a=a, b=a, c=a,
+                            lennard_jones=[LennardJones(sigma=sigma, epsilon=epsilon)])
 
-        structure = Structure(a, a, a, atom_sites, [LennardJones(atom_type="A_0", sigma=sigma, epsilon=epsilon)])
-        m = Material(structure=structure)
-        return m
+        for xi, yi, zi in product(range(num_atoms), range(num_atoms), range(num_atoms)):
+            # only add indices that are in one of the three boundary planes, i.e index == 0
+            if min(xi, yi, zi) == 0:
+                structure.atom_sites.append(AtomSite(
+                    lennard_jones=structure.lennard_jones[0],
+                    x=xi * atom_diameter / a,
+                    y=yi * atom_diameter / a,
+                    z=zi * atom_diameter / a,
+                    q=0.0
+                ))
 
-
+        return Material(structure=structure)
 
     def clone(self):
         copy = super(Material, self).clone()
