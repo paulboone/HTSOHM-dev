@@ -3,7 +3,7 @@
 from distutils.core import setup
 setup(
     name = 'HTSOHM',
-    version = '0.5.1',
+    version = '0.6.0',
     description = 'High-throughput Screening of Hypothetical Materials',
     author = 'Paul Boone / A Reino Kaija',
     author_email = 'paulboone@pitt.edu',
