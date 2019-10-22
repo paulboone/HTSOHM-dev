@@ -7,9 +7,9 @@ def random_position(x0, x1, mutation_strength):
     dx = min(abs(x0 - x1), 1 - abs(x0 - x1))
     if x0 > x1 and (x0 - x1) > 0.5: # then dx will be through boundary, so move right
         x2 = (x0 + mutation_strength * dx) % 1.
-    if x0 >= x1 and (x0 - x1) < 0.5: # then dx will be in box, so move left
+    if x0 >= x1 and (x0 - x1) <= 0.5: # then dx will be in box, so move left
         x2 = x0 - mutation_strength * dx
-    if x0 < x1 and (x1 - x0) > 0.5: # then dx will be through boundary, so move left
+    if x0 < x1 and (x1 - x0) >= 0.5: # then dx will be through boundary, so move left
         x2 = (x0 - mutation_strength * dx) % 1.
     if x0 < x1 and (x1 - x0) < 0.5: # then dx will be in box, so move right
         x2 = x0 + mutation_strength * dx
@@ -82,8 +82,10 @@ def mutate_material(parent, config):
         number_of_atoms = max(1, round(child.number_density * child.structure.volume))
 
     if number_of_atoms < len(cs.atom_sites):
+        print("Removing atom sites...")
         cs.atom_sites = sample(cs.atom_sites, number_of_atoms)
     elif number_of_atoms > len(cs.atom_sites):
+        print("Adding atom sites...")
         cs.atom_sites += random_atom_sites(number_of_atoms - len(cs.atom_sites), cs.lennard_jones)
 
     print_parent_child_diff(parent, child)
