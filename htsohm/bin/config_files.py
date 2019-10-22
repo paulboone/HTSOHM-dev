@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import click
 
-from htsohm import db, load_config_file, simulation
-from htsohm.simulation import void_fraction, gas_loading
+from htsohm import db, load_config_file
+from htsohm.simulation import simulate
 
 
 @click.command()
@@ -27,7 +27,7 @@ def output_config_files(config_path, material_ids, database_path=None):
             output_dir = "output_%d_%s_%s_%d" % (m.id, m.uuid[0:8], simcfg["type"], i)
             os.makedirs(output_dir, exist_ok=True)
 
-            sim = getattr(simulation, simcfg["type"])
+            sim = getattr(simulate, simcfg["type"])
             sim.write_output_files(m, simcfg, output_dir)
 
 
