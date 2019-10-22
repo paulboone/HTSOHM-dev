@@ -18,6 +18,7 @@ import htsohm.select.triangulation as selector_tri
 import htsohm.select.density_bin as selector_bin
 import htsohm.select.best as selector_best
 import htsohm.select.specific as selector_specific
+import htsohm.select.neighbor_bin as selector_neighbor_bin
 
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
@@ -193,8 +194,8 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
             parents_d, parents_r = selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
         elif config['selector_type'] == 'density-bin':
             parents_d, parents_r, _ = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
-        elif config['selector_type'] == 'density-bin-neighbor-radius':
-            parents_d, parents_r, bin_scores = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials, score_by_empty_neighbors=True)
+        elif config['selector_type'] == 'neighbor-bin':
+            parents_d, parents_r, bin_scores = selector_neighbor_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
         elif config['selector_type'] == 'best':
             parents_d, parents_r, _ = selector_best.choose_parents(children_per_generation, box_d, box_r)
         elif config['selector_type'] == 'specific':
