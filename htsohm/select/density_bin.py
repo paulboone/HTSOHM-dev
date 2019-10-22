@@ -3,8 +3,13 @@ import numpy as np
 from htsohm.db import Material
 from numpy.random import choice
 
-def choose_parents(num_parents, box_d, box_range, bin_materials):
-    bins = [(i, len(mats)) for i, mats in np.ndenumerate(bin_materials) if len(mats) > 0]
+
+def choose_parent_bins_from_weighted_bin_list(bins, num_parents):
+    """
+    bins: ((binx, biny), weight)
+
+    The weights of all the bins will be summed up and each bin will be normalized.
+    """
 
     bins.sort(key=lambda x: x[1])
 
@@ -23,7 +28,12 @@ def choose_parents(num_parents, box_d, box_range, bin_materials):
     bin_weights = bin_weights.sum() / bin_weights
     bin_weights /= bin_weights.sum()
 
-    parent_bins = choice(bin_indices, num_parents, p=bin_weights)
+    return choice(bin_indices, num_parents, p=bin_weights)
+
+
+def choose_parents(num_parents, box_d, box_range, bin_materials):
+    bins = [(i, len(mats)) for i, mats in np.ndenumerate(bin_materials) if len(mats) > 0]
+    parent_bins = choose_parent_bins_from_weighted_bin_list(bins, num_parents)
     parent_indices = [choice(bin_materials[bin[0]][bin[1]], 1)[0] for bin in parent_bins]
 
-    return [box_d[i] for i in parent_indices], [box_range[i] for i in parent_indices], bins
+    return [box_d[i] for i in parent_indices], [box_range[i] for i in parent_indices]

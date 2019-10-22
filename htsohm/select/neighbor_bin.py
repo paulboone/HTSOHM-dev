@@ -1,11 +1,12 @@
 import numpy as np
-
-from htsohm.db import Material
 from numpy.random import choice
+
+from htsohm.select.density_bin import choose_parent_bins_from_weighted_bin_list
+from htsohm.db import Material
+
 
 def choose_parents(num_parents, box_d, box_range, bin_materials):
     raw_bins = [(i, len(mats)) for i, mats in np.ndenumerate(bin_materials) if len(mats) > 0]
-
     bins = []
     r = 2
     imax = len(bin_materials)
@@ -22,24 +23,7 @@ def choose_parents(num_parents, box_d, box_range, bin_materials):
                     neighbor_count += 1
         bins.append([(ci, cj), 25 - neighbor_count])
 
-    bins.sort(key=lambda x: x[1])
-
-    # since we are sorted, this is the bin with the most materials
-    cutoff_index = num_parents - 1 if num_parents - 1 < len(bins) else -1
-    cutoff = bins[cutoff_index][1]
-
-    # limit to ALL materials that are within the cutoff. This is necessary because our weighting is
-    # based on an integer value here, as opposed to the float values for the convex_hull methods.
-    bins = np.array([x for x in bins if x[1] <= cutoff])
-
-    bin_indices = bins[:, 0]
-    bin_weights = bins[:, 1].astype(float)
-
-    # calculate weights by subtracting the # materials per bin from the total weight to get a
-    bin_weights = bin_weights.sum() / bin_weights
-    bin_weights /= bin_weights.sum()
-
-    parent_bins = choice(bin_indices, num_parents, p=bin_weights)
+    parent_bins = choose_parent_bins_from_weighted_bin_list(bins, num_parents)
     parent_indices = [choice(bin_materials[bin[0]][bin[1]], 1)[0] for bin in parent_bins]
 
-    return [box_d[i] for i in parent_indices], [box_range[i] for i in parent_indices], bins
+    return [box_d[i] for i in parent_indices], [box_range[i] for i in parent_indices]
