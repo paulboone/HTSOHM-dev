@@ -2,6 +2,7 @@
 from datetime import datetime
 from glob import glob
 import math
+from multiprocessing import Pool
 import os
 import random
 import shutil
@@ -98,6 +99,45 @@ def check_db_materials_for_restart(expected_num_materials, session, delete_exces
         print("Is this the right database and restart file?")
         sys.exit(1)
 
+def init_worker(config):
+    """initialization function for worker that inits the database and gets a worker-specific
+    session."""
+    global worker_session
+    _, worker_session = db.init_database(config["database_connection_string"])
+    return
+
+def simulate_generation_worker(parent_id):
+    """gets most of its parameters from the global worker_metadata set in the
+    parallel_simulate_generation method."""
+    generator, config, gen = worker_metadata
+
+    if parent_id > 0:
+        parent = worker_session.query(Material).get(int(parent_id))
+        material = generator(parent, config["structure_parameters"])
+    else:
+        material = generator(config["structure_parameters"])
+
+    run_all_simulations(material, config)
+    material.generation = gen
+    worker_session.add(material)
+    worker_session.commit()
+
+    return (material.id, (material.void_fraction[0].get_void_fraction(),
+                          material.gas_loading[0].absolute_volumetric_loading))
+
+def parallel_simulate_generation(generator, parent_ids, config, gen, children_per_generation):
+    global worker_metadata
+    worker_metadata = (generator, config, gen)
+
+    if parent_ids is None:
+        parent_ids = [0] * (children_per_generation) # should only be needed for random!
+
+    with Pool(processes=config['num_processes'], initializer=init_worker, initargs=[config]) as pool:
+        results = pool.map(simulate_generation_worker, parent_ids)
+
+    box_d, box_r = zip(*results)
+    return (np.array(box_d), np.array(box_r))
+
 def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
     config = load_config_file(config_path)
     os.makedirs(config['output_dir'], exist_ok=True)
@@ -148,22 +188,9 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
         if config['initial_points_random_seed']:
             print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
             random.seed(config['initial_points_random_seed'])
-        # generator_f = generator.random.new_material
-        # box_d, box_r = run_generation(generator_f, )
 
-        for i in range(children_per_generation):
-            # generator, config, gen, session => box_d, box_r
-            print("Material Index: ", i)
-            material = generator.random.new_material(config["structure_parameters"])
-            run_all_simulations(material, config)
-            material.generation = 0
-            session.add(material)
-            session.commit()
-
-            box_d[i] = material.id
-            box_r[i,:] = (material.void_fraction[0].get_void_fraction(),
-                          material.gas_loading[0].absolute_volumetric_loading)
-            # box_r[i,:] = (material[prop1], material[prop2])
+        box_d, box_r = parallel_simulate_generation(generator.random.new_material, None, config,
+                        gen=0, children_per_generation=config['children_per_generation'])
 
         random.seed() # flush the seed so that only the initial points are set, not generated points
 
@@ -183,7 +210,6 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
     for gen in range(start_gen, config['max_generations'] + 1):
         benchmark_just_reached = False
         parents_r = parents_d = []
-        perturbation_methods = [""] * children_per_generation
 
         # mutate materials and simulate properties
         new_box_d = np.zeros(children_per_generation)
@@ -200,26 +226,13 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
         elif config['selector_type'] == 'specific':
             parents_d, parents_r = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
 
-        for i in range(children_per_generation):
-            # generator, selector, config, gen, session, box_d, box_r, bin_materials => new_box_d, new_box_r
-            print("Material Index: ", i + gen * children_per_generation)
-            if config['generator_type'] == 'random':
-                material = generator.random.new_material(config["structure_parameters"])
-                perturbation_methods = None
-            elif config['generator_type'] == 'mutate':
-                parent = session.query(Material).get(int(parents_d[i]))
-                material = generator.mutate.mutate_material(parent, config["structure_parameters"])
-                perturbation_methods[i] = material.perturbation
+        if config['generator_type'] == 'random':
+            generator_method = generator.random.new_material
+        elif config['generator_type'] == 'mutate':
+            generator_method = generator.mutate.mutate_material
 
-            run_all_simulations(material, config)
-            material.generation = gen
-            session.add(material)
-            session.commit()
-
-            new_box_d[i] = material.id
-            new_box_r[i,:] = (material.void_fraction[0].get_void_fraction(),
-                              material.gas_loading[0].absolute_volumetric_loading)
-            # new_box_r[i,:] = (material[prop1], material[prop2])
+        new_box_d, new_box_r = parallel_simulate_generation(generator_method, parents_d, config,
+                        gen=gen, children_per_generation=config['children_per_generation'])
 
         # TODO: bins for methane loading?
         all_bins = calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
@@ -254,7 +267,7 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
                                 (gen, len(bins), num_bins ** 2, len(new_bins),
                                 100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
                             patches=None, prop1range=prop1range, prop2range=prop2range, \
-                            perturbation_methods=perturbation_methods, show_triangulation=False, show_hull=False)
+                            perturbation_methods=["all"]*children_per_generation, show_triangulation=False, show_hull=False)
 
         if config['tri_graph_on'] and (
             (benchmark_just_reached or gen == config['max_generations']) or \
@@ -267,7 +280,7 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
                                 (gen, len(bins), num_bins ** 2, len(new_bins),
                                 100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
                             patches=None, prop1range=prop1range, prop2range=prop2range, \
-                            perturbation_methods=perturbation_methods)
+                            perturbation_methods=["all"]*children_per_generation)
 
         box_d = np.append(box_d, new_box_d, axis=0)
         box_r = np.append(box_r, new_box_r, axis=0)

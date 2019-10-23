@@ -9,6 +9,7 @@ def default_configuration():
         'verbose': False,
         'void_fraction_subtype': 'raspa',
         'load_restart_path': False,
+        'num_processes': 1
     }
 
 def load_config_file(path):
