@@ -20,6 +20,7 @@ import htsohm.select.density_bin as selector_bin
 import htsohm.select.best as selector_best
 import htsohm.select.specific as selector_specific
 import htsohm.select.neighbor_bin as selector_neighbor_bin
+from htsohm.slog import init_slog, get_slog
 
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
@@ -110,7 +111,7 @@ def simulate_generation_worker(parent_id):
     """gets most of its parameters from the global worker_metadata set in the
     parallel_simulate_generation method."""
     generator, config, gen = worker_metadata
-
+    init_slog()
     if parent_id > 0:
         parent = worker_session.query(Material).get(int(parent_id))
         material = generator(parent, config["structure_parameters"])
@@ -121,7 +122,7 @@ def simulate_generation_worker(parent_id):
     material.generation = gen
     worker_session.add(material)
     worker_session.commit()
-
+    print(get_slog())
     return (material.id, (material.void_fraction[0].get_void_fraction(),
                           material.gas_loading[0].absolute_volumetric_loading))
 

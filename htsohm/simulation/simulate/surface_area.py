@@ -11,6 +11,7 @@ from htsohm.simulation.raspa import write_mol_file, write_mixing_rules
 from htsohm.simulation.raspa import write_pseudo_atoms, write_force_field
 from htsohm.simulation.templates import load_and_subs_template
 from htsohm.db import SurfaceArea
+from htsohm.slog import slog
 
 def write_raspa_file(filename, material, simulation_config):
     """Writes RASPA input file for calculating surface area.
@@ -79,7 +80,7 @@ def parse_output(output_file, material, simulation_config):
                 elif count == 2:
                     surface_area.volumetric_surface_area = float(line.split()[2])
 
-    print("\nSURFACE AREA : {} m^2/cm^3\n".format(surface_area.volumetric_surface_area))
+    slog("\nSURFACE AREA : {} m^2/cm^3\n".format(surface_area.volumetric_surface_area))
 
     material.surface_area.append(surface_area)
 
@@ -94,7 +95,7 @@ def run(material, simulation_config, config):
 
     """
     output_dir = "output_{}_{}".format(material.uuid, uuid4())
-    print("Output directory :\t{}".format(output_dir))
+    slog("Output directory :\t{}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
     # Write simulation input-files
@@ -103,16 +104,14 @@ def run(material, simulation_config, config):
     # Run simulations
     while True:
         try:
-            print("Date             : {}".format(datetime.now().date().isoformat()))
-            print("Time             : {}".format(datetime.now().time().isoformat()))
-            print("Simulation type  : {}".format(simulation_config["type"]))
-            print("Probe            : {}".format(simulation_config["adsorbate"]))
+            slog("Probe            : {}".format(simulation_config["adsorbate"]))
             filename = "output_{}_2.2.2_298.000000_0.data".format(material.uuid)
             output_file = os.path.join(output_dir, "Output", "System_0", filename)
 
             while not Path(output_file).exists():
-                subprocess.run(["simulate", "-i", "./SurfaceArea.input"], check=True,
-                        cwd=output_dir)
+                process = subprocess.run(["simulate", "-i", "./SurfaceArea.input"], check=True,
+                        cwd=output_dir, capture_output=True, text=True)
+                slog(process.stdout)
 
             # Parse output
             parse_output(output_file, material, simulation_config)
@@ -120,7 +119,7 @@ def run(material, simulation_config, config):
                 shutil.rmtree(output_dir, ignore_errors=True)
             sys.stdout.flush()
         except (FileNotFoundError, KeyError) as err:
-            print(err)
-            print(err.args)
+            slog(err)
+            slog(err.args)
             continue
         break

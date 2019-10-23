@@ -17,6 +17,7 @@ from htsohm.simulation.raspa import write_pseudo_atoms, write_force_field
 from htsohm.simulation.templates import load_and_subs_template
 from htsohm.db import VoidFraction
 from htsohm.void_fraction import calculate_void_fraction
+from htsohm.slog import slog
 
 def write_raspa_file(filename, material, simulation_config):
     """Writes RASPA input file for calculating helium void fraction.
@@ -90,20 +91,16 @@ def run(material, simulation_config, config):
 
     """
     output_dir = "output_{}_{}".format(material.uuid, uuid4())
-    print("Output directory : {}".format(output_dir))
+    slog("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
     write_output_files(material, simulation_config, output_dir)
 
     # Run simulations
-    print("--")
-    print("Date             : {}".format(datetime.now().date().isoformat()))
-    print("Time             : {}".format(datetime.now().time().isoformat()))
-    print("Simulation type  : {}".format(simulation_config["type"]))
-    print("Probe            : {}".format(simulation_config["adsorbate"]))
+    slog("Probe            : {}".format(simulation_config["adsorbate"]))
     if "do_geo" in simulation_config:
-        print("Probe radius [geo]: {}".format(simulation_config["probe_radius"]))
-    print("Temperature      : {}".format(simulation_config["temperature"]))
+        slog("Probe radius [geo]: {}".format(simulation_config["probe_radius"]))
+    slog("Temperature      : {}".format(simulation_config["temperature"]))
 
     void_fraction = VoidFraction()
     void_fraction.adsorbate = simulation_config["adsorbate"]
@@ -111,7 +108,7 @@ def run(material, simulation_config, config):
 
     if "do_raspa" in simulation_config and simulation_config["do_raspa"]:
         tbegin = time.perf_counter()
-        process = subprocess.run(["simulate", "-i", "./void_fraction.input"], check=True, cwd=output_dir)
+        process = subprocess.run(["simulate", "-i", "./void_fraction.input"], check=True, cwd=output_dir, capture_output=True, text=True)
 
         data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
         if len(data_files) != 1:
@@ -120,10 +117,10 @@ def run(material, simulation_config, config):
 
         # Parse output
         parse_output(output_file, material, void_fraction)
-        print("RASPA void fraction simulation time: %5.2f seconds" % (time.perf_counter() - tbegin))
-        print("RASPA VOID FRACTION : {}".format(void_fraction.void_fraction))
+        slog("RASPA void fraction simulation time: %5.2f seconds" % (time.perf_counter() - tbegin))
+        slog("RASPA VOID FRACTION : {}".format(void_fraction.void_fraction))
         if material.parent:
-            print("(parent VOID FRACTION : {})".format(material.parent.void_fraction[0].void_fraction))
+            slog("(parent VOID FRACTION : {})".format(material.parent.void_fraction[0].void_fraction))
 
 
     # run geometric void fraction
@@ -132,8 +129,8 @@ def run(material, simulation_config, config):
         atoms = [(a.x * material.structure.a, a.y * material.structure.b, a.z * material.structure.c, a.lennard_jones.sigma) for a in material.structure.atom_sites]
         box = (material.structure.a, material.structure.b, material.structure.c)
         void_fraction.void_fraction_geo = calculate_void_fraction(atoms, box, probe_r=simulation_config["probe_radius"])
-        print("GEOMETRIC void fraction: %f" % void_fraction.void_fraction_geo)
-        print("GEOMETRIC void fraction simulation time: %5.2f   seconds" % (time.perf_counter() - tbegin))
+        slog("GEOMETRIC void fraction: %f" % void_fraction.void_fraction_geo)
+        slog("GEOMETRIC void fraction simulation time: %5.2f   seconds" % (time.perf_counter() - tbegin))
     if "do_zeo" in simulation_config:
         pass
         # run zeo void fraction here

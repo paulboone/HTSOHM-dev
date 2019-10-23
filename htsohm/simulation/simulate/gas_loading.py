@@ -15,6 +15,7 @@ from htsohm.simulation.raspa import write_mol_file, write_mixing_rules
 from htsohm.simulation.raspa import write_pseudo_atoms, write_force_field
 from htsohm.simulation.templates import load_and_subs_template
 from htsohm.db import GasLoading
+from htsohm.slog import slog
 
 def write_raspa_file(filename, material, simulation_config, restart):
     """Writes RASPA input file for simulating gas adsorption.
@@ -99,10 +100,10 @@ def parse_output(output_file, material, simulation_config):
             elif "Conversion factor molecules/unit cell -> cm^3 STP/cm^3:" in line:
                 atoms_uc_to_vv = float(line.split()[7])
 
-        print("{} LOADING : {} v/v (STP)".format(simulation_config["adsorbate"],
+        slog("{} LOADING : {} v/v (STP)".format(simulation_config["adsorbate"],
                                             gas_loading.absolute_volumetric_loading))
         if material.parent:
-            print("(parent LOADING : {} v/v (STP))".format(material.parent.gas_loading[0].absolute_volumetric_loading))
+            slog("(parent LOADING : {} v/v (STP))".format(material.parent.gas_loading[0].absolute_volumetric_loading))
 
 
     return gas_loading, atom_blocks, atoms_uc_to_vv
@@ -134,19 +135,16 @@ def run(material, simulation_config, config):
     write_output_files(material, simulation_config, output_dir, restart=True, filename=os.path.join(output_dir, raspa_restart_config))
 
     # Run simulations
-    print("--")
-    print("Date             : {}".format(datetime.now().date().isoformat()))
-    print("Time             : {}".format(datetime.now().time().isoformat()))
-    print("Simulation type  : {}".format(simulation_config["type"]))
-    print("Adsorbate        : {}".format(adsorbate))
-    print("Pressure         : {}".format(simulation_config["pressure"]))
-    print("Temperature      : {}".format(simulation_config["temperature"]))
+    slog("Adsorbate        : {}".format(adsorbate))
+    slog("Pressure         : {}".format(simulation_config["pressure"]))
+    slog("Temperature      : {}".format(simulation_config["temperature"]))
 
     unit_cells = material.structure.minimum_unit_cells(simulation_config['cutoff'])
     total_unit_cells = unit_cells[0] * unit_cells[1] * unit_cells[2]
     all_atom_blocks = []
 
-    subprocess.run(["simulate", "-i", raspa_config], check=True, cwd=output_dir)
+    process = subprocess.run(["simulate", "-i", raspa_config], check=True, cwd=output_dir, capture_output=True, text=True)
+    slog(process.stdout)
     for i in range(simulation_config['max_restarts'] + 1):
 
         data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
@@ -157,38 +155,38 @@ def run(material, simulation_config, config):
         # Parse output
         gas_loading, atom_blocks, atoms_uc_to_vv = parse_output(output_file, material, simulation_config)
         atom_blocks = [a * atoms_uc_to_vv / total_unit_cells for a in atom_blocks]
-        print("new blocks for averaging [v/v]: ", atom_blocks)
-        print("atoms_uc_to_vv = %f" % atoms_uc_to_vv)
-        print("reported V/V: %f" % gas_loading.absolute_volumetric_loading)
-        print("reported err: %f" % gas_loading.absolute_volumetric_loading_error)
+        slog("new blocks for averaging [v/v]: ", atom_blocks)
+        slog("atoms_uc_to_vv = %f" % atoms_uc_to_vv)
+        slog("reported V/V: %f" % gas_loading.absolute_volumetric_loading)
+        slog("reported err: %f" % gas_loading.absolute_volumetric_loading_error)
 
 
         all_atom_blocks += atom_blocks
-        print("all blocks: ", all_atom_blocks)
+        slog("all blocks: ", all_atom_blocks)
 
         # assign two initialization blocks to every restart run
         run_blocks = all_atom_blocks[math.floor(i/2)*5:]
-        print("run blocks: ", run_blocks)
-        print("run blocks len: %f" % (len(run_blocks) / 5))
+        slog("run blocks: ", run_blocks)
+        slog("run blocks len: %f" % (len(run_blocks) / 5))
 
         blocks_for_averaging = np.mean(np.array(run_blocks).reshape(-1, int(len(run_blocks) / 5)), axis=1)
-        print("incorporated blocks for averaging [v/v]: ", blocks_for_averaging)
+        slog("incorporated blocks for averaging [v/v]: ", blocks_for_averaging)
         atoms_std = np.std(blocks_for_averaging)
-        print("2*std of all blocks avg %d: %f" % (i, atoms_std*2))
-        print("2*std of all blocks: %f" % (2 * np.std(run_blocks)))
+        slog("2*std of all blocks avg %d: %f" % (i, atoms_std*2))
+        slog("2*std of all blocks: %f" % (2 * np.std(run_blocks)))
 
         error_vv = 2*atoms_std * atoms_uc_to_vv / total_unit_cells
         gas_loading.absolute_volumetric_loading = np.mean(blocks_for_averaging)
         gas_loading.absolute_volumetric_loading_error = error_vv
-        print("calculated V/V: %f" % gas_loading.absolute_volumetric_loading)
-        print("calculated error: %f" % error_vv)
+        slog("calculated V/V: %f" % gas_loading.absolute_volumetric_loading)
+        slog("calculated error: %f" % error_vv)
 
-        print("Copying restart to RestartInitial...")
+        slog("Copying restart to RestartInitial...")
         # remove old RestartInitial directory and copy the current one to there
         shutil.rmtree(os.path.join(output_dir, "RestartInitial"), ignore_errors=True)
         shutil.copytree(os.path.join(output_dir, "Restart"), os.path.join(output_dir, "RestartInitial"))
 
-        print("Moving backup RASPA outputs to restart index")
+        slog("Moving backup RASPA outputs to restart index")
         shutil.move(os.path.join(output_dir, "Output"), os.path.join(output_dir, "Output-%d" % i))
         shutil.move(os.path.join(output_dir, "Restart"), os.path.join(output_dir, "Restart-%d" % i))
         shutil.move(os.path.join(output_dir, "Movies"), os.path.join(output_dir, "Movies-%d" % i))
@@ -196,20 +194,19 @@ def run(material, simulation_config, config):
 
         gas_loading.cycles = simulation_config['simulation_cycles'] * (i + 1)
         if (gas_loading.absolute_volumetric_loading_error < simulation_config['restart_err_threshold']):
-            print("Exiting because v/v err < restart_err_threshold: %4.2f < %4.2f" %
+            slog("Exiting because v/v err < restart_err_threshold: %4.2f < %4.2f" %
                 (gas_loading.absolute_volumetric_loading_error, simulation_config['restart_err_threshold']))
             break
         elif i == simulation_config['max_restarts']:
-            print("Exiting because we've already restarted maximum number of times.")
-            print("v/v err >= restart_err_threshold: %4.2f >= %4.2f" %
+            slog("Exiting because we've already restarted maximum number of times.")
+            slog("v/v err >= restart_err_threshold: %4.2f >= %4.2f" %
                 (gas_loading.absolute_volumetric_loading_error, simulation_config['restart_err_threshold']))
-            print("--")
-
             break
         else:
-            print("\n--")
-            print("restart # %d" % i)
-            subprocess.run(["simulate", "-i", raspa_restart_config], check=True, cwd=output_dir)
+            slog("\n--")
+            slog("restart # %d" % i)
+            process = subprocess.run(["simulate", "-i", raspa_restart_config], check=True, cwd=output_dir, capture_output=True, text=True)
+            slog(process.stdout)
 
 
 
