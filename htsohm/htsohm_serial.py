@@ -154,6 +154,16 @@ def select_parents(children_per_generation, box_d, box_r, bin_materials, config)
 
 
 def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
+
+    def _update_bins_counts_materials(all_bins, bins, start_index):
+        nonlocal bin_counts, bin_materials
+        for i, (bx, by) in enumerate(all_bins):
+            bin_counts[bx,by] += 1
+            bin_materials[bx][by].append(i + start_index)
+        new_bins = set(all_bins) - bins
+        return new_bins, bins.union(new_bins)
+
+
     config = load_config_file(config_path)
     os.makedirs(config['output_dir'], exist_ok=True)
     print(config)
@@ -172,7 +182,6 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
                 backup=(load_restart_path != False or restart_generation > 0))
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
-
     if restart_generation > 0:
         print("Restarting from database using generation: %s" % restart_generation)
         box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart_db(
@@ -190,13 +199,6 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
             print("ERROR: cannot have existing materials in the database for a new run")
             sys.exit(1)
 
-        # define variables that are needed for state
-        bin_counts = np.zeros((num_bins, num_bins))
-        bin_materials = empty_lists_2d(num_bins, num_bins)
-        box_d = np.zeros(children_per_generation, dtype=int)
-        box_r = -1 * np.ones((children_per_generation, 2))
-        bins = set()
-
         # generate initial generation of random materials
         print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
         random.seed(config['initial_points_random_seed'])
@@ -204,11 +206,11 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
                         gen=0, children_per_generation=config['children_per_generation'])
         random.seed() # flush the seed so that only the initial points are set, not generated points
 
+        # setup initial bins
+        bin_counts = np.zeros((num_bins, num_bins))
+        bin_materials = empty_lists_2d(num_bins, num_bins)
         all_bins = calc_bins(box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
-        for i, (bx, by) in enumerate(all_bins):
-            bin_counts[bx,by] += 1
-            bin_materials[bx][by].append(i)
-        bins = set(all_bins)
+        new_bins, bins = _update_bins_counts_materials(all_bins, set(), 0)
 
         output_path = os.path.join(config['output_dir'], "binplot_0.png")
         delaunay_figure(box_r, num_bins, output_path, bins=bin_counts, \
@@ -230,14 +232,9 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
         new_box_d, new_box_r = parallel_simulate_generation(generator_method, parents_d, config,
                         gen=gen, children_per_generation=config['children_per_generation'])
 
-        # TODO: bins for methane loading?
+        # track bins
         all_bins = calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
-        for i, (bx, by) in enumerate(all_bins):
-            bin_counts[bx,by] += 1
-            material_index = i + gen * children_per_generation
-            bin_materials[bx][by].append(material_index)
-        new_bins = set(all_bins) - bins
-        bins = bins.union(new_bins)
+        new_bins, bins = _update_bins_counts_materials(all_bins, bins, gen * children_per_generation)
 
         # evaluate algorithm effectiveness
         bin_fraction_explored = len(bins) / num_bins ** 2
