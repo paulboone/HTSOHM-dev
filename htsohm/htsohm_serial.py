@@ -122,6 +122,7 @@ def simulate_generation_worker(parent_id):
     material.generation = gen
     worker_session.add(material)
     worker_session.commit()
+
     print(get_slog())
     return (material.id, (material.void_fraction[0].get_void_fraction(),
                           material.gas_loading[0].absolute_volumetric_loading))
@@ -138,6 +139,19 @@ def parallel_simulate_generation(generator, parent_ids, config, gen, children_pe
 
     box_d, box_r = zip(*results)
     return (np.array(box_d), np.array(box_r))
+
+def select_parents(children_per_generation, box_d, box_r, bin_materials, config):
+    if config['selector_type'] == 'simplices-or-hull':
+        return selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
+    elif config['selector_type'] == 'density-bin':
+        return selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
+    elif config['selector_type'] == 'neighbor-bin':
+        return selector_neighbor_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
+    elif config['selector_type'] == 'best':
+        return selector_best.choose_parents(children_per_generation, box_d, box_r)
+    elif config['selector_type'] == 'specific':
+        return selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
+
 
 def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
     config = load_config_file(config_path)
@@ -186,13 +200,10 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
         bins = set()
 
         # generate initial generation of random materials
-        if config['initial_points_random_seed']:
-            print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
-            random.seed(config['initial_points_random_seed'])
-
+        print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
+        random.seed(config['initial_points_random_seed'])
         box_d, box_r = parallel_simulate_generation(generator.random.new_material, None, config,
                         gen=0, children_per_generation=config['children_per_generation'])
-
         random.seed() # flush the seed so that only the initial points are set, not generated points
 
         all_bins = calc_bins(box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
@@ -208,30 +219,16 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
 
         start_gen = 1
 
+    if config['generator_type'] == 'random':
+        generator_method = generator.random.new_material
+    elif config['generator_type'] == 'mutate':
+        generator_method = generator.mutate.mutate_material
+
     for gen in range(start_gen, config['max_generations'] + 1):
         benchmark_just_reached = False
-        parents_r = parents_d = []
 
         # mutate materials and simulate properties
-        new_box_d = np.zeros(children_per_generation)
-        new_box_r = -1 * np.ones((children_per_generation, 2))
-
-        if config['selector_type'] == 'simplices-or-hull':
-            parents_d, parents_r = selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
-        elif config['selector_type'] == 'density-bin':
-            parents_d, parents_r = selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
-        elif config['selector_type'] == 'neighbor-bin':
-            parents_d, parents_r = selector_neighbor_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
-        elif config['selector_type'] == 'best':
-            parents_d, parents_r = selector_best.choose_parents(children_per_generation, box_d, box_r)
-        elif config['selector_type'] == 'specific':
-            parents_d, parents_r = selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
-
-        if config['generator_type'] == 'random':
-            generator_method = generator.random.new_material
-        elif config['generator_type'] == 'mutate':
-            generator_method = generator.mutate.mutate_material
-
+        parents_d, parents_r = select_parents(children_per_generation, box_d, box_r, bin_materials, config)
         new_box_d, new_box_r = parallel_simulate_generation(generator_method, parents_d, config,
                         gen=gen, children_per_generation=config['children_per_generation'])
 

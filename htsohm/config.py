@@ -1,3 +1,4 @@
+import time
 import os
 import yaml
 
@@ -9,7 +10,8 @@ def default_configuration():
         'verbose': False,
         'void_fraction_subtype': 'raspa',
         'load_restart_path': False,
-        'num_processes': 1
+        'num_processes': 1,
+        'initial_points_random_seed': int(time.time())
     }
 
 def load_config_file(path):
