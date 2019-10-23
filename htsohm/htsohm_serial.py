@@ -161,7 +161,6 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
     children_per_generation = config['children_per_generation']
     prop1range = config['prop1range']
     prop2range = config['prop2range']
-    verbose = config['verbose']
     VoidFraction.set_column_for_void_fraction(config['void_fraction_subtype'])
     num_bins = config['number_of_convergence_bins']
     benchmarks = config['benchmarks']
@@ -169,7 +168,6 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
     last_benchmark_reached = False
     load_restart_path = config['load_restart_path']
 
-    dbcs = config["database_connection_string"]
     engine, session = db.init_database(config["database_connection_string"],
                 backup=(load_restart_path != False or restart_generation > 0))
 
@@ -243,8 +241,7 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
 
         # evaluate algorithm effectiveness
         bin_fraction_explored = len(bins) / num_bins ** 2
-        if verbose:
-            print_block('GENERATION %s: %5.2f%%' % (gen, bin_fraction_explored * 100))
+        print_block('GENERATION %s: %5.2f%%' % (gen, bin_fraction_explored * 100))
         while bin_fraction_explored >= next_benchmark:
             benchmark_just_reached = True
             print_block("%s: %5.2f%% exploration accomplished at generation %d" %
