@@ -72,7 +72,7 @@ def load_restart_db(gen, num_bins, prop1range, prop2range, session):
     bin_counts = np.zeros((num_bins, num_bins))
     bin_materials = empty_lists_2d(num_bins, num_bins)
 
-    bins = calc_bins(box_r[0:gen], num_bins, prop1range=prop1range, prop2range=prop2range)
+    bins = calc_bins(box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
     for i, (bx, by) in enumerate(bins):
         bin_counts[bx,by] += 1
         bin_materials[bx][by].append(i)
