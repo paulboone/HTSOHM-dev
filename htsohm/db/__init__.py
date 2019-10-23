@@ -33,11 +33,6 @@ def init_database(connection_string, backup=False):
     global __session__
 
     if connection_string[0:10] == "sqlite:///":
-        print(
-            'WARNING: attempting to use SQLite database! Okay for local debugging\n' +
-            'but will not work with multiple workers, due to lack of locking features.',
-            file=sys.stderr
-        )
         db_path = connection_string[10:]
         if backup and os.path.exists(db_path):
             backup_path = db_path + "." + datetime.now().isoformat() + ".backup"
