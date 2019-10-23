@@ -4,7 +4,7 @@ import click
 import numpy as np
 
 from htsohm import load_config_file, db
-from htsohm.db import Material
+from htsohm.db import Material, VoidFraction
 from htsohm.figures import delaunay_figure
 from htsohm.htsohm_serial import calc_bins
 
@@ -22,6 +22,7 @@ def bin_graph(config_path, database_path=None, csv_path=None, sigma_limits=None,
         addl_data_path=None, last_children=0):
 
     config = load_config_file(config_path)
+    VoidFraction.set_column_for_void_fraction(config['void_fraction_subtype'])
 
     prop1range = config['prop1range']
     prop2range = config['prop2range']
@@ -44,10 +45,11 @@ def bin_graph(config_path, database_path=None, csv_path=None, sigma_limits=None,
     else:
         db.init_database(db.get_sqlite_dbcs(database_path))
         session = db.get_session()
+
         mats_d = session.query(Material).options(joinedload("void_fraction"), joinedload("gas_loading")).all()
 
         print("calculating material properties...")
-        mats_r = [(m.void_fraction[0].void_fraction_geo, m.gas_loading[0].absolute_volumetric_loading) for m in mats_d]
+        mats_r = [(m.void_fraction[0].get_void_fraction(), m.gas_loading[0].absolute_volumetric_loading) for m in mats_d]
 
     if last_children == 0:
         last_generation_start = len(mats_r)

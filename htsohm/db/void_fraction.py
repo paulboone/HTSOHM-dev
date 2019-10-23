@@ -9,9 +9,9 @@ class VoidFraction(Base):
     @classmethod
     def set_column_for_void_fraction(cls, column_label):
         if column_label in ["geo", "zeo"]:
-            __column_for_void_fraction__ = "void_fraction_" + column_label
+            cls.__column_for_void_fraction__ = "void_fraction_" + column_label
         else:
-            __column_for_void_fraction__ = "void_fraction"
+            cls.__column_for_void_fraction__ = "void_fraction"
 
     id = Column(Integer, primary_key=True)
 
