@@ -29,13 +29,11 @@ def print_parent_child_diff(parent, child):
     slog("PARENT UUID :\t{}".format(parent.uuid))
     slog("CHILD UUID  :\t{}".format(child.uuid))
     slog("lattice constants: (%.2f, %.2f, %.2f) => (%.2f, %.2f, %.2f)" % (ps.a, ps.b, ps.c, cs.a, cs.b, cs.c))
-    slog("number_density: %.2e => %.2e" % (parent.number_density, child.number_density))
     slog("number of atoms: %.2f => %.2f" % (len(parent.structure.atom_sites),
                                              len(child.structure.atom_sites)))
     parent_ljs = ", ".join(["(%.1f, %.1f)" % (ljs.epsilon, ljs.sigma) for ljs in ps.lennard_jones])
     child_ljs = ", ".join(["(%.1f, %.1f)" % (ljs.epsilon, ljs.sigma) for ljs in cs.lennard_jones])
     slog("lennard jones: %s => %s" % (parent_ljs, child_ljs))
-    # slog("FRAMEWORK NET CHARGE :\t{}".format(sum([e.q for e in cs.atom_sites])))
 
 def mutate_material(parent, config):
     child = parent.clone()
@@ -77,28 +75,11 @@ def mutate_material(parent, config):
         cs.c = perturb_unweighted(cs.c, ms * (ll[1] - ll[0]), ll)
         child.number_density = len(cs.atom_sites) / cs.volume
 
-    if perturb & {"density"}:
-        ndl = config["number_density_limits"]
-        child.number_density = perturb_unweighted(child.number_density, (ndl[1] - ndl[0])*ms, ndl)
-
     if perturb & {"atom_sites"}:
         for a in cs.atom_sites:
             a.x = random_position(a.x, random(), ms)
             a.y = random_position(a.y, random(), ms)
             a.z = random_position(a.z, random(), ms)
-
-    # add / remove atoms if density has changed
-    if "fix_atoms" in config:
-        number_of_atoms = config['fix_atoms']
-    else:
-        number_of_atoms = max(1, round(child.number_density * child.structure.volume))
-
-    if number_of_atoms < len(cs.atom_sites):
-        slog("Removing atom sites...")
-        cs.atom_sites = sample(cs.atom_sites, number_of_atoms)
-    elif number_of_atoms > len(cs.atom_sites):
-        slog("Adding atom sites...")
-        cs.atom_sites += random_atom_sites(number_of_atoms - len(cs.atom_sites), cs.lennard_jones)
 
     print_parent_child_diff(parent, child)
     return child

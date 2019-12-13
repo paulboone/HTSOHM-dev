@@ -24,11 +24,6 @@ def new_material(config):
         lennard_jones = random_atom_types(config["number_of_atom_types"], config),
     )
 
-    if "fix_atoms" in config:
-        number_of_atoms = config['fix_atoms']
-    else:
-        number_of_atoms = random_number_density(config["number_density_limits"], structure.volume)
-
     number_of_atoms = randint(*config["num_atoms_limits"])
     structure.atom_sites = random_atom_sites(number_of_atoms, structure.lennard_jones)
 
