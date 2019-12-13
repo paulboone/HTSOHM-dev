@@ -14,12 +14,13 @@ from sqlalchemy.orm import joinedload
 @click.argument('config-path', type=click.Path())
 @click.option('--database-path', type=click.Path())
 @click.option('--csv-path', type=click.Path())
+@click.option('--last-material', '-l', type=int, default=None)
 @click.option('--sigma-limits', type=float, nargs=2)
 @click.option('--epsilon-limits', type=float, nargs=2)
 @click.option('--addl-data-path', type=click.Path())
 @click.option('--last-children', type=int, default=0)
-def bin_graph(config_path, database_path=None, csv_path=None, sigma_limits=None, epsilon_limits=None,
-        addl_data_path=None, last_children=0):
+def bin_graph(config_path, database_path=None, csv_path=None, last_material=None,
+        sigma_limits=None, epsilon_limits=None, addl_data_path=None, last_children=0):
 
     config = load_config_file(config_path)
     VoidFraction.set_column_for_void_fraction(config['void_fraction_subtype'])
@@ -34,7 +35,7 @@ def bin_graph(config_path, database_path=None, csv_path=None, sigma_limits=None,
     print("loading materials...")
 
     if csv_path:
-        mats_r = np.loadtxt(csv_path, delimiter=',', skiprows=1, usecols=(8,9,5,6))
+        mats_r = np.loadtxt(csv_path, delimiter=',', skiprows=1, usecols=(8,9,5,6), max_rows=last_material)
         print("%d rows loaded from csv" % mats_r.shape[0])
         if sigma_limits:
             mats_r = mats_r[(sigma_limits[0] <= mats_r[:,2]) & (mats_r[:,2] <= sigma_limits[1])]
