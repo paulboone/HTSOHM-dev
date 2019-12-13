@@ -51,7 +51,7 @@ def init_database(connection_string, backup=False):
 # Import all models
 from htsohm.db.base import Base
 from htsohm.db.atom_sites import AtomSite
-from htsohm.db.lennard_jones import LennardJones
+from htsohm.db.atom_types import AtomTypes
 from htsohm.db.gas_loading import GasLoading
 from htsohm.db.surface_area import SurfaceArea
 from htsohm.db.void_fraction import VoidFraction
@@ -64,5 +64,5 @@ def delete_extra_materials(delete_after_id):
     __engine__.execute("delete from surface_areas where material_id > %d" % delete_after_id)
     __engine__.execute("delete from void_fractions where material_id > %d" % delete_after_id)
     __engine__.execute("delete from structures where material_id > %d" % delete_after_id)
-    __engine__.execute("delete from lennard_jones where structure_id > %d" % delete_after_id)
+    __engine__.execute("delete from atom_types where structure_id > %d" % delete_after_id)
     __engine__.execute("delete from atom_sites where structure_id > %d" % delete_after_id)

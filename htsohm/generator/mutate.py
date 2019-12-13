@@ -31,9 +31,9 @@ def print_parent_child_diff(parent, child):
     slog("lattice constants: (%.2f, %.2f, %.2f) => (%.2f, %.2f, %.2f)" % (ps.a, ps.b, ps.c, cs.a, cs.b, cs.c))
     slog("number of atoms: %.2f => %.2f" % (len(parent.structure.atom_sites),
                                              len(child.structure.atom_sites)))
-    parent_ljs = ", ".join(["(%.1f, %.1f)" % (ljs.epsilon, ljs.sigma) for ljs in ps.lennard_jones])
-    child_ljs = ", ".join(["(%.1f, %.1f)" % (ljs.epsilon, ljs.sigma) for ljs in cs.lennard_jones])
-    slog("lennard jones: %s => %s" % (parent_ljs, child_ljs))
+    parent_ats = ", ".join(["(%.1f, %.1f)" % (ats.epsilon, ats.sigma) for ats in ps.atom_types])
+    child_ats = ", ".join(["(%.1f, %.1f)" % (ats.epsilon, ats.sigma) for ats in cs.atom_types])
+    slog("atom types: %s => %s" % (parent_ats, child_ats))
 
 def mutate_material(parent, config):
     child = parent.clone()
@@ -50,10 +50,10 @@ def mutate_material(parent, config):
     slog("Perturbing: %s [%s]" % (child.perturbation, perturb))
     ms = config["mutation_strength"]
 
-    if config["number_of_atom_types"] > len(cs.lennard_jones):
-        num_atom_types_to_add = config["number_of_atom_types"] - len(cs.lennard_jones)
+    if config["number_of_atom_types"] > len(cs.atom_types):
+        num_atom_types_to_add = config["number_of_atom_types"] - len(cs.atom_types)
         slog("Adding %d random atom types so we have number defined in the config" % num_atom_types_to_add)
-        cs.lennard_jones += random_atom_types(num_atom_types_to_add, config)
+        cs.atom_types += random_atom_types(num_atom_types_to_add, config)
 
     if perturb & {"num_atoms"} and random() < ms:
         if random() < 0.5: # remove an atoms
@@ -64,21 +64,21 @@ def mutate_material(parent, config):
         else: # add an atom
             if len(cs.atom_sites) < config['num_atoms_limits'][1]:
                 slog("Adding atom site...")
-                cs.atom_sites += random_atom_sites(1, cs.lennard_jones)
+                cs.atom_sites += random_atom_sites(1, cs.atom_types)
 
 
     if perturb & {"atom_type_assignments"}:
         for i, atom in enumerate(cs.atom_sites):
             if random() < ms**2:
-                new_atom_type = choice(cs.lennard_jones)
+                new_atom_type = choice(cs.atom_types)
                 slog("Reassigning atom type for site %d from %d to %d" %
-                    (i, cs.lennard_jones.index(atom.lennard_jones), cs.lennard_jones.index(new_atom_type)))
-                atom.lennard_jones = new_atom_type
+                    (i, cs.atom_types.index(atom.atom_types), cs.atom_types.index(new_atom_type)))
+                atom.atom_types = new_atom_type
 
     if perturb & {"atom_types"}:
         sigl = config["sigma_limits"]
         epsl = config["epsilon_limits"]
-        for at in cs.lennard_jones:
+        for at in cs.atom_types:
             at.sigma = perturb_unweighted(at.sigma, ms * (sigl[1] - sigl[0]), sigl)
             at.epsilon = perturb_unweighted(at.epsilon, ms * (epsl[1] - epsl[0]), epsl)
 

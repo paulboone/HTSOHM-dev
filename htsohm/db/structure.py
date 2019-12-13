@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 
 from htsohm.db import Base
 from htsohm.db.atom_sites import AtomSite
-from htsohm.db.lennard_jones import LennardJones
+from htsohm.db.atom_types import AtomTypes
 
 class Structure(Base):
     __tablename__ = "structures"
@@ -18,29 +18,29 @@ class Structure(Base):
     c = Column(Float)
 
     atom_sites = relationship("AtomSite", backref="structure")
-    lennard_jones = relationship("LennardJones", backref="structure")
+    atom_types = relationship("AtomTypes", backref="structure")
 
     def exclude_cols(self):
         return ['id']
 
-    def __init__(self, a=None, b=None, c=None, atom_sites=[], lennard_jones=[]):
+    def __init__(self, a=None, b=None, c=None, atom_sites=[], atom_types=[]):
         self.a = a
         self.b = b
         self.c = c
 
         self.atom_sites = atom_sites
-        self.lennard_jones = lennard_jones
+        self.atom_types = atom_types
 
     def clone(self):
         copy = super(Structure, self).clone()
-        if self.lennard_jones:
-            for lj in self.lennard_jones:
-                copy.lennard_jones.append(lj.clone())
+        if self.atom_types:
+            for lj in self.atom_types:
+                copy.atom_types.append(lj.clone())
 
         if self.atom_sites:
             for atom_site in self.atom_sites:
-                lennard_jones = copy.lennard_jones[atom_site.lennard_jones.atom_type_index()]
-                copy.atom_sites.append(atom_site.clone(lennard_jones))
+                atom_types = copy.atom_types[atom_site.atom_types.atom_type_index()]
+                copy.atom_sites.append(atom_site.clone(atom_types))
 
         return copy
 

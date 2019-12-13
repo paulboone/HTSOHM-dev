@@ -126,7 +126,7 @@ def run(material, simulation_config, config):
     # run geometric void fraction
     if "do_geo" in simulation_config and simulation_config["do_geo"]:
         tbegin = time.perf_counter()
-        atoms = [(a.x * material.structure.a, a.y * material.structure.b, a.z * material.structure.c, a.lennard_jones.sigma) for a in material.structure.atom_sites]
+        atoms = [(a.x * material.structure.a, a.y * material.structure.b, a.z * material.structure.c, a.atom_types.sigma) for a in material.structure.atom_sites]
         box = (material.structure.a, material.structure.b, material.structure.c)
         void_fraction.void_fraction_geo = calculate_void_fraction(atoms, box, probe_r=simulation_config["probe_radius"])
         slog("GEOMETRIC void fraction: %f" % void_fraction.void_fraction_geo)

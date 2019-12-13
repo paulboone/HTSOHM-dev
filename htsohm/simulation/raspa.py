@@ -17,7 +17,7 @@ def write_mol_file(material, simulation_path):
             mol_file.write(
                     "{:6} {:10.4f} {:10.4f} {:10.4f}  {:5} {:10.8f}  0  0\n".format(
                         i + 1, round(a.x * s.a, 4), round(a.y * s.b, 4), round(a.z * s.c, 4),
-                        str(a.lennard_jones.atom_type_index()), round(a.q, 8)))
+                        str(a.atom_types.atom_type_index()), round(a.q, 8)))
         mol_file.write(
                 "\n" +
                 "\n" +
@@ -54,12 +54,12 @@ def write_mixing_rules(structure, simulation_path):
             "# general rule tailcorrections\n" +
             "no\n" +
             "# number of defined interactions\n" +
-            "{}\n".format(len(structure.lennard_jones) + 10) +
+            "{}\n".format(len(structure.atom_types) + 10) +
             "# type interaction, parameters.    " +
             "IMPORTANT: define shortest matches first, so" +
             " that more specific ones overwrites these\n"
         )
-        for lj in structure.lennard_jones:
+        for lj in structure.atom_types:
             mixing_rules_file.write(
                 "{0:12} lennard-jones {1:8f} {2:8f}\n".format(lj.atom_type_index(),
                     round(lj.epsilon, 4), round(lj.sigma, 4)))
@@ -91,10 +91,10 @@ def write_pseudo_atoms(structure, simulation_path):
     with open(file_name, "w") as pseudo_atoms_file:
         pseudo_atoms_file.write(
             "#number of pseudo atoms\n" +
-            "%s\n" % (len(structure.lennard_jones) + 10) +
+            "%s\n" % (len(structure.atom_types) + 10) +
             "#type  print   as  chem    oxidation   mass    charge  polarization    B-factor    radii   " +
                  "connectivity  anisotropic anisotrop-type  tinker-type\n")
-        for a in structure.lennard_jones:
+        for a in structure.atom_types:
             pseudo_atoms_file.write(
                 "{0:7}  yes  C   C   0   12.0       0.0  0.0  1.0  1.0    0  0  absolute  0\n".format(
                     str(a.atom_type_index())))
