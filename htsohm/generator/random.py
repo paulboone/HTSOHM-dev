@@ -28,16 +28,3 @@ def new_material(config):
     structure.atom_sites = random_atom_sites(number_of_atoms, structure.lennard_jones)
 
     return Material(structure=structure, number_density=number_of_atoms / structure.volume)
-
-def random_number_density(number_density_limits, volume):
-    """Produces random number for atom-sites in a unit cell,
-    constrained by some number density limits and a volume"""
-
-    min_atoms = ceil(number_density_limits[0] * volume)
-    max_atoms = int(number_density_limits[1] * volume)
-    if min_atoms < 1:
-        min_atoms = 1
-    if min_atoms >= max_atoms:
-        return min_atoms
-
-    return randrange(min_atoms, max_atoms + 1, 1)
