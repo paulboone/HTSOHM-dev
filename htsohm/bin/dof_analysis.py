@@ -10,7 +10,7 @@ import numpy as np
 
 from htsohm import load_config_file, db
 from htsohm.db import Material
-from htsohm.htsohm_serial import calc_bins
+from htsohm.htsohm_run import calc_bins
 
 def dof_analysis(config_path, output_directory):
     config = load_config_file(config_path)

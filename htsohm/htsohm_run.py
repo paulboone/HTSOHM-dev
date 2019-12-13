@@ -25,7 +25,6 @@ from htsohm.slog import init_slog, get_slog
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
 
-
 def calc_bin(value, bound_min, bound_max, bins):
     """Find bin in parameter range.
     Args:
@@ -127,14 +126,14 @@ def simulate_generation_worker(parent_id):
     return (material.id, (material.void_fraction[0].get_void_fraction(),
                           material.gas_loading[0].absolute_volumetric_loading))
 
-def parallel_simulate_generation(generator, parent_ids, config, gen, children_per_generation):
+def parallel_simulate_generation(generator, num_processes, parent_ids, config, gen, children_per_generation):
     global worker_metadata
     worker_metadata = (generator, config, gen)
 
     if parent_ids is None:
         parent_ids = [0] * (children_per_generation) # should only be needed for random!
 
-    with Pool(processes=config['num_processes'], initializer=init_worker, initargs=[config]) as pool:
+    with Pool(processes=num_processes, initializer=init_worker, initargs=[config]) as pool:
         results = pool.map(simulate_generation_worker, parent_ids)
 
     box_d, box_r = zip(*results)
@@ -153,7 +152,7 @@ def select_parents(children_per_generation, box_d, box_r, bin_materials, config)
         return selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
 
 
-def serial_runloop(config_path, restart_generation=-1, override_db_errors=False):
+def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num_processes=1):
 
     def _update_bins_counts_materials(all_bins, bins, start_index):
         nonlocal bin_counts, bin_materials
@@ -202,8 +201,8 @@ def serial_runloop(config_path, restart_generation=-1, override_db_errors=False)
         # generate initial generation of random materials
         print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
         random.seed(config['initial_points_random_seed'])
-        box_d, box_r = parallel_simulate_generation(generator.random.new_material, None, config,
-                        gen=0, children_per_generation=config['children_per_generation'])
+        box_d, box_r = parallel_simulate_generation(generator.random.new_material, num_processes, None,
+                        config, gen=0, children_per_generation=config['children_per_generation'])
         random.seed() # flush the seed so that only the initial points are set, not generated points
 
         # setup initial bins
@@ -229,8 +228,8 @@ def serial_runloop(config_path, restart_generation=-1, override_db_errors=False)
 
         # mutate materials and simulate properties
         parents_d, parents_r = select_parents(children_per_generation, box_d, box_r, bin_materials, config)
-        new_box_d, new_box_r = parallel_simulate_generation(generator_method, parents_d, config,
-                        gen=gen, children_per_generation=config['children_per_generation'])
+        new_box_d, new_box_r = parallel_simulate_generation(generator_method, num_processes, parents_d,
+                                config, gen=gen, children_per_generation=config['children_per_generation'])
 
         # track bins
         all_bins = calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)

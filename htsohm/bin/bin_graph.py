@@ -6,7 +6,7 @@ import numpy as np
 from htsohm import load_config_file, db
 from htsohm.db import Material, VoidFraction
 from htsohm.figures import delaunay_figure
-from htsohm.htsohm_serial import calc_bins
+from htsohm.htsohm_run import calc_bins
 
 from sqlalchemy.orm import joinedload
 
