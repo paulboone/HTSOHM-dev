@@ -1,4 +1,4 @@
-from random import choice, random, uniform, sample
+from random import choice, random, uniform, sample, randint
 
 from htsohm.slog import slog
 from htsohm.generator.random import random_atom_sites, random_number_density
@@ -48,9 +48,20 @@ def mutate_material(parent, config):
     else:
         child.perturbation = "all"
 
-    slog("Parent ID: %d" % (child.parent_id))
-    slog("PERTURBING: %s [%s]" % (child.perturbation, perturb))
+    slog("Parent id: %d" % (child.parent_id))
+    slog("Perturbing: %s [%s]" % (child.perturbation, perturb))
     ms = config["mutation_strength"]
+
+    if perturb & {"num_atoms"} and random() < ms**2:
+        if random() < 0.5: # remove an atoms
+            if len(cs.atom_sites) > config['num_atoms_limits'][0]:
+                slog("Removing atom site...")
+                removed_site = cs.atom_sites.pop(randint(0, len(cs.atom_sites) - 1))
+                slog(removed_site)
+        else: # add an atom
+            if len(cs.atom_sites) < config['num_atoms_limits'][1]:
+                slog("Adding atom site...")
+                cs.atom_sites += random_atom_sites(1, cs.lennard_jones)
 
     if perturb & {"atom_types"}:
         sigl = config["sigma_limits"]

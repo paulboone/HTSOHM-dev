@@ -1,5 +1,5 @@
 from math import ceil
-from random import choice, random, randrange, uniform
+from random import choice, random, randrange, uniform, randint
 
 from htsohm.db import Material, Structure, LennardJones, AtomSite
 
@@ -29,6 +29,7 @@ def new_material(config):
     else:
         number_of_atoms = random_number_density(config["number_density_limits"], structure.volume)
 
+    number_of_atoms = randint(*config["num_atoms_limits"])
     structure.atom_sites = random_atom_sites(number_of_atoms, structure.lennard_jones)
 
     return Material(structure=structure, number_density=number_of_atoms / structure.volume)
