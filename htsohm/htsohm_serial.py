@@ -153,7 +153,7 @@ def select_parents(children_per_generation, box_d, box_r, bin_materials, config)
         return selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
 
 
-def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
+def serial_runloop(config_path, restart_generation=-1, override_db_errors=False):
 
     def _update_bins_counts_materials(all_bins, bins, start_index):
         nonlocal bin_counts, bin_materials
@@ -182,7 +182,7 @@ def serial_runloop(config_path, restart_generation=0, override_db_errors=False):
                 backup=(load_restart_path != False or restart_generation > 0))
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
-    if restart_generation > 0:
+    if restart_generation >= 0:
         print("Restarting from database using generation: %s" % restart_generation)
         box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart_db(
             restart_generation, num_bins, prop1range, prop2range, session)

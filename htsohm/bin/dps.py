@@ -7,7 +7,7 @@ from htsohm.htsohm_serial import serial_runloop
 
 @click.command()
 @click.argument('config_path', type=click.Path())
-@click.option('-r', '--restart',  type=int, default=0, help="generation to restart at")
+@click.option('-r', '--restart',  type=int, default=-1, help="generation to restart at")
 @click.option('-f', '--override-database-errors',  is_flag=True, default=False)
 def cmdline(config_path, restart, override_database_errors):
     if config_path == "auto":
