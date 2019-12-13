@@ -11,7 +11,7 @@ def random_atom_types(num_atom_types, config):
 
 def random_atom_sites(num_sites, atom_types):
     return [AtomSite(
-        lennard_jones = atom_types[choice(range(len(atom_types)))],
+        lennard_jones = choice(atom_types),
         x = random(), y = random(), z = random(),
         q = 0.0
     ) for i in range(num_sites)]

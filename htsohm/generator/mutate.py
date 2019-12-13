@@ -1,4 +1,4 @@
-from random import choice, random, uniform, sample, randint
+from random import choice, random, uniform
 
 from htsohm.slog import slog
 from htsohm.generator.random import random_atom_sites, random_number_density
@@ -50,16 +50,25 @@ def mutate_material(parent, config):
     slog("Perturbing: %s [%s]" % (child.perturbation, perturb))
     ms = config["mutation_strength"]
 
-    if perturb & {"num_atoms"} and random() < ms**2:
+    if perturb & {"num_atoms"} and random() < ms:
         if random() < 0.5: # remove an atoms
             if len(cs.atom_sites) > config['num_atoms_limits'][0]:
-                slog("Removing atom site...")
-                removed_site = cs.atom_sites.pop(randint(0, len(cs.atom_sites) - 1))
-                slog(removed_site)
+                site_to_remove = choice(cs.atom_sites)
+                slog("Removing atom site: ", site_to_remove)
+                removed_site = cs.atom_sites.remove(site_to_remove)
         else: # add an atom
             if len(cs.atom_sites) < config['num_atoms_limits'][1]:
                 slog("Adding atom site...")
                 cs.atom_sites += random_atom_sites(1, cs.lennard_jones)
+
+
+    if perturb & {"atom_type_assignments"}:
+        for i, atom in enumerate(cs.atom_sites):
+            if random() < ms**2:
+                new_atom_type = choice(cs.lennard_jones)
+                slog("Reassigning atom type for site %d from %d to %d" %
+                    (i, cs.lennard_jones.index(atom.lennard_jones), cs.lennard_jones.index(new_atom_type)))
+                atom.lennard_jones = new_atom_type
 
     if perturb & {"atom_types"}:
         sigl = config["sigma_limits"]
