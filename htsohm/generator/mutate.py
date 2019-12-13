@@ -20,7 +20,10 @@ def net_charge(atom_sites):
     return sum([e.q for e in atom_sites])
 
 def perturb_unweighted(curr_val, max_change, var_limits):
-    new_val = curr_val + uniform(-max_change, max_change)
+    # the / 2 is to make sure that if the max_change is the entire variable range (i.e. 100%
+    # mutation strength), then if we are in the center of the range, this equivalent to generating
+    # a new random number in the range.
+    new_val = curr_val + uniform(-max_change, max_change) / 2
     return min(max(new_val, var_limits[0]), var_limits[1])
 
 def print_parent_child_diff(parent, child):
