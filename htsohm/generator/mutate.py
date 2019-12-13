@@ -1,7 +1,7 @@
 from random import choice, random, uniform
 
 from htsohm.slog import slog
-from htsohm.generator.random import random_atom_sites, random_number_density
+from htsohm.generator.random import random_atom_sites, random_atom_types
 
 def random_position(x0, x1, mutation_strength):
     # get minimum distance between two points of (1) within the box, and (2) across the box boundary
@@ -49,6 +49,11 @@ def mutate_material(parent, config):
     slog("Parent id: %d" % (child.parent_id))
     slog("Perturbing: %s [%s]" % (child.perturbation, perturb))
     ms = config["mutation_strength"]
+
+    if config["number_of_atom_types"] > len(cs.lennard_jones):
+        num_atom_types_to_add = config["number_of_atom_types"] - len(cs.lennard_jones)
+        slog("Adding %d random atom types so we have number defined in the config" % num_atom_types_to_add)
+        cs.lennard_jones += random_atom_types(num_atom_types_to_add, config)
 
     if perturb & {"num_atoms"} and random() < ms:
         if random() < 0.5: # remove an atoms
