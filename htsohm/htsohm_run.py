@@ -20,7 +20,7 @@ import htsohm.select.density_bin as selector_bin
 import htsohm.select.best as selector_best
 import htsohm.select.specific as selector_specific
 import htsohm.select.neighbor_bin as selector_neighbor_bin
-from htsohm.slog import init_slog, get_slog
+from htsohm.slog import init_slog, get_slog, slog
 
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
@@ -140,7 +140,9 @@ def parallel_simulate_generation(generator, num_processes, parent_ids, config, g
     return (np.array(box_d), np.array(box_r))
 
 def select_parents(children_per_generation, box_d, box_r, bin_materials, config):
-    if config['selector_type'] == 'simplices-or-hull':
+    if config['generator_type'] == 'random':
+        return (None, [])
+    elif config['selector_type'] == 'simplices-or-hull':
         return selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
     elif config['selector_type'] == 'density-bin':
         return selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)

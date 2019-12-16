@@ -86,7 +86,7 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
         ax.add_patch(Circle((0.5, 0.5), 0.125, fill=False, linestyle="dashed", linewidth=1, zorder=50))
         ax.add_patch(Circle((0.5, 0.5), 0.375, fill=False, linestyle="dashed", linewidth=2, zorder=50))
 
-    if perturbation_methods:
+    if perturbation_methods and len(parents) > 0:
         p_cmap = {"all": "black", "lattice": "w", "lattice_nodens": "#848C8E", "density": "#435058", "atom_types": "#0FA3B1", "atom_sites": "#F77936", }
         arrows = [ConnectionPatch(parents[i], children[i], "data", arrowstyle="-|>", \
                     shrinkA=5, shrinkB=5, mutation_scale=20, fc=p_cmap[perturbation_methods[i]], \
