@@ -3,14 +3,10 @@ __pycache__
 *.pyc
 settings/*.yaml
 !settings/*.sample.yaml
-*.db
-output_*
-output-*
 config
 logs
 .ipynb_checkpoints/
 *.o*
-2019*
 dist/
 build/
 MANIFEST
