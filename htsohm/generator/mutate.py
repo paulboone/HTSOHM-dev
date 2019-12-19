@@ -88,8 +88,12 @@ def mutate_material(parent, config):
     if perturb & {"lattice"}:
         ll = config["lattice_constant_limits"]
         cs.a = perturb_unweighted(cs.a, ms * (ll[1] - ll[0]), ll)
-        cs.b = perturb_unweighted(cs.b, ms * (ll[1] - ll[0]), ll)
-        cs.c = perturb_unweighted(cs.c, ms * (ll[1] - ll[0]), ll)
+        if config["lattice_cubic"]:
+            cs.b = cs.a
+            cs.c = cs.a
+        else:
+            cs.b = perturb_unweighted(cs.b, ms * (ll[1] - ll[0]), ll)
+            cs.c = perturb_unweighted(cs.c, ms * (ll[1] - ll[0]), ll)
         child.number_density = len(cs.atom_sites) / cs.volume
 
     if perturb & {"atom_sites"}:

@@ -17,10 +17,16 @@ def random_atom_sites(num_sites, atom_types):
     ) for i in range(num_sites)]
 
 def new_material(config):
+    a = uniform(*config["lattice_constant_limits"])
+    if config["lattice_cubic"]:
+        b = a
+        c = a
+    else:
+        b = uniform(*config["lattice_constant_limits"])
+        c = uniform(*config["lattice_constant_limits"])
+
     structure=Structure(
-        a = uniform(*config["lattice_constant_limits"]),
-        b = uniform(*config["lattice_constant_limits"]),
-        c = uniform(*config["lattice_constant_limits"]),
+        a = a, b = b, c = c,
         atom_types = random_atom_types(config["number_of_atom_types"], config),
     )
 
