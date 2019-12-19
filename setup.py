@@ -4,10 +4,10 @@ from distutils.core import setup
 setup(
     name = 'HTSOHM',
     version = '0.6.0',
-    description = 'High-throughput Screening of Hypothetical Materials',
+    description = 'High-throughput Screening of Pseudo Materials',
     author = 'Paul Boone / A Reino Kaija',
     author_email = 'paulboone@pitt.edu',
-    url = 'https://github.com/paulboone/HTSOHM-dev',
+    url = 'https://github.com/paulboone/htsohm',
     packages = ['htsohm'],
     install_requires=[
         'numpy',
