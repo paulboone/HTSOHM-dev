@@ -12,6 +12,8 @@ import numpy as np
 from sqlalchemy.orm import joinedload
 
 from htsohm import generator, load_config_file, db
+from htsohm.bins import calc_bins
+from htsohm.bin.output_csv import output_csv_from_db, csv_add_bin_column
 from htsohm.db import Material, VoidFraction
 from htsohm.simulation.run_all import run_all_simulations
 from htsohm.figures import delaunay_figure
@@ -25,24 +27,6 @@ from htsohm.slog import init_slog, get_slog, slog
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
 
-def calc_bin(value, bound_min, bound_max, bins):
-    """Find bin in parameter range.
-    Args:
-        value (float): some value, the result of a simulation.
-        bound_min (float): lower limit, defining the parameter-space.
-        bound_max (float): upper limit, defining the parameter-space.
-        bins (int): number of bins used to subdivide parameter-space.
-    Returns:
-        Bin(int) corresponding to the input-value.
-    """
-    step = (bound_max - bound_min) / bins
-    assigned_bin = (value - bound_min) // step
-    assigned_bin = min(assigned_bin, bins-1)
-    assigned_bin = max(assigned_bin, 0)
-    return int(assigned_bin)
-
-def calc_bins(box_r, num_bins, prop1range=(0.0, 1.0), prop2range=(0.0, 1.0)):
-    return [(calc_bin(b[0], *prop1range, num_bins), calc_bin(b[1], *prop2range, num_bins)) for b in box_r]
 
 def empty_lists_2d(x,y):
     return [[[] for j in range(x)] for i in range(y)]
@@ -285,3 +269,10 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
 
         if last_benchmark_reached:
             break
+
+    with open("pm.csv", 'w', newline='') as f:
+        output_csv_from_db(session, output_file=f)
+
+    with open("pm-binned.csv", 'w', newline='') as f:
+        # column 8 is void_fraction_geo, 9 is methane loading
+        csv_add_bin_column("pm.csv", [(8, *prop1range, num_bins), (9, *prop2range, num_bins)], output_file=f)

@@ -6,8 +6,8 @@ import click
 from sqlalchemy.orm import joinedload
 
 from htsohm import db
+from htsohm.bins import calc_bin
 from htsohm.db import Material
-from htsohm.htsohm_run import calc_bin
 
 @click.command()
 @click.argument('database-path', type=click.Path())
@@ -15,13 +15,16 @@ from htsohm.htsohm_run import calc_bin
 def output_csv(database_path, start_id=0):
     db.init_database(db.get_sqlite_dbcs(database_path))
     session = db.get_session()
+    output_csv_from_db(session, start_id)
+
+def output_csv_from_db(session, start_id=0, output_file=sys.stdout):
     mats = session.query(Material) \
         .options(joinedload("structure").joinedload("atom_types")) \
         .options(joinedload("gas_loading")) \
         .options(joinedload("void_fraction")) \
         .filter(Material.id >= start_id).all()
 
-    f = csv.writer(sys.stdout, lineterminator="\n")
+    f = csv.writer(output_file, lineterminator="\n")
     f.writerow(["id", "parent_id",  "a", "b", "c", "sigma", "epsilon", "void_fraction", "void_fraction_geo", "absolute_volumetric_loading", "absolute_volumetric_loading_error"])
     for m in mats:
         f.writerow([m.id, m.parent_id, m.structure.a, m.structure.b, m.structure.c,
@@ -30,13 +33,17 @@ def output_csv(database_path, start_id=0):
             m.gas_loading[0].absolute_volumetric_loading, m.gas_loading[0].absolute_volumetric_loading_error
         ])
 
+
 @click.command()
 @click.argument('csv-path', type=click.Path())
 @click.option('-b', '--bin', nargs=4, type=click.Tuple([int, float, float, int]), multiple=True, help="column lower_bound upper_bound num_bins")
-def csv_add_bin(csv_path, bin):
+def csv_add_bin(csv_path, bin, output_file=sys.stdout):
+    csv_add_bin_column(csv_path, bin, output_file)
+
+def csv_add_bin_column(csv_path, bin, output_file=sys.stdout):
     with open(csv_path) as f:
         csv_in = csv.reader(f)
-        csv_out = csv.writer(sys.stdout, lineterminator="\n")
+        csv_out = csv.writer(output_file, lineterminator="\n")
         header = next(csv_in)
 
         bin_col_labels = ["bin%d" % col for col, _, _, _ in bin]
