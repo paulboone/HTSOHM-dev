@@ -138,7 +138,7 @@ def select_parents(children_per_generation, box_d, box_r, bin_materials, config)
         return selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
 
 
-def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num_processes=1):
+def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num_processes=1, max_generations=None):
 
     def _update_bins_counts_materials(all_bins, bins, start_index):
         nonlocal bin_counts, bin_materials
@@ -162,6 +162,9 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     next_benchmark = benchmarks.pop(0)
     last_benchmark_reached = False
     load_restart_path = config['load_restart_path']
+
+    if max_generations is None:
+        max_generations = config['max_generations']
 
     engine, session = db.init_database(config["database_connection_string"],
                 backup=(load_restart_path != False or restart_generation > 0))
@@ -209,7 +212,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     elif config['generator_type'] == 'mutate':
         generator_method = generator.mutate.mutate_material
 
-    for gen in range(start_gen, config['max_generations'] + 1):
+    for gen in range(start_gen, max_generations + 1):
         benchmark_just_reached = False
 
         # mutate materials and simulate properties
@@ -264,7 +267,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
 
         restart_path = os.path.join(config['output_dir'], "restart.txt.npz")
         dump_restart(restart_path, box_d, box_r, bin_counts, bin_materials, bins, gen + 1)
-        if benchmark_just_reached or gen == config['max_generations']:
+        if benchmark_just_reached or gen == max_generations:
             shutil.move(restart_path, os.path.join(config['output_dir'], "restart%d.txt.npz" % gen))
 
         if last_benchmark_reached:

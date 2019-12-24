@@ -10,7 +10,8 @@ from htsohm import htsohm_run
 @click.option('-r', '--restart',  type=int, default=-1, help="generation to restart at")
 @click.option('-f', '--override-database-errors',  is_flag=True, default=False)
 @click.option('-n', '--num-processes', type=int, default=1)
-def cmdline(config_path, restart, override_database_errors, num_processes):
+@click.option('-g', '--max-generations', type=int, default=None)
+def cmdline(config_path, restart, max_generations, override_database_errors, num_processes):
     if config_path == "auto":
         yaml_files = glob("*.yaml")
         if len(yaml_files) == 0:
@@ -20,7 +21,7 @@ def cmdline(config_path, restart, override_database_errors, num_processes):
         if len(yaml_files) > 1:
             print("WARNING: more than one YAML file found in this directory. Using first one: %s" % config_path)
 
-    htsohm_run(config_path, restart, override_database_errors, num_processes)
+    htsohm_run(config_path, restart, override_database_errors, num_processes, max_generations)
 
 if __name__ == '__main__':
     cmdline()
