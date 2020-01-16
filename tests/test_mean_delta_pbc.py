@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from pytest import approx
 
-from visualizer.mean_delta_pbc import mean_delta_pbc, minimum_distance_point, minimum_distance_v
+from htsohm.mean_delta_pbc import mean_delta_pbc, minimum_distance_point, minimum_distance_v
 
 def test_mean_delta_pbc_basics():
     points = [(0.5, 0.5, 0.4), (0.5, 0.5, 0.5), (0.5, 0.5, 0.6)]
