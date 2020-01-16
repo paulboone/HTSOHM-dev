@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 from htsohm.db import Base
 from htsohm.db.atom_sites import AtomSite
 from htsohm.db.atom_types import AtomTypes
+from htsohm.mean_delta_pbc import mean_delta_pbc
 
 class Structure(Base):
     __tablename__ = "structures"
@@ -52,6 +53,23 @@ class Structure(Base):
     @property
     def volume(self):
         return self.a * self.b * self.c
+
+    @property
+    def site_distribution(self):
+        mean, min_range = mean_delta_pbc([(a.x, a.y, a.z) for a in self.atom_sites])
+        return min_range
+
+    @property
+    def number_density(self):
+        return len(self.atom_sites)/self.volume
+
+    @property
+    def total_epsilon(self):
+        return sum([s.atom_types.epsilon for s in self.atom_sites])
+
+    @property
+    def epsilon_density(self):
+        return self.total_epsilon / self.volume
 
     def __repr__(self):
         return "(%s: %f, %f, %f)" % (self.id, self.a, self.b, self.c)

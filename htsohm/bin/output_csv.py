@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 
 from htsohm import db
 from htsohm.bins import calc_bin
-from htsohm.db import Material
+from htsohm.db import Material, AtomSite
 
 @click.command()
 @click.argument('database-path', type=click.Path())
@@ -19,20 +19,39 @@ def output_csv(database_path, start_id=0):
 
 def output_csv_from_db(session, start_id=0, output_file=sys.stdout):
     mats = session.query(Material) \
-        .options(joinedload("structure").joinedload("atom_types")) \
+        .options(joinedload("structure").joinedload("atom_types", "atom_sites")) \
         .options(joinedload("gas_loading")) \
         .options(joinedload("void_fraction")) \
         .filter(Material.id >= start_id).all()
 
     f = csv.writer(output_file, lineterminator="\n")
-    f.writerow(["id", "parent_id",  "a", "b", "c", "sigma", "epsilon", "void_fraction", "void_fraction_geo", "absolute_volumetric_loading", "absolute_volumetric_loading_error"])
+    f.writerow(["id", "parent_id", "generation", "a", "b", "c", "volume", "atom_sites", "number_density",
+                "total_epsilon", "epsilon_density", "void_fraction", "void_fraction_geo",
+                "absolute_volumetric_loading", "absolute_volumetric_loading_error", "site_distribution"])
     for m in mats:
-        f.writerow([m.id, m.parent_id, m.structure.a, m.structure.b, m.structure.c,
-            m.structure.atom_types[0].sigma, m.structure.atom_types[0].epsilon,
+        f.writerow([m.id, m.parent_id, m.generation, m.structure.a, m.structure.b, m.structure.c, m.structure.volume,
+            len(m.structure.atom_sites),  m.structure.number_density, m.structure.total_epsilon, m.structure.epsilon_density,
             m.void_fraction[0].void_fraction, m.void_fraction[0].void_fraction_geo,
-            m.gas_loading[0].absolute_volumetric_loading, m.gas_loading[0].absolute_volumetric_loading_error
+            m.gas_loading[0].absolute_volumetric_loading, m.gas_loading[0].absolute_volumetric_loading_error,
+            m.structure.site_distribution
         ])
 
+
+@click.command()
+@click.argument('database-path', type=click.Path())
+def output_atom_sites_csv(database_path):
+    db.init_database(db.get_sqlite_dbcs(database_path))
+    session = db.get_session()
+    output_atom_sites_csv_from_db(session)
+
+def output_atom_sites_csv_from_db(session, output_file=sys.stdout):
+    sites = session.query(AtomSite) \
+        .options(joinedload("atom_types"))
+
+    f = csv.writer(output_file, lineterminator="\n")
+    f.writerow(["id", "structure_id", "x", "y", "z", "epsilon", "sigma", "a"])
+    for s in sites:
+        f.writerow([s.id, s.structure_id, s.x, s.y, s.z, s.atom_types.epsilon, s.atom_types.sigma, s.structure.a])
 
 @click.command()
 @click.argument('csv-path', type=click.Path())

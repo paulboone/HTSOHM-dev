@@ -27,6 +27,7 @@ setup(
               'psm-graph-max-prop-by-num-materials = htsohm.bin.graph_max_prop_by_num_materials:bin_graph',
               'psm-output-config-files = htsohm.bin.config_files:output_config_files',
               'psm-csv = htsohm.bin.output_csv:output_csv',
+              'psm-atoms-csv = htsohm.bin.output_csv:output_atom_sites_csv',
               'psm-csv-add-bin = htsohm.bin.output_csv:csv_add_bin',
               'psm-dof-analysis = htsohm.bin.dof_analysis:dof_analysis',
               'psm-setup-one-atom-sweep = htsohm.bin.one_atom_sweep_setup:sweep_setup',
