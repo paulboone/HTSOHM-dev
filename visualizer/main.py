@@ -1,3 +1,5 @@
+from glob import glob
+
 import numpy as np
 import pandas as pd
 
@@ -13,30 +15,50 @@ from pseudomaterial_render import show_pseudomaterial
 # constants
 num_ch4_a3 = 2.69015E-05 # from methane-comparison.xlsx
 epsilon_max = 500
+data_files = glob("./data/*.csv")
 
 # read data and cleanup
-m = pd.read_csv('pm2.csv')
-m['volume_plotsize'] = (1/3)*m['volume']**(1/2)
-m['atom_sites_plotsize'] = m.atom_sites * 4
-m['ch4_uc'] = m.absolute_volumetric_loading  * (num_ch4_a3 * m.volume)
-m['epsilon_density_log'] = np.log(m.epsilon_density)
-del m['b']
-del m['c']
-del m['Unnamed: 0']
-m_source = ColumnDataSource(m)
+def load_data(path):
+    print("loading new data from %s" % path)
+    m = pd.read_csv(path)
+    m.rename(columns={'void_fraction': 'void_fraction_raspa'}, inplace=True)
 
-atoms = pd.read_csv('atoms.csv')
+    m['volume_plotsize'] = (1/3)*m['volume']**(1/2)
+    m['atom_sites_plotsize'] = m.atom_sites * 4
+    m['ch4_uc'] = m.absolute_volumetric_loading  * (num_ch4_a3 * m.volume)
+    m['epsilon_density_log'] = np.log(m.epsilon_density)
+    m['number_density_log'] = np.log(m.number_density)
 
-columns = sorted(m.columns)
-columns.remove('volume_plotsize')
-columns.remove('atom_sites_plotsize')
+    del m['b']
+    del m['c']
+    # del m['Unnamed: 0']
 
-print(m.head())
+    m_source = ColumnDataSource(m)
+
+    # atoms = pd.read_csv('atoms.csv')
+
+    columns = sorted(m.columns)
+    columns.remove('volume_plotsize')
+    columns.remove('atom_sites_plotsize')
+    columns.remove('id')
+    columns.remove('parent_id')
+
+    print(m.head())
+    print(columns)
+    return m, m_source, columns
+
+
+m, m_source, columns = load_data("./data/ms_10.csv")
 
 colormap_overrides = {
     'atom_sites': dict(palette=Viridis8),
     'site_distribution': dict(palette=Viridis5, low=0, high=0.5)
     # 'epsilon_density': dict(palette=Viridis5, low=0, high=0.5)
+}
+
+range_defaults = {
+    "absolute_volumetric_loading": (0,800),
+    "void_fraction_geo": (0,1)
 }
 
 def create_figure():
@@ -52,9 +74,12 @@ def create_figure():
     if size.value != 'None':
         tooltips += [(size.value, "@" + size.value)]
 
-    p = figure(plot_height=1000, plot_width=1000,
+    x_range = range_defaults[x.value] if x.value in range_defaults else None
+    y_range = range_defaults[y.value] if y.value in range_defaults else None
+
+    p = figure(plot_height=800, plot_width=800, x_range=x_range, y_range=y_range,
                 tooltips=tooltips, tools=["tap", "hover", "box_select", "reset"],
-                title=("%s vs %s" % (y.value, x.value)))
+                title=("%s: %s vs %s" % (data.value, y.value, x.value)))
     p.xaxis.axis_label = x.value
     p.yaxis.axis_label = y.value
 
@@ -108,10 +133,20 @@ def create_figure():
 
     return p
 
+def update_data(attr, old, new):
+    global m, m_source, columns
+
+    m, m_source, columns = load_data(data.value)
+    layout.children[1] = create_figure()
+    print('data and layout updated')
+
+
 def update(attr, old, new):
     layout.children[1] = create_figure()
     print('layout updated')
 
+data = Select(title='Data source', value='./data/reference.csv', options=data_files)
+data.on_change('value', update_data)
 
 x = Select(title='X-Axis', value='void_fraction_geo', options=columns)
 x.on_change('value', update)
@@ -119,13 +154,13 @@ x.on_change('value', update)
 y = Select(title='Y-Axis', value='absolute_volumetric_loading', options=columns)
 y.on_change('value', update)
 
-size = Select(title='Size', value='atom_sites', options=['None'] + columns)
+size = Select(title='Size', value='volume', options=['None'] + columns)
 size.on_change('value', update)
 
-color = Select(title='Color', value='site_distribution', options=['None'] + columns)
+color = Select(title='Color', value='atom_sites', options=['None'] + columns)
 color.on_change('value', update)
 
-controls = column(x, y, color, size, width=200)
+controls = column(data, x, y, color, size, width=200)
 layout = row(controls, create_figure())
 
 curdoc().add_root(layout)
