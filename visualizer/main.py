@@ -9,6 +9,7 @@ from bokeh.palettes import Spectral5, Viridis5, Viridis8
 from bokeh.plotting import curdoc, figure
 from bokeh.sampledata.autompg import autompg_clean as m
 from bokeh.transform import linear_cmap
+from bokeh.models.widgets import Slider
 
 from pseudomaterial_render import show_pseudomaterial
 
@@ -48,7 +49,7 @@ def load_data(path):
     return m, m_source, columns
 
 
-m, m_source, columns = load_data("./data/ms_10.csv")
+m, m_source, columns = load_data("./data/reference.csv")
 
 colormap_overrides = {
     'atom_sites': dict(palette=Viridis8),
@@ -61,7 +62,7 @@ range_defaults = {
     "void_fraction_geo": (0,1)
 }
 
-def create_figure():
+def create_figure(m, m_source, columns):
     print("creating figure with x = %s, y = %s, color = %s, size = %s" % (x.value, y.value, color.value, size.value))
 
     tooltips = [
@@ -78,7 +79,7 @@ def create_figure():
     y_range = range_defaults[y.value] if y.value in range_defaults else None
 
     p = figure(plot_height=800, plot_width=800, x_range=x_range, y_range=y_range,
-                tooltips=tooltips, tools=["tap", "hover", "box_select", "reset"],
+                tooltips=tooltips, tools=["tap", "hover", "box_select", "reset", "save"],
                 title=("%s: %s vs %s" % (data.value, y.value, x.value)))
     p.xaxis.axis_label = x.value
     p.yaxis.axis_label = y.value
@@ -133,16 +134,23 @@ def create_figure():
 
     return p
 
+def slider_on_change(attr, old, gen):
+    m2 = m[m.generation <= gen]
+    m2_source = ColumnDataSource(m2)
+    layout.children[1] = create_figure(m2, m2_source, columns)
+    print('generation updated')
+
+
 def update_data(attr, old, new):
     global m, m_source, columns
 
     m, m_source, columns = load_data(data.value)
-    layout.children[1] = create_figure()
+    layout.children[1] = create_figure(m, m_source, columns)
     print('data and layout updated')
 
 
 def update(attr, old, new):
-    layout.children[1] = create_figure()
+    layout.children[1] = create_figure(m, m_source, columns)
     print('layout updated')
 
 data = Select(title='Data source', value='./data/reference.csv', options=data_files)
@@ -160,8 +168,12 @@ size.on_change('value', update)
 color = Select(title='Color', value='atom_sites', options=['None'] + columns)
 color.on_change('value', update)
 
-controls = column(data, x, y, color, size, width=200)
-layout = row(controls, create_figure())
+slider = Slider(start=0, end=500, value=500, step=50, title="Generation")
+slider.on_change('value', slider_on_change)
+
+controls = column(data, x, y, color, size, slider, width=200)
+layout = row(controls, create_figure(m, m_source, columns))
+
 
 curdoc().add_root(layout)
 curdoc().title = "Pseudomaterial Visualizer"
