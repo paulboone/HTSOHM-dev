@@ -15,7 +15,7 @@ from pseudomaterial_render import show_pseudomaterial
 # constants
 num_ch4_a3 = 2.69015E-05 # from methane-comparison.xlsx
 epsilon_max = 500
-data_files = glob("./data/*.csv")
+data_files = sorted(glob("./data/*.csv"))
 
 # read data and cleanup
 def load_data(path):
