@@ -25,6 +25,7 @@ setup(
               'psm-graph-bins = htsohm.bin.bin_graph:bin_graph',
               'psm-graph-a-ml = htsohm.bin.graph_sig_eps_a_ml:bin_graph',
               'psm-graph-max-prop-by-num-materials = htsohm.bin.graph_max_prop_by_num_materials:bin_graph',
+              'psm-graph-prop-by-num-materials = htsohm.bin.graph_prop_by_num_materials:bin_graph',
               'psm-output-config-files = htsohm.bin.config_files:output_config_files',
               'psm-csv = htsohm.bin.output_csv:output_csv',
               'psm-atoms-csv = htsohm.bin.output_csv:output_atom_sites_csv',
