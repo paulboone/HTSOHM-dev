@@ -14,7 +14,7 @@ from matplotlib import cm
 @click.option('--ymax', type=float)
 @click.option('--xmax', type=float)
 @click.option('--colors', default="Viridis")
-def bin_graph(csv_path, col, output_path, ylabel="", ymax=None, xmax=None, colors="Greens"):
+def bin_graph(csv_path, col, output_path, ylabel="", ymax=None, xmax=0.0, colors="Greens"):
     print("loading data...")
     np_data = np.vstack([np.loadtxt(path, delimiter=',', skiprows=1, usecols=col) for path in csv_path])
     legend_labels = [os.path.splitext(os.path.basename(f))[0] for f in csv_path]
@@ -32,13 +32,14 @@ def bin_graph(csv_path, col, output_path, ylabel="", ymax=None, xmax=None, color
     ax.grid(linestyle='-', color='0.8', zorder=0)
     ax.set_prop_cycle(color=line_colors)
 
-    if xmax:
+    if xmax > 0.0:
         ax.set_xlim(0,xmax)
 
     for i, row in enumerate(np_data):
         # print(row.shape)
         if legend_labels[i] == "reference":
-            ax.plot(range(len(row)), row, lw=1, marker="s", markevery=5000, markersize=3)
+            markevery = len(row) / 5 if xmax == 0.0 else xmax / 5
+            ax.plot(range(len(row)), row, lw=1, marker="s", markevery=int(markevery), markersize=3)
         else:
             ax.plot(range(len(row)), row, lw=1)
 
