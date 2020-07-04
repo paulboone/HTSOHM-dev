@@ -47,15 +47,17 @@ def bin_graph(config_path, database_path=None, csv_path=None, last_material=None
         db.init_database(db.get_sqlite_dbcs(database_path))
         session = db.get_session()
 
-        mats_d = session.query(Material).options(joinedload("void_fraction"), joinedload("gas_loading")).all()
+        mats_d = session.query(Material).options(joinedload("void_fraction"), joinedload("gas_loading"))
+        if last_material:
+            mats_d = mats_d.limit(last_material).all()
+        else:
+            mats_d = mats_d.all()
 
         print("calculating material properties...")
         mats_r = [(m.void_fraction[0].get_void_fraction(), m.gas_loading[0].absolute_volumetric_loading) for m in mats_d]
 
-    if last_children == 0:
-        last_generation_start = len(mats_r)
-    else:
-        last_generation_start = len(mats_r) - last_children
+
+    last_generation_start = len(mats_r) - last_children
 
     print("calculating bins...")
     bin_counts = np.zeros((num_bins, num_bins))
@@ -72,9 +74,8 @@ def bin_graph(config_path, database_path=None, csv_path=None, last_material=None
     parents = []
     if last_children > 0:
         children = np.array(mats_r[last_generation_start:])
-        parent_ids = np.unique([m.parent_id for m in mats_d[last_generation_start:]])
+        parent_ids = np.array([m.parent_id for m in mats_d[last_generation_start:]])
         parents = np.array([mats_r[pid - 1] for pid in parent_ids])
-        print(parents)
 
     addl_data = None
     if addl_data_path:
