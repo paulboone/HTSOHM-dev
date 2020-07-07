@@ -13,7 +13,6 @@ def test_mean_delta_pbc_basics():
     assert delta == approx(0.1)
 
 def test_mean_delta_pbc_w_pbc():
-
     points = [(0.5, 0.5, 0.1), (0.5, 0.5, 0.0), (0.5, 0.5, 0.9)]
     mean, delta = mean_delta_pbc(points)
 
@@ -25,6 +24,13 @@ def test_mean_delta_pbc_w_pbc():
 
     assert mean == approx((0.5, 0.5, 0.0))
     assert delta == approx(0.1)
+
+def test_mean_delta_pbc_which_point_centered():
+    points = [(0.5, 0.5, 0.5), (0.5, 0.5, 0.1), (0.5, 0.5, 0.9)]
+    mean, delta = mean_delta_pbc(points)
+
+    assert mean == approx((0.5, 0.5, 5.0/30))
+    assert delta == approx(1.0/3)
 
 
 def test_minimum_distance_point():

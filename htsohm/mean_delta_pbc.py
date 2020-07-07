@@ -30,11 +30,18 @@ def mean_delta_pbc(points):
     means = []
     distances = []
     deltas = []
-    ps = [minimum_distance_point(points[0], p1) for p1 in points]
-    rel_mean = np.mean(ps, axis=0)
-    deltas = np.array(ps) - rel_mean
 
-    min_range = max(np.sum(deltas ** 2, axis=1) ** 0.5)
+    best_range = None
+    best_mean = None
+    for p0 in points:
+        ps = [minimum_distance_point(p0, p1) for p1 in points]
+        rel_mean = np.mean(ps, axis=0)
+        deltas = np.array(ps) - rel_mean
+        min_range = max(np.sum(deltas ** 2, axis=1) ** 0.5)
+        mean = (rel_mean + p0) % 1.0
 
-    mean = (rel_mean + points[0]) % 1.0
-    return mean, min_range
+        if (best_range is None) or (min_range < best_range):
+            best_range = min_range
+            best_mean = mean
+
+    return best_mean, best_range
