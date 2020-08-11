@@ -29,6 +29,7 @@ setup(
               'psm-output-config-files = htsohm.bin.config_files:output_config_files',
               'psm-csv = htsohm.bin.output_csv:output_csv',
               'psm-atoms-csv = htsohm.bin.output_csv:output_atom_sites_csv',
+              'psm-material-csv = htsohm.bin.output_csv:output_material_csv',
               'psm-csv-add-bin = htsohm.bin.output_csv:csv_add_bin',
               'psm-dof-analysis = htsohm.bin.dof_analysis:dof_analysis',
               'psm-setup-one-atom-sweep = htsohm.bin.one_atom_sweep_setup:sweep_setup',

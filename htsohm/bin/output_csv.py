@@ -54,6 +54,32 @@ def output_atom_sites_csv_from_db(session, output_file=sys.stdout):
         f.writerow([s.id, s.structure_id, s.x, s.y, s.z, s.atom_types.epsilon, s.atom_types.sigma, s.structure.a])
 
 @click.command()
+@click.argument('database-path', type=click.Path())
+@click.argument('ids', nargs=-1, type=int)
+def output_material_csv(database_path, ids):
+    db.init_database(db.get_sqlite_dbcs(database_path))
+    session = db.get_session()
+    output_materials_csvs_from_db(session, ids)
+
+def output_material_csv_from_db(session, id, output_file):
+    sites = session.query(AtomSite).options(joinedload("atom_types")).filter(AtomSite.structure_id == id)
+
+    a = sites[0].structure.a
+    output_file.write("ucs: %f,%f,%f\n" % (a,a,a))
+
+    f = csv.writer(output_file, lineterminator="\n")
+    f.writerow(["id", "structure_id", "x", "y", "z", "epsilon", "sigma"])
+    for s in sites:
+        f.writerow([s.id, s.structure_id, s.x, s.y, s.z, s.atom_types.epsilon, s.atom_types.sigma])
+
+def output_materials_csvs_from_db(session, ids):
+    for id in ids:
+        with open("%i.csv" % id, "w") as f:
+            output_material_csv_from_db(session, id, f)
+
+
+
+@click.command()
 @click.argument('csv-path', type=click.Path())
 @click.option('-b', '--bin', nargs=4, type=click.Tuple([int, float, float, int]), multiple=True, help="column lower_bound upper_bound num_bins")
 def csv_add_bin(csv_path, bin, output_file=sys.stdout):
