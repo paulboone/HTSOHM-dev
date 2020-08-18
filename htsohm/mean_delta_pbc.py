@@ -14,6 +14,8 @@ def minimum_distance_v(v1, v2):
 def minimum_distance_point(p1, p2):
     return [minimum_distance_v(v1, v2) for (v1, v2) in zip(p1, p2)]
 
+def center_delta_pbc(points):
+    return mean_delta_pbc(points)
 
 def mean_delta_pbc(points):
     """ calculates the best mean for a group of points through periodic boundary conditions with the
