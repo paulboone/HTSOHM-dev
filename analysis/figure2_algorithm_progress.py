@@ -58,11 +58,10 @@ def figure2_bin_graph(csv_paths=("reference", "random16")):
     prop2range = [0.0, 800.0] # ML
     num_bins = 40
 
-
     materials = [50,500, 5000, 25000]
 
     # plot visualization
-    # NOTE: this is set larder than a half column 3.45 inch because of how matplotlib handles whitespace
+    # NOTE: this is set larger than a half column 3.45 inch because of how matplotlib handles whitespace
     # and tight bounding boxes. This seems to be about right to use with labels to the left.
     fig = plt.figure(figsize=(3.8,3.8*2))
 
@@ -78,12 +77,10 @@ def figure2_bin_graph(csv_paths=("reference", "random16")):
               ax.spines[axis].set_color("gray")
             delaunay_figure(ax, num_bins, bin_counts,prop1range, prop2range)
 
-
-
     fig.subplots_adjust(wspace=0.05, hspace=0.05)
 
-    output_path = "figure2-%s.eps" % "-".join(csv_paths)
-    fig.savefig(output_path, dpi=600, bbox_inches='tight')
+    output_path = "figure2-%s.png" % "-".join(csv_paths)
+    fig.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close(fig)
 
 if __name__ == '__main__':
