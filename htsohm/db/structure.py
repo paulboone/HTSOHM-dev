@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from htsohm.db import Base
 from htsohm.db.atom_sites import AtomSite
 from htsohm.db.atom_types import AtomTypes
-from htsohm.mean_delta_pbc import mean_delta_pbc
+from htsohm.mean_delta_pbc import max_pair_distance
 
 class Structure(Base):
     __tablename__ = "structures"
@@ -56,8 +56,7 @@ class Structure(Base):
 
     @property
     def site_distribution(self):
-        mean, min_range = mean_delta_pbc([(a.x, a.y, a.z) for a in self.atom_sites])
-        return min_range
+        return max_pair_distance([(a.x, a.y, a.z) for a in self.atom_sites])
 
     @property
     def number_density(self):
