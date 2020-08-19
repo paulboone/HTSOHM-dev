@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from htsohm.db import Base
 from htsohm.db.atom_sites import AtomSite
 from htsohm.db.atom_types import AtomTypes
-from htsohm.mean_delta_pbc import max_pair_distance
+from htsohm.max_pair_distance import max_pair_distance
 
 class Structure(Base):
     __tablename__ = "structures"

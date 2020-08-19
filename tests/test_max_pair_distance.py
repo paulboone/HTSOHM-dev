@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from pytest import approx
 
-from htsohm.mean_delta_pbc import minimum_distance_v, minimum_distance_point, max_pair_distance
+from htsohm.max_pair_distance import minimum_distance_v, minimum_distance_point, max_pair_distance
 
 
 def test_minimum_distance_v__within_pbcs():
