@@ -80,7 +80,7 @@ def figure2_bin_graph(csv_paths=("reference", "random16")):
     fig.subplots_adjust(wspace=0.05, hspace=0.05)
 
     output_path = "figure2-%s.png" % "-".join(csv_paths)
-    fig.savefig(output_path, dpi=300, bbox_inches='tight')
+    fig.savefig(output_path, dpi=1200, bbox_inches='tight')
     plt.close(fig)
 
 if __name__ == '__main__':
