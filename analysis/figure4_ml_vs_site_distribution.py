@@ -12,7 +12,14 @@ prop2range = [0.0, 800.0] # ML
 num_ch4_a3 = 2.69015E-05 # from methane-comparison.xlsx
 fsl = fs = 8
 
-rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+# rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+
+font = {'family':'sans-serif',
+        'sans-serif':['Helvetica'],
+        'weight' : 'bold',
+        'size'   : 8}
+
+matplotlib.rc('font', **font)
 # rc('text', usetex=True)
 
 @click.command()
@@ -20,8 +27,8 @@ rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 def figure4_ml_vs_site_distribution(csv_path):
     fig = plt.figure(figsize=(8.5 / 2.54, 8.5 / 2.54))
 
-    # cm = matplotlib.cm.get_cmap("inferno")
-    cm = cmocean.cm.thermal
+    cm = matplotlib.cm.get_cmap("viridis")
+    # cm = cmocean.cm.thermal
     points = pd.read_csv(csv_path)
     points['ch4_uc'] = points.absolute_volumetric_loading * (num_ch4_a3 * points.a * points.b * points.c)
 
@@ -39,7 +46,8 @@ def figure4_ml_vs_site_distribution(csv_path):
     # ax.grid(which='minor', axis='both', linestyle='-', color='0.9', zorder=0)
 
     sc = ax.scatter(points.site_distribution, points.absolute_volumetric_loading, zorder=2,
-                alpha=0.6, s=points.a, edgecolors=None, linewidths=0, c=np.log(points.epsilon_density),
+                alpha=0.6, s=points.a, edgecolors=None, linewidths=0, c=points.ch4_uc.round(),
+                # c=np.log(points.epsilon_density),
                 # norm=matplotlib.colors.LogNorm(vmin=points.epsilon_density.min(), vmax=points.epsilon_density.max()),
                 cmap=cm)
 
