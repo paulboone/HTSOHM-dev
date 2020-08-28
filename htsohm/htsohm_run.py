@@ -12,38 +12,21 @@ import numpy as np
 from sqlalchemy.orm import joinedload
 
 from htsohm import generator, load_config_file, db
+from htsohm.bins import calc_bins
+from htsohm.bin.output_csv import output_csv_from_db, csv_add_bin_column
 from htsohm.db import Material, VoidFraction
 from htsohm.simulation.run_all import run_all_simulations
-from htsohm.figures import delaunay_figure
+# from htsohm.figures import delaunay_figure
 import htsohm.select.triangulation as selector_tri
 import htsohm.select.density_bin as selector_bin
 import htsohm.select.best as selector_best
 import htsohm.select.specific as selector_specific
 import htsohm.select.neighbor_bin as selector_neighbor_bin
-from htsohm.slog import init_slog, get_slog
+from htsohm.slog import init_slog, get_slog, slog
 
 def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
 
-
-def calc_bin(value, bound_min, bound_max, bins):
-    """Find bin in parameter range.
-    Args:
-        value (float): some value, the result of a simulation.
-        bound_min (float): lower limit, defining the parameter-space.
-        bound_max (float): upper limit, defining the parameter-space.
-        bins (int): number of bins used to subdivide parameter-space.
-    Returns:
-        Bin(int) corresponding to the input-value.
-    """
-    step = (bound_max - bound_min) / bins
-    assigned_bin = (value - bound_min) // step
-    assigned_bin = min(assigned_bin, bins-1)
-    assigned_bin = max(assigned_bin, 0)
-    return int(assigned_bin)
-
-def calc_bins(box_r, num_bins, prop1range=(0.0, 1.0), prop2range=(0.0, 1.0)):
-    return [(calc_bin(b[0], *prop1range, num_bins), calc_bin(b[1], *prop2range, num_bins)) for b in box_r]
 
 def empty_lists_2d(x,y):
     return [[[] for j in range(x)] for i in range(y)]
@@ -127,21 +110,23 @@ def simulate_generation_worker(parent_id):
     return (material.id, (material.void_fraction[0].get_void_fraction(),
                           material.gas_loading[0].absolute_volumetric_loading))
 
-def parallel_simulate_generation(generator, parent_ids, config, gen, children_per_generation):
+def parallel_simulate_generation(generator, num_processes, parent_ids, config, gen, children_per_generation):
     global worker_metadata
     worker_metadata = (generator, config, gen)
 
     if parent_ids is None:
         parent_ids = [0] * (children_per_generation) # should only be needed for random!
 
-    with Pool(processes=config['num_processes'], initializer=init_worker, initargs=[config]) as pool:
+    with Pool(processes=num_processes, initializer=init_worker, initargs=[config]) as pool:
         results = pool.map(simulate_generation_worker, parent_ids)
 
     box_d, box_r = zip(*results)
     return (np.array(box_d), np.array(box_r))
 
 def select_parents(children_per_generation, box_d, box_r, bin_materials, config):
-    if config['selector_type'] == 'simplices-or-hull':
+    if config['generator_type'] == 'random':
+        return (None, [])
+    elif config['selector_type'] == 'simplices-or-hull':
         return selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
     elif config['selector_type'] == 'density-bin':
         return selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
@@ -153,7 +138,7 @@ def select_parents(children_per_generation, box_d, box_r, bin_materials, config)
         return selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
 
 
-def serial_runloop(config_path, restart_generation=-1, override_db_errors=False):
+def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num_processes=1, max_generations=None):
 
     def _update_bins_counts_materials(all_bins, bins, start_index):
         nonlocal bin_counts, bin_materials
@@ -177,6 +162,9 @@ def serial_runloop(config_path, restart_generation=-1, override_db_errors=False)
     next_benchmark = benchmarks.pop(0)
     last_benchmark_reached = False
     load_restart_path = config['load_restart_path']
+
+    if max_generations is None:
+        max_generations = config['max_generations']
 
     engine, session = db.init_database(config["database_connection_string"],
                 backup=(load_restart_path != False or restart_generation > 0))
@@ -202,8 +190,8 @@ def serial_runloop(config_path, restart_generation=-1, override_db_errors=False)
         # generate initial generation of random materials
         print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
         random.seed(config['initial_points_random_seed'])
-        box_d, box_r = parallel_simulate_generation(generator.random.new_material, None, config,
-                        gen=0, children_per_generation=config['children_per_generation'])
+        box_d, box_r = parallel_simulate_generation(generator.random.new_material, num_processes, None,
+                        config, gen=0, children_per_generation=config['children_per_generation'])
         random.seed() # flush the seed so that only the initial points are set, not generated points
 
         # setup initial bins
@@ -213,9 +201,9 @@ def serial_runloop(config_path, restart_generation=-1, override_db_errors=False)
         new_bins, bins = _update_bins_counts_materials(all_bins, set(), 0)
 
         output_path = os.path.join(config['output_dir'], "binplot_0.png")
-        delaunay_figure(box_r, num_bins, output_path, bins=bin_counts, \
-                            title="Starting random materials", show_triangulation=False, show_hull=False, \
-                            prop1range=prop1range, prop2range=prop2range)
+        # delaunay_figure(box_r, num_bins, output_path, bins=bin_counts, \
+        #                     title="Starting random materials", show_triangulation=False, show_hull=False, \
+        #                     prop1range=prop1range, prop2range=prop2range)
 
         start_gen = 1
 
@@ -224,13 +212,13 @@ def serial_runloop(config_path, restart_generation=-1, override_db_errors=False)
     elif config['generator_type'] == 'mutate':
         generator_method = generator.mutate.mutate_material
 
-    for gen in range(start_gen, config['max_generations'] + 1):
+    for gen in range(start_gen, max_generations + 1):
         benchmark_just_reached = False
 
         # mutate materials and simulate properties
         parents_d, parents_r = select_parents(children_per_generation, box_d, box_r, bin_materials, config)
-        new_box_d, new_box_r = parallel_simulate_generation(generator_method, parents_d, config,
-                        gen=gen, children_per_generation=config['children_per_generation'])
+        new_box_d, new_box_r = parallel_simulate_generation(generator_method, num_processes, parents_d,
+                                config, gen=gen, children_per_generation=config['children_per_generation'])
 
         # track bins
         all_bins = calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
@@ -248,39 +236,46 @@ def serial_runloop(config_path, restart_generation=-1, override_db_errors=False)
             else:
                 last_benchmark_reached = True
 
-        if config['bin_graph_on'] and (
-            (benchmark_just_reached or gen == config['max_generations']) or \
-            (config['bin_graph_every'] > 0  and gen % config['bin_graph_every'] == 0)):
-
-            output_path = os.path.join(config['output_dir'], "binplot_%d.png" % gen)
-            delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
-                            bins=bin_counts, new_bins=new_bins,
-                            title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
-                                (gen, len(bins), num_bins ** 2, len(new_bins),
-                                100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
-                            patches=None, prop1range=prop1range, prop2range=prop2range, \
-                            perturbation_methods=["all"]*children_per_generation, show_triangulation=False, show_hull=False)
-
-        if config['tri_graph_on'] and (
-            (benchmark_just_reached or gen == config['max_generations']) or \
-            (config['tri_graph_every'] > 0  and gen % config['tri_graph_every'] == 0)):
-
-            output_path = os.path.join(config['output_dir'], "triplot_%d.png" % gen)
-            delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
-                            bins=bin_counts, new_bins=new_bins,
-                            title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
-                                (gen, len(bins), num_bins ** 2, len(new_bins),
-                                100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
-                            patches=None, prop1range=prop1range, prop2range=prop2range, \
-                            perturbation_methods=["all"]*children_per_generation)
+        # if config['bin_graph_on'] and (
+        #     (benchmark_just_reached or gen == config['max_generations']) or \
+        #     (config['bin_graph_every'] > 0  and gen % config['bin_graph_every'] == 0)):
+        #
+        #     output_path = os.path.join(config['output_dir'], "binplot_%d.png" % gen)
+        #     delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
+        #                     bins=bin_counts, new_bins=new_bins,
+        #                     title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
+        #                         (gen, len(bins), num_bins ** 2, len(new_bins),
+        #                         100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
+        #                     patches=None, prop1range=prop1range, prop2range=prop2range, \
+        #                     perturbation_methods=["all"]*children_per_generation, show_triangulation=False, show_hull=False)
+        #
+        # if config['tri_graph_on'] and (
+        #     (benchmark_just_reached or gen == config['max_generations']) or \
+        #     (config['tri_graph_every'] > 0  and gen % config['tri_graph_every'] == 0)):
+        #
+        #     output_path = os.path.join(config['output_dir'], "triplot_%d.png" % gen)
+        #     delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
+        #                     bins=bin_counts, new_bins=new_bins,
+        #                     title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
+        #                         (gen, len(bins), num_bins ** 2, len(new_bins),
+        #                         100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
+        #                     patches=None, prop1range=prop1range, prop2range=prop2range, \
+        #                     perturbation_methods=["all"]*children_per_generation)
 
         box_d = np.append(box_d, new_box_d, axis=0)
         box_r = np.append(box_r, new_box_r, axis=0)
 
         restart_path = os.path.join(config['output_dir'], "restart.txt.npz")
         dump_restart(restart_path, box_d, box_r, bin_counts, bin_materials, bins, gen + 1)
-        if benchmark_just_reached or gen == config['max_generations']:
+        if benchmark_just_reached or gen == max_generations:
             shutil.move(restart_path, os.path.join(config['output_dir'], "restart%d.txt.npz" % gen))
 
         if last_benchmark_reached:
             break
+
+    with open("pm.csv", 'w', newline='') as f:
+        output_csv_from_db(session, output_file=f)
+
+    with open("pm-binned.csv", 'w', newline='') as f:
+        # column 8 is void_fraction_geo, 9 is methane loading
+        csv_add_bin_column("pm.csv", [(8, *prop1range, num_bins), (9, *prop2range, num_bins)], output_file=f)

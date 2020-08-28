@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy import ForeignKey, Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 
-from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction, AtomSite, LennardJones
+from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction, AtomSite, AtomTypes
 from htsohm.db.structure import Structure
 
 class Material(Base):
@@ -51,10 +51,10 @@ class Material(Base):
     @staticmethod
     def one_atom_new(sigma, epsilon, a, b, c):
         structure=Structure(a=a, b=b, c=c,
-                            lennard_jones=[LennardJones(sigma=sigma, epsilon=epsilon)])
+                            atom_types=[AtomTypes(sigma=sigma, epsilon=epsilon)])
 
         structure.atom_sites = [AtomSite(x=1.0, y=1.0, z=1.0, q=0.0,
-                                lennard_jones=structure.lennard_jones[0])]
+                                atom_types=structure.atom_types[0])]
 
         return Material(structure=structure)
 
@@ -64,13 +64,13 @@ class Material(Base):
         a = num_atoms * atom_diameter
 
         structure=Structure(a=a, b=a, c=a,
-                            lennard_jones=[LennardJones(sigma=sigma, epsilon=epsilon)])
+                            atom_types=[AtomTypes(sigma=sigma, epsilon=epsilon)])
 
         for xi, yi, zi in product(range(num_atoms), range(num_atoms), range(num_atoms)):
             # only add indices that are in one of the three boundary planes, i.e index == 0
             if min(xi, yi, zi) == 0:
                 structure.atom_sites.append(AtomSite(
-                    lennard_jones=structure.lennard_jones[0],
+                    atom_types=structure.atom_types[0],
                     x=xi * atom_diameter / a,
                     y=yi * atom_diameter / a,
                     z=zi * atom_diameter / a,

@@ -8,21 +8,21 @@ class AtomSite(Base):
 
     id = Column(Integer, primary_key=True)
     structure_id = Column(Integer, ForeignKey("structures.id"))
-    lennard_jones_id = Column(Integer, ForeignKey("lennard_jones.id"))
+    atom_types_id = Column(Integer, ForeignKey("atom_types.id"))
 
     x = Column(Float)
     y = Column(Float)
     z = Column(Float)
     q = Column(Float)
 
-    lennard_jones = relationship("LennardJones")
+    atom_types = relationship("AtomTypes")
 
     def exclude_cols(self):
         return ['id']
 
-    def clone(self, lennard_jones):
+    def clone(self, atom_types):
         copy = super(AtomSite, self).clone()
-        copy.lennard_jones = lennard_jones
+        copy.atom_types = atom_types
         return copy
 
     def __repr__(self):

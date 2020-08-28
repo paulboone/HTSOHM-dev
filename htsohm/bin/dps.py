@@ -3,13 +3,15 @@
 from glob import glob
 import click
 
-from htsohm.htsohm_serial import serial_runloop
+from htsohm import htsohm_run
 
 @click.command()
 @click.argument('config_path', type=click.Path())
 @click.option('-r', '--restart',  type=int, default=-1, help="generation to restart at")
 @click.option('-f', '--override-database-errors',  is_flag=True, default=False)
-def cmdline(config_path, restart, override_database_errors):
+@click.option('-n', '--num-processes', type=int, default=1)
+@click.option('-g', '--max-generations', type=int, default=None)
+def cmdline(config_path, restart, max_generations, override_database_errors, num_processes):
     if config_path == "auto":
         yaml_files = glob("*.yaml")
         if len(yaml_files) == 0:
@@ -19,7 +21,7 @@ def cmdline(config_path, restart, override_database_errors):
         if len(yaml_files) > 1:
             print("WARNING: more than one YAML file found in this directory. Using first one: %s" % config_path)
 
-    serial_runloop(config_path, restart, override_database_errors)
+    htsohm_run(config_path, restart, override_database_errors, num_processes, max_generations)
 
 if __name__ == '__main__':
     cmdline()

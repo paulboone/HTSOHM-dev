@@ -52,12 +52,12 @@ def bin_graph(config_path, csv_path=None, database_path=None):
         db.init_database(db.get_sqlite_dbcs(database_path))
         session = db.get_session()
         mats = session.query(Material) \
-            .options(joinedload("structure").joinedload("lennard_jones")) \
+            .options(joinedload("structure").joinedload("atom_types")) \
             .options(joinedload("gas_loading")).all()
 
         print("calculating material properties...")
         for m in mats:
-            lj = (m.structure.lennard_jones[0].sigma, m.structure.lennard_jones[0].epsilon)
+            lj = (m.structure.atom_types[0].sigma, m.structure.atom_types[0].epsilon)
             if lj not in mats_by_lj:
                 mats_by_lj[lj] = []
             mats_by_lj[lj].append([m.structure.a, m.gas_loading[0].absolute_volumetric_loading])

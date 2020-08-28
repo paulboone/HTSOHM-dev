@@ -7,7 +7,6 @@ def default_configuration():
         'override_restart_errors': False,
         'keep_configs': False,
         'output_dir': os.getcwd(),
-        'verbose': False,
         'void_fraction_subtype': 'raspa',
         'load_restart_path': False,
         'num_processes': 1,
