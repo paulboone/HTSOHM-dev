@@ -15,6 +15,9 @@ def minimum_distance_point(p1, p2):
     return [minimum_distance_v(v1, v2) for (v1, v2) in zip(p1, p2)]
 
 def max_pair_distance(points):
+    """
+    does NOT support non-cubic unit cells!
+"""
     if len(points) == 1:
         return 0.0
     pairs = np.array([minimum_distance_point(p1, p2) for p1, p2 in itertools.combinations(points, 2)])

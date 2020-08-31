@@ -53,7 +53,7 @@ m, m_source, columns = load_data("./data/reference.csv")
 
 colormap_overrides = {
     'atom_sites': dict(palette=Viridis8),
-    'site_distribution': dict(palette=Viridis5, low=0, high=0.5)
+    'max_pair_distance': dict(palette=Viridis5, low=0, high=0.5)
     # 'epsilon_density': dict(palette=Viridis5, low=0, high=0.5)
 }
 

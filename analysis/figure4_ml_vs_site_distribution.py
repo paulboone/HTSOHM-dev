@@ -7,7 +7,7 @@ from matplotlib import rc
 import numpy as np
 import pandas as pd
 
-prop1range = [-0.01, 1.0]   # site_distribution
+prop1range = [-0.01, 1.0]   # max_pair_distance
 prop2range = [0.0, 800.0] # ML
 num_ch4_a3 = 2.69015E-05 # from methane-comparison.xlsx
 fsl = fs = 8
@@ -24,7 +24,7 @@ matplotlib.rc('font', **font)
 
 @click.command()
 @click.argument('csv-path', type=click.File())
-def figure4_ml_vs_site_distribution(csv_path):
+def figure4_ml_vs_max_pair_distance(csv_path):
     fig = plt.figure(figsize=(8.5 / 2.54, 8.5 / 2.54))
 
     cm = matplotlib.cm.get_cmap("viridis")
@@ -45,7 +45,7 @@ def figure4_ml_vs_site_distribution(csv_path):
     ax.grid(which='major', axis='both', linestyle='-', color='0.9', zorder=0)
     # ax.grid(which='minor', axis='both', linestyle='-', color='0.9', zorder=0)
 
-    sc = ax.scatter(points.site_distribution, points.absolute_volumetric_loading, zorder=2,
+    sc = ax.scatter(points.max_pair_distance, points.absolute_volumetric_loading, zorder=2,
                 alpha=0.6, s=points.a, edgecolors=None, linewidths=0, c=points.ch4_uc.round(),
                 # c=np.log(points.epsilon_density),
                 # norm=matplotlib.colors.LogNorm(vmin=points.epsilon_density.min(), vmax=points.epsilon_density.max()),
@@ -62,4 +62,4 @@ def figure4_ml_vs_site_distribution(csv_path):
     plt.close(fig)
 
 if __name__ == '__main__':
-    figure4_ml_vs_site_distribution()
+    figure4_ml_vs_max_pair_distance()

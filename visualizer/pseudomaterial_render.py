@@ -73,5 +73,5 @@ def show_pseudomaterial(id, atoms, epsilon_max):
     return pseudomaterial_render(scaled_p)
     #
     # m2 = materials[materials.id==id]
-    # print(m2[['id', 'void_fraction_geo', 'absolute_volumetric_loading', 'atom_sites', 'site_distribution']])
+    # print(m2[['id', 'void_fraction_geo', 'absolute_volumetric_loading', 'atom_sites', 'max_pair_distance']])
     # print(p[['structure_id', 'x', 'y', 'z', 'epsilon', 'sigma', 'a']], flush=True)
