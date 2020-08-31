@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from htsohm.db import Base
 from htsohm.db.atom_sites import AtomSite
 from htsohm.db.atom_types import AtomTypes
-from htsohm.max_pair_distance import max_pair_distance
+from htsohm.max_pair_distance import max_pair_distance, min_pair_distance
 
 class Structure(Base):
     __tablename__ = "structures"
@@ -57,7 +57,15 @@ class Structure(Base):
     @property
     def max_pair_distance(self):
         """in fractional coordinates"""
-        return max_pair_distance([(a.x, a.y, a.z) for a in self.atom_sites])
+        return max_pair_distance([a.xyz for a in self.atom_sites])
+
+    @property
+    def min_pair_distance(self):
+        """in fractional coordinates"""
+        return min_pair_distance([a.xyz for a in self.atom_sites])
+
+    def min_unit_cell_a(self, min_distance):
+        return min_distance / self.min_pair_distance
 
     @property
     def number_density(self):
