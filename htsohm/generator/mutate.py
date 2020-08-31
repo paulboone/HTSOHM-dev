@@ -2,6 +2,7 @@ from random import choice, random, uniform
 
 from htsohm.slog import slog
 from htsohm.generator.random import random_atom_sites, random_atom_types
+from htsohm.max_pair_distance import min_pair_distance
 
 def random_position(x0, x1, mutation_strength):
     # get minimum distance between two points of (1) within the box, and (2) across the box boundary
@@ -15,6 +16,26 @@ def random_position(x0, x1, mutation_strength):
     if x0 < x1 and (x1 - x0) < 0.5: # then dx will be in box, so move right
         x2 = x0 + mutation_strength * dx
     return x2
+
+def move_sites(sitesl, uc_a, ms, distance, num_trials=100):
+    sites = set(sitesl)
+    for site in sites:
+        other_sites = sites - set(a)
+        good_pos = find_good_move_position(site, other_sites, uc_a, ms, distance, num_trials)
+        if good_pos is not None:
+            site.xyz = good_pos
+        else:
+            slog("Failed to move site")
+
+def find_good_move_position(site, other_sites, uc_a, ms, distance, num_trials=100):
+    """ attempts {num_trials} trials of finding a new move position for one site in a collection of
+    sites, such that the minimum distance between points is maintained at > {distance}
+    """
+    for _ in range(num_trials):
+        trial_pos = [random_position(r, random(), ms) for r in site.xyz]
+        if min_pair_distance([s.xyz for s in other_sites] + [trial_pos]) > distance/uc_a:
+            return trial_position
+    return None
 
 def net_charge(atom_sites):
     return sum([e.q for e in atom_sites])
@@ -67,8 +88,12 @@ def mutate_material(parent, config):
         else: # add an atom
             if len(cs.atom_sites) < config['num_atoms_limits'][1]:
                 slog("Adding atom site...")
-                cs.atom_sites += random_atom_sites(1, cs.atom_types)
-
+                atom_position = find_atom_site_with_minimum_distance([s.xyz for s in cs.atom_sites], config['minimum_site_distance'], cs.a)
+                if atom_position:
+                    new_site = random_atom_sites(1, cs.atom_types)
+                    new_site.xyz = atom_position
+                else:
+                    slog("Failed to add a new atom.")
 
     if perturb & {"atom_type_assignments"}:
         for i, atom in enumerate(cs.atom_sites):
@@ -87,7 +112,8 @@ def mutate_material(parent, config):
 
     if perturb & {"lattice"}:
         ll = config["lattice_constant_limits"]
-        cs.a = perturb_unweighted(cs.a, ms * (ll[1] - ll[0]), ll)
+        trial_a = perturb_unweighted(cs.a, ms * (ll[1] - ll[0]), ll)
+        cs.a = max(trial_a, cs.min_unit_cell_a(config['minimum_site_distance']))
         if config["lattice_cubic"]:
             cs.b = cs.a
             cs.c = cs.a
@@ -97,10 +123,9 @@ def mutate_material(parent, config):
         child.number_density = len(cs.atom_sites) / cs.volume
 
     if perturb & {"atom_sites"}:
-        for a in cs.atom_sites:
-            a.x = random_position(a.x, random(), ms)
-            a.y = random_position(a.y, random(), ms)
-            a.z = random_position(a.z, random(), ms)
+        move_sites(cs.atoms_sites, uc_a, ms, config['minimum_site_distance'])
+
+    # possibility that the material is unchanged
 
     print_parent_child_diff(parent, child)
     return child
