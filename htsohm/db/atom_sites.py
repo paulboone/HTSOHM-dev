@@ -30,8 +30,8 @@ class AtomSite(Base):
 
     @property
     def xyz(self):
-        return (x, y, z)
+        return (self.x, self.y, self.z)
 
     @xyz.setter
     def xyz(self, xyz):
-        x, y, z = xyz
+        self.x, self.y, self.z = xyz
