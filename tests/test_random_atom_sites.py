@@ -5,7 +5,7 @@ import numpy as np
 
 from htsohm.generator.random import new_material
 from htsohm.generator.random import random_atom_sites, find_atom_site_with_minimum_distance
-from htsohm.max_pair_distance import minimum_distance_v, minimum_distance_point, max_pair_distance, min_pair_distance
+from htsohm.pair_distance import minimum_distance_v, minimum_distance_point, max_pair_distance, min_pair_distance
 
 @pytest.fixture
 def config():

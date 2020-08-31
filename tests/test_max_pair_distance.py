@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from pytest import approx
 
-from htsohm.max_pair_distance import minimum_distance_v, minimum_distance_point, \
+from htsohm.pair_distance import minimum_distance_v, minimum_distance_point, \
                                      max_pair_distance, min_pair_distance
 
 

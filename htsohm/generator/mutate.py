@@ -2,7 +2,7 @@ from random import choice, random, uniform
 
 from htsohm.slog import slog
 from htsohm.generator.random import random_atom_sites, random_atom_types
-from htsohm.max_pair_distance import min_pair_distance
+from htsohm.pair_distance import min_pair_distance
 
 def convert_positions_to_offset(x0, x1):
     offset = x1 - x0

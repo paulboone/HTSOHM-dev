@@ -2,7 +2,7 @@ from math import ceil
 from random import choice, random, randrange, uniform, randint
 
 from htsohm.db import Material, Structure, AtomTypes, AtomSite
-from htsohm.max_pair_distance import min_pair_distance
+from htsohm.pair_distance import min_pair_distance
 
 def random_atom_types(num_atom_types, config):
     return [AtomTypes(
