@@ -4,18 +4,21 @@ from htsohm.slog import slog
 from htsohm.generator.random import random_atom_sites, random_atom_types
 from htsohm.max_pair_distance import min_pair_distance
 
+def convert_positions_to_offset(x0, x1):
+    offset = x1 - x0
+    if offset > 0.5:
+        return offset - 1.0
+    elif offset < -0.5:
+        return offset + 1.0
+    else:
+        return offset
+
 def random_position(x0, x1, mutation_strength):
-    # get minimum distance between two points of (1) within the box, and (2) across the box boundary
-    dx = min(abs(x0 - x1), 1 - abs(x0 - x1))
-    if x0 > x1 and (x0 - x1) > 0.5: # then dx will be through boundary, so move right
-        x2 = (x0 + mutation_strength * dx) % 1.
-    if x0 >= x1 and (x0 - x1) <= 0.5: # then dx will be in box, so move left
-        x2 = x0 - mutation_strength * dx
-    if x0 < x1 and (x1 - x0) >= 0.5: # then dx will be through boundary, so move left
-        x2 = (x0 - mutation_strength * dx) % 1.
-    if x0 < x1 and (x1 - x0) < 0.5: # then dx will be in box, so move right
-        x2 = x0 + mutation_strength * dx
-    return x2
+    """
+    if given a position x0 and a second (usually random) position x1, then moves towards the nearest
+    x1 (either within the current image, or across a PBC) a distance equal to the mutation_strength.
+    """
+    return (x0 + (convert_positions_to_offset(x0, x1)) * mutation_strength) % 1.
 
 def move_sites(sitesl, uc_a, ms, distance, num_trials=100):
     sites = set(sitesl)
