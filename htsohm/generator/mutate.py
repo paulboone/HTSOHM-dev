@@ -13,7 +13,7 @@ def convert_positions_to_offset(x0, x1):
     else:
         return offset
 
-def random_position(x0, x1, mutation_strength):
+def mutate_pos_to_new_pos_w_pbc(x0, x1, mutation_strength):
     """
     if given a position x0 and a second (usually random) position x1, then moves towards the nearest
     x1 (either within the current image, or across a PBC) a distance equal to the mutation_strength.
@@ -35,7 +35,7 @@ def find_good_move_position(site, other_sites, uc_a, ms, distance, num_trials=10
     sites, such that the minimum distance between points is maintained at > {distance}
     """
     for _ in range(num_trials):
-        trial_pos = [random_position(r, random(), ms) for r in site.xyz]
+        trial_pos = [mutate_pos_to_new_pos_w_pbc(r, random(), ms) for r in site.xyz]
         if min_pair_distance([s.xyz for s in other_sites] + [trial_pos]) > distance/uc_a:
             return trial_position
     return None
