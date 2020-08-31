@@ -10,7 +10,8 @@ def default_configuration():
         'void_fraction_subtype': 'raspa',
         'load_restart_path': False,
         'num_processes': 1,
-        'initial_points_random_seed': int(time.time())
+        'initial_points_random_seed': int(time.time()),
+        'minimum_site_distance': 0.0
     }
 
 def load_config_file(path):
@@ -34,3 +35,4 @@ def enforce_config_ok(config):
     assert config['void_fraction_subtype'] in ["raspa", "geo", "zeo"]
     assert config['selector_type'] in ["simplices-or-hull", "density-bin", "neighbor-bin",
                                         "best", "specific", "random"]
+    assert config['lattice_cubic'] == True
