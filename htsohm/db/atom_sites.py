@@ -27,3 +27,11 @@ class AtomSite(Base):
 
     def __repr__(self):
         return "(%s, %f, %f, %f, %f)" % (str(self.id), self.x, self.y, self.z, self.q)
+
+    @property
+    def xyz(self):
+        return (x, y, z)
+
+    @xyz.setter
+    def xyz(self, xyz):
+        x, y, z = xyz
