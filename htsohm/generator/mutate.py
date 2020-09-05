@@ -1,7 +1,7 @@
 from random import choice, random, uniform
 
 from htsohm.slog import slog
-from htsohm.generator.random import random_atom_sites, random_atom_types
+from htsohm.generator.random import random_atom_sites, random_atom_types, find_atom_site_with_minimum_distance
 from htsohm.pair_distance import min_pair_distance
 
 def convert_positions_to_offset(x0, x1):
@@ -21,9 +21,8 @@ def mutate_pos_to_new_pos_w_pbc(x0, x1, mutation_strength):
     return (x0 + (convert_positions_to_offset(x0, x1)) * mutation_strength) % 1.
 
 def move_sites(sitesl, uc_a, ms, distance, num_trials=100):
-    sites = set(sitesl)
-    for site in sites:
-        other_sites = sites - set(a)
+    for site in sitesl:
+        other_sites = set(sitesl) - {site}
         good_pos = find_good_move_position(site, other_sites, uc_a, ms, distance, num_trials)
         if good_pos is not None:
             site.xyz = good_pos
@@ -93,7 +92,7 @@ def mutate_material(parent, config):
                 slog("Adding atom site...")
                 atom_position = find_atom_site_with_minimum_distance([s.xyz for s in cs.atom_sites], config['minimum_site_distance'], cs.a)
                 if atom_position:
-                    new_site = random_atom_sites(1, cs.atom_types)
+                    new_site = random_atom_sites(1, cs.atom_types)[0]
                     new_site.xyz = atom_position
                 else:
                     slog("Failed to add a new atom.")
@@ -126,7 +125,7 @@ def mutate_material(parent, config):
         child.number_density = len(cs.atom_sites) / cs.volume
 
     if perturb & {"atom_sites"}:
-        move_sites(cs.atoms_sites, uc_a, ms, config['minimum_site_distance'])
+        move_sites(cs.atom_sites, cs.a, ms, config['minimum_site_distance'])
 
     # possibility that the material is unchanged
 
