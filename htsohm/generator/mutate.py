@@ -30,14 +30,14 @@ def move_sites(sitesl, uc_a, ms, distance, num_trials=100):
         else:
             slog("Failed to move site")
 
-def find_good_move_position(site, other_sites, uc_a, ms, distance, num_trials=100):
+def find_good_move_position(site, other_sites, uc_a, mutation_strength, distance, num_trials=100):
     """ attempts {num_trials} trials of finding a new move position for one site in a collection of
     sites, such that the minimum distance between points is maintained at > {distance}
     """
     for _ in range(num_trials):
-        trial_pos = [mutate_pos_to_new_pos_w_pbc(r, random(), ms) for r in site.xyz]
+        trial_pos = [mutate_pos_to_new_pos_w_pbc(r, random(), mutation_strength) for r in site.xyz]
         if min_pair_distance([s.xyz for s in other_sites] + [trial_pos]) > distance/uc_a:
-            return trial_position
+            return trial_pos
     return None
 
 def net_charge(atom_sites):
