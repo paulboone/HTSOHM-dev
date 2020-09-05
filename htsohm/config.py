@@ -34,3 +34,4 @@ def enforce_config_ok(config):
     assert config['void_fraction_subtype'] in ["raspa", "geo", "zeo"]
     assert config['selector_type'] in ["simplices-or-hull", "density-bin", "neighbor-bin",
                                         "best", "specific", "random"]
+    assert config['structure_parameters']['lattice_cubic'] == True
