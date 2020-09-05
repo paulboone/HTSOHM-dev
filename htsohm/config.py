@@ -11,7 +11,9 @@ def default_configuration():
         'load_restart_path': False,
         'num_processes': 1,
         'initial_points_random_seed': int(time.time()),
-        'minimum_site_distance': 0.0
+        'structure_parameters': {
+            'minimum_site_distance': 0.0
+        }
     }
 
 def load_config_file(path):
@@ -35,4 +37,4 @@ def enforce_config_ok(config):
     assert config['void_fraction_subtype'] in ["raspa", "geo", "zeo"]
     assert config['selector_type'] in ["simplices-or-hull", "density-bin", "neighbor-bin",
                                         "best", "specific", "random"]
-    assert config['lattice_cubic'] == True
+    assert config['structure_parameters']['lattice_cubic'] == True
