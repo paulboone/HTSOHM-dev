@@ -83,17 +83,21 @@ def check_db_materials_for_restart(expected_num_materials, session, delete_exces
         print("Is this the right database and restart file?")
         sys.exit(1)
 
-def init_worker(config):
+def init_worker(worker_metadata):
     """initialization function for worker that inits the database and gets a worker-specific
     session."""
+    global config
+    global generator
+    global gen
     global worker_session
-    _, worker_session = db.init_database(config["database_connection_string"])
+    generator, config, gen = worker_metadata
+    _, worker_session = db.init_database(config["database_connection_string"],
+                        void_fraction_subtype=config['void_fraction_subtype'])
     return
 
 def simulate_generation_worker(parent_id):
     """gets most of its parameters from the global worker_metadata set in the
     parallel_simulate_generation method."""
-    generator, config, gen = worker_metadata
     init_slog()
     if parent_id > 0:
         parent = worker_session.query(Material).get(int(parent_id))
@@ -111,13 +115,12 @@ def simulate_generation_worker(parent_id):
                           material.gas_loading[0].absolute_volumetric_loading))
 
 def parallel_simulate_generation(generator, num_processes, parent_ids, config, gen, children_per_generation):
-    global worker_metadata
     worker_metadata = (generator, config, gen)
 
     if parent_ids is None:
         parent_ids = [0] * (children_per_generation) # should only be needed for random!
 
-    with Pool(processes=num_processes, initializer=init_worker, initargs=[config]) as pool:
+    with Pool(processes=num_processes, initializer=init_worker, initargs=[worker_metadata]) as pool:
         results = pool.map(simulate_generation_worker, parent_ids)
 
     box_d, box_r = zip(*results)
@@ -156,7 +159,6 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     children_per_generation = config['children_per_generation']
     prop1range = config['prop1range']
     prop2range = config['prop2range']
-    VoidFraction.set_column_for_void_fraction(config['void_fraction_subtype'])
     num_bins = config['number_of_convergence_bins']
     benchmarks = config['benchmarks']
     next_benchmark = benchmarks.pop(0)
@@ -167,7 +169,8 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         max_generations = config['max_generations']
 
     engine, session = db.init_database(config["database_connection_string"],
-                backup=(load_restart_path != False or restart_generation > 0))
+                backup=(load_restart_path != False or restart_generation > 0),
+                void_fraction_subtype=config['void_fraction_subtype'])
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
     if restart_generation >= 0:
