@@ -26,8 +26,8 @@ def net_charge(atom_sites):
 #     new_val = curr_val + uniform(-max_change, max_change) / 2
 #     return min(max(new_val, var_limits[0]), var_limits[1])
 
-def perturb_unweighted(curr_val, max_change, var_limits):
-    return curr_val + max_change * (uniform(*var_limits) - curr_val)
+def perturb_unweighted(curr_val, mutation_strength, var_limits):
+    return curr_val + mutation_strength * (uniform(*var_limits) - curr_val)
 
 def print_parent_child_diff(parent, child):
     ps = parent.structure
@@ -85,18 +85,18 @@ def mutate_material(parent, config):
         sigl = config["sigma_limits"]
         epsl = config["epsilon_limits"]
         for at in cs.atom_types:
-            at.sigma = perturb_unweighted(at.sigma, ms * (sigl[1] - sigl[0]), sigl)
-            at.epsilon = perturb_unweighted(at.epsilon, ms * (epsl[1] - epsl[0]), epsl)
+            at.sigma = perturb_unweighted(at.sigma, ms, sigl)
+            at.epsilon = perturb_unweighted(at.epsilon, ms, epsl)
 
     if perturb & {"lattice"}:
         ll = config["lattice_constant_limits"]
-        cs.a = perturb_unweighted(cs.a, ms * (ll[1] - ll[0]), ll)
+        cs.a = perturb_unweighted(cs.a, ms, ll)
         if config["lattice_cubic"]:
             cs.b = cs.a
             cs.c = cs.a
         else:
-            cs.b = perturb_unweighted(cs.b, ms * (ll[1] - ll[0]), ll)
-            cs.c = perturb_unweighted(cs.c, ms * (ll[1] - ll[0]), ll)
+            cs.b = perturb_unweighted(cs.b, ms, ll)
+            cs.c = perturb_unweighted(cs.c, ms, ll)
         child.number_density = len(cs.atom_sites) / cs.volume
 
     if perturb & {"atom_sites"}:
