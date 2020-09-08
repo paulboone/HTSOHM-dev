@@ -35,7 +35,7 @@ def bin_graph(config_path, database_path=None, csv_path=None, last_material=None
     print("loading materials...")
 
     if csv_path:
-        mats_r = np.loadtxt(csv_path, delimiter=',', skiprows=1, usecols=(8,9,5,6), max_rows=last_material)
+        mats_r = np.loadtxt(csv_path, delimiter=',', skiprows=1, usecols=(12,13,5,6), max_rows=last_material)
         print("%d rows loaded from csv" % mats_r.shape[0])
         if sigma_limits:
             mats_r = mats_r[(sigma_limits[0] <= mats_r[:,2]) & (mats_r[:,2] <= sigma_limits[1])]

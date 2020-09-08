@@ -277,5 +277,5 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         output_csv_from_db(session, output_file=f)
 
     with open("pm-binned.csv", 'w', newline='') as f:
-        # column 8 is void_fraction_geo, 9 is methane loading
-        csv_add_bin_column("pm.csv", [(8, *prop1range, num_bins), (9, *prop2range, num_bins)], output_file=f)
+        # column 12 is void_fraction_geo, 13 is methane loading
+        csv_add_bin_column("pm.csv", [(12, *prop1range, num_bins), (13, *prop2range, num_bins)], output_file=f)
