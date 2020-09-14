@@ -68,12 +68,13 @@ def figure5_efficiency():
     ax.set_title("Atom Sites")
 
     ax = fig.add_subplot(1, 4, 3)
-    legend_labels = ["5%", "10%", "20%", "40%", "random"]
-    g1 = setup_plot(["ms_5.csv", "ms_10.csv", "reference.csv", "ms_40.csv", "random8.csv"])
+    legend_labels = ["5%", "10%", "20%", "40%", "20% alt", "random"]
+    g1 = setup_plot(["ms_5.csv", "ms_10.csv", "reference.csv", "ms_40.csv", "ms_20_questionable_perturbation.csv", "random8.csv"])
     ax.axes.yaxis.set_ticklabels([])
     ax.plot(g1.num, g1["ms_5.csv"],      lw=1 )
     ax.plot(g1.num, g1["ms_10.csv"],     lw=1 )
     ax.plot(g1.num, g1["reference.csv"], lw=1, color="black")
+    ax.plot(g1.num, g1["ms_20_questionable_perturbation.csv"], lw=1, color="pink")
     ax.plot(g1.num, g1["ms_40.csv"],     lw=1 )
     ax.plot(g1.num, g1["random8.csv"],    lw=1, color="grey" )
     # ax.legend(legend_labels, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., facecolor='white', framealpha=1)
