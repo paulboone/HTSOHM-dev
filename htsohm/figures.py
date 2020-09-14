@@ -3,9 +3,17 @@ from collections import Counter
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle, Circle, ConnectionPatch
+from matplotlib import rc
 import numpy as np
 from scipy.spatial import Delaunay
 
+
+font = {'family':'sans-serif',
+        'sans-serif':['Helvetica'],
+        'weight' : 'normal',
+        'size'   : 12}
+
+rc('font', **font)
 
 def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=[], parents=[],
                     bins=[], new_bins=[], title="", patches=None, prop1range=(0.0,1.0),
@@ -15,7 +23,7 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
 
 
     # plot visualization
-    fig = plt.figure(figsize=(12,12), tight_layout=True)
+    fig = plt.figure(figsize=(4, 4), tight_layout=True)
     ax = fig.add_subplot(1, 1, 1)
     ax.set_xlim(prop1range[0], prop1range[1])
     ax.set_ylim(prop2range[0], prop2range[1])
@@ -38,7 +46,7 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
     for b, bcount in np.ndenumerate(bins):
         if bcount > 0.0:
             bin_rects.append(Rectangle((b[0] * dbinx, b[1] * dbiny), dbinx, dbiny, \
-                        facecolor=str(max(1-bcount/bin_saturated, 0.0)), edgecolor='0.8'))
+                        facecolor=str(max(1-bcount/bin_saturated, 0.0)), edgecolor='0.8', lw=0.5))
     pc = PatchCollection(bin_rects, match_original=True)
     ax.add_collection(pc)
 
@@ -96,5 +104,5 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
             ax.add_patch(a)
 
     ax.set_title(title)
-    fig.savefig(output_path)
+    fig.savefig(output_path, dpi=600)
     plt.close(fig)
