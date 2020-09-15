@@ -227,6 +227,10 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         all_bins = calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
         new_bins, bins = _update_bins_counts_materials(all_bins, bins, gen * children_per_generation)
 
+        # output space + calced bins
+        for i, box_r in enumerate(new_box_r):
+            print("(%s) => (%s)" % (box_r, all_bins[i]))
+
         # evaluate algorithm effectiveness
         bin_fraction_explored = len(bins) / num_bins ** 2
         print_block('GENERATION %s: %5.2f%%' % (gen, bin_fraction_explored * 100))
