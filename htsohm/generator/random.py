@@ -10,7 +10,22 @@ def random_atom_types(num_atom_types, config):
         epsilon = uniform(*config["epsilon_limits"])
     ) for i in range(num_atom_types)]
 
-def random_atom_sites(num_sites, atom_types):
+def random_charges(num_charges, abs_max_charge):
+    """ returns an array containing num_charges charges, such that all charges
+    obey the restrictions that abs(charge) <= abs_max_charge and that the total
+    charge equals zero.
+    """
+    total_charge = 0.0
+    qs = [0.0] * num_charges
+    for i in range(num_charges):
+        remaining_assignable_charge = (num_charges - i - 1) * abs_max_charge
+        mx = remaining_assignable_charge - total_charge
+        mn = -remaining_assignable_charge - total_charge
+        qs[i] = uniform(max(mn, -abs_max_charge), min(mx, abs_max_charge))
+        total_charge += qs[i]
+    return qs
+
+def random_atom_sites(num_sites, atom_types, ):
     return [AtomSite(
         atom_types = choice(atom_types),
         x = random(), y = random(), z = random(),
