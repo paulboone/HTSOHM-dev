@@ -19,8 +19,9 @@ from sqlalchemy.orm import joinedload
 @click.option('--epsilon-limits', type=float, nargs=2)
 @click.option('--addl-data-path', type=click.Path())
 @click.option('--last-children', type=int, default=0)
+@click.option('-o', '--output-path', type=click.Path(), default=None)
 def bin_graph(config_path, database_path=None, csv_path=None, last_material=None,
-        sigma_limits=None, epsilon_limits=None, addl_data_path=None, last_children=0):
+        sigma_limits=None, epsilon_limits=None, addl_data_path=None, last_children=0, output_path=None):
 
     config = load_config_file(config_path)
     VoidFraction.set_column_for_void_fraction(config['void_fraction_subtype'])
@@ -83,10 +84,11 @@ def bin_graph(config_path, database_path=None, csv_path=None, last_material=None
         addl_data = np.loadtxt(addl_data_path, delimiter=",", skiprows=1, usecols=(1,2))
 
     print("outputting graph...")
-    output_path = "binplot_%d_materials.png" % len(mats_r)
+    if output_path is None:
+        output_path = "binplot_%d_materials.png" % len(mats_r)
+
     delaunay_figure(mats_r, num_bins, output_path, bins=bin_counts, new_bins=new_bins,
-                    title="%d Materials: %d/%d %5.2f%%" % (len(mats_r), bins_explored,
-                    num_bins ** 2, 100*float(bins_explored / num_bins ** 2)),
+                    title="%d materials: %d/%d bins" % (len(mats_r), bins_explored, num_bins ** 2),
                     prop1range=prop1range, prop2range=prop2range, show_triangulation=False, show_hull=False,
                     addl_data_set=addl_data, children=children, parents=parents)
 
