@@ -64,7 +64,12 @@ def mutate_charge(charges, charge_index, mutation_strength, charge_limits):
     return new_charges
 
 def mutate_charges(charges, mutation_strength, charge_limits):
-    pass
+    new_charges = charges
+    for i in range(len(charges)):
+        new_charges = mutate_charge(charges, i, mutation_strength, charge_limits)
+
+    return new_charges
+
 
 
 

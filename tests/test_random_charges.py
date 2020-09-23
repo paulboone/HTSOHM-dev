@@ -52,7 +52,7 @@ def test_mutate_charge__charge_index_charge_is_within_bounds():
     assert mutate_charge([1.0, -1.0], 1, ms, qlimits)[0] >= -1.0
     assert mutate_charge([0.5, -0.5], 0, ms, qlimits)[0] <= 1.0
 
-def test_random_and_mutate_charge_aggregate():
+def test_random_and_mutate_charges_aggregate():
     ms=1.0
     qlimits = (-1.0, 1.0)
     for _ in range(1000):
@@ -62,7 +62,7 @@ def test_random_and_mutate_charge_aggregate():
         assert sum(q) == approx(0.0)
         assert (q <= 1).all()
         assert (q >= -1).all()
-        qn = np.array(mutate_charge(q, randrange(0,len(q)), ms, qlimits))
+        qn = np.array(mutate_charges(q, ms, qlimits))
         assert sum(qn) == approx(0.0)
         assert (qn <= 1).all()
         assert (qn >= -1).all()
