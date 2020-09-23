@@ -41,27 +41,31 @@ def find_good_move_position(site, other_sites, uc_a, mutation_strength, distance
     return None
 
 
+def rebalance_charges(charges, charge_limits, exclude_indices=[]):
+    """rebalances the list charges in-place so that the total charge equals 0.0 and the
+    individual charges are withih the charge_limits.
+    """
+
+    delta_q = sum(charges)
+    # reassign delta_q to other atoms
+    other_charges = set(range(len(charges))) - set(exclude_indices)
+    while not math.isclose(delta_q, 0.0, abs_tol=1e-12):
+        i = choice(list(other_charges))
+        i_new_q = min(max(charges[i] - delta_q, charge_limits[0]), charge_limits[1])
+        delta_q += i_new_q - charges[i]
+        charges[i] = i_new_q
+        other_charges = other_charges - {i}
+
+    return charges
+
 def mutate_charge(charges, charge_index, mutation_strength, charge_limits):
     if len(charges) == 1:
         return [0.0]
 
     new_charges = charges.copy()
-
-    # mutate charge to new value within limits
     new_q = perturb_unweighted(charges[charge_index], mutation_strength, charge_limits)
-    delta_q = new_q - charges[charge_index]
     new_charges[charge_index] = new_q
-
-    # reassign delta_q to other atoms
-    other_charges = set(range(len(charges))) - {charge_index}
-    while not math.isclose(delta_q, 0.0, abs_tol=1e-12):
-        i = choice(list(other_charges))
-        i_new_q = min(max(charges[i] - delta_q, charge_limits[0]), charge_limits[1])
-        delta_q += i_new_q - charges[i]
-        new_charges[i] = i_new_q
-        other_charges = other_charges - {i}
-
-    return new_charges
+    return rebalance_charges(new_charges, charge_limits, exclude_indices=[charge_index])
 
 def mutate_charges(charges, mutation_strength, charge_limits):
     new_charges = charges
@@ -117,7 +121,7 @@ def mutate_material(parent, config):
         cs.atom_types += random_atom_types(num_atom_types_to_add, config)
 
     if perturb & {"num_atoms"} and random() < ms:
-        if random() < 0.5: # remove an atoms
+        if random() < 0.5: # remove an atom
             if len(cs.atom_sites) > config['num_atoms_limits'][0]:
                 site_to_remove = choice(cs.atom_sites)
                 slog("Removing atom site: ", site_to_remove)
