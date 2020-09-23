@@ -8,7 +8,7 @@ output_path = "comparison_graph.png"
 col = 18
 
 ms_files = ["ms_20_1site", "ms_20_2site", "ms_20_4site", "ms_20_8site", "ms_20_16site", "ms_20_32site", "ms_20_64site", "ms_20_512site"]
-random_files = ["random_1site", "random_2site", "random_4site", "random_8site", "random_16site", "random_32site", "random_64site"]# "random_512site"]
+random_files = ["random_1site", "random_2site", "random_4site", "random_8site", "random_16site", "random_32site", "random_64site", "random_512site"]
 
 
 ylabel = ""
@@ -34,8 +34,8 @@ def load_data(paths, max_rows):
     return np_data
 
 
-ms_data = load_data(ms_files, max_rows=20000)
-random_data = load_data(random_files, max_rows=20000)
+ms_data = load_data(ms_files, max_rows=25000)
+random_data = load_data(random_files, max_rows=25000)
 max_mats = min(len(ms_data), len(random_data))
 
 print("plotting...")
