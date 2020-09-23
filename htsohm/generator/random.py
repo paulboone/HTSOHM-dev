@@ -24,11 +24,13 @@ def random_charges(num_charges, abs_max_charge):
         total_charge += qs[i]
     return qs
 
-def random_atom_sites(num_sites, atom_types, ):
+def random_atom_sites(num_sites, atom_types, q=0.0):
+    if q == 0.0:
+        q = [0.0] * num_sites
     return [AtomSite(
         atom_types = choice(atom_types),
         x = random(), y = random(), z = random(),
-        q = 0.0
+        q = q[i]
     ) for i in range(num_sites)]
 
 def new_material(config, attempts=10):
@@ -47,7 +49,9 @@ def new_material(config, attempts=10):
         )
 
         number_of_atoms = randint(*config["num_atoms_limits"])
-        structure.atom_sites = random_atom_sites(number_of_atoms, structure.atom_types)
+
+        q = random_charges(number_of_atoms, config["charge_limits"][1])
+        structure.atom_sites = random_atom_sites(number_of_atoms, structure.atom_types, q=q)
 
         if structure.min_pair_distance * structure.a > config['minimum_site_distance']:
             return Material(structure=structure, number_density=number_of_atoms / structure.volume)

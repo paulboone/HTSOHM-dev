@@ -69,8 +69,8 @@ def mutate_charge(charges, charge_index, mutation_strength, charge_limits):
 
 def mutate_charges(charges, mutation_strength, charge_limits):
     new_charges = charges
-    for i in range(len(charges)):
-        new_charges = mutate_charge(charges, i, mutation_strength, charge_limits)
+    for i in range(len(new_charges)):
+        new_charges = mutate_charge(new_charges, i, mutation_strength, charge_limits)
 
     return new_charges
 
@@ -126,13 +126,17 @@ def mutate_material(parent, config):
                 site_to_remove = choice(cs.atom_sites)
                 slog("Removing atom site: ", site_to_remove)
                 removed_site = cs.atom_sites.remove(site_to_remove)
+                cs.allq = rebalance_charges(cs.allq, config['charge_limits'])
         else: # add an atom
             if len(cs.atom_sites) < config['num_atoms_limits'][1]:
                 slog("Adding atom site...")
                 atom_position = find_atom_site_with_minimum_distance([s.xyz for s in cs.atom_sites], config['minimum_site_distance'], cs.a)
                 if atom_position:
-                    new_site = random_atom_sites(1, cs.atom_types)[0]
+                    # note, the xyz coordinates from random_atom_sites will be replaced by the point found above
+                    new_site = random_atom_sites(1, cs.atom_types, q=[uniform(*config['charge_limits'])])[0]
                     new_site.xyz = atom_position
+                    cs.atom_sites.append(new_site)
+                    cs.allq = rebalance_charges(cs.allq, config['charge_limits'], exclude_indices=[len(cs.atom_sites) - 1])
                 else:
                     slog("Failed to add a new atom.")
 
@@ -165,6 +169,9 @@ def mutate_material(parent, config):
 
     if perturb & {"atom_sites"}:
         move_sites(cs.atom_sites, cs.a, ms, config['minimum_site_distance'])
+
+    if perturb & {"charges"}:
+        cs.allq = mutate_charges(cs.allq, ms, config['charge_limits'])
 
     # possibility that the material is unchanged
 

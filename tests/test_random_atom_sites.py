@@ -13,6 +13,7 @@ def config():
         lattice_constant_limits=[2.0,4.0],
         sigma_limits=[2.0, 6.0],
         epsilon_limits=[2.516, 342.176],
+        charge_limits=[-1.0, 1.0],
         lattice_cubic=True,
         number_of_atom_types=1,
         num_atoms_limits=[4,4],
@@ -20,9 +21,10 @@ def config():
     )
 
 def test_new_material__too_close_sites_fail(config):
-    seed(0)
+    seed(1)
     with pytest.raises(Exception):
         m = new_material(config, attempts=1)
+
 
 def test_new_material__atom_sites_are_not_too_close(config):
     seed(0)

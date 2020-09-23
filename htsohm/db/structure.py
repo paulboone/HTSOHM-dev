@@ -79,5 +79,14 @@ class Structure(Base):
     def epsilon_density(self):
         return self.total_epsilon / self.volume
 
+    @property
+    def allq(self):
+        return [a.q for a in self.atom_sites]
+
+    @allq.setter
+    def allq(self, allq):
+        for i, q in enumerate(allq):
+            self.atom_sites[i].q = q
+
     def __repr__(self):
         return "(%s: %f, %f, %f)" % (self.id, self.a, self.b, self.c)
