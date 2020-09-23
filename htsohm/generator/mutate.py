@@ -1,3 +1,4 @@
+import math
 from random import choice, random, uniform
 
 from htsohm.slog import slog
@@ -38,6 +39,34 @@ def find_good_move_position(site, other_sites, uc_a, mutation_strength, distance
         if min_pair_distance([s.xyz for s in other_sites] + [trial_pos]) > distance/uc_a:
             return trial_pos
     return None
+
+
+def mutate_charge(charges, charge_index, mutation_strength, charge_limits):
+    if len(charges) == 1:
+        return [0.0]
+
+    new_charges = charges.copy()
+
+    # mutate charge to new value within limits
+    new_q = perturb_unweighted(charges[charge_index], mutation_strength, charge_limits)
+    delta_q = new_q - charges[charge_index]
+    new_charges[charge_index] = new_q
+
+    # reassign delta_q to other atoms
+    other_charges = set(range(len(charges))) - {charge_index}
+    while not math.isclose(delta_q, 0.0, abs_tol=1e-12):
+        i = choice(list(other_charges))
+        i_new_q = min(max(charges[i] - delta_q, charge_limits[0]), charge_limits[1])
+        delta_q += i_new_q - charges[i]
+        new_charges[i] = i_new_q
+        other_charges = other_charges - {i}
+
+    return new_charges
+
+def mutate_charges(charges, mutation_strength, charge_limits):
+    pass
+
+
 
 def net_charge(atom_sites):
     return sum([e.q for e in atom_sites])

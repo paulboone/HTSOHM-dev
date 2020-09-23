@@ -1,5 +1,4 @@
-from math import ceil
-from random import choice, random, randrange, uniform, randint
+from random import choice, random, uniform, randint
 
 from htsohm.db import Material, Structure, AtomTypes, AtomSite
 from htsohm.pair_distance import min_pair_distance
