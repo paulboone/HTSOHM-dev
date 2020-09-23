@@ -42,10 +42,11 @@ def find_good_move_position(site, other_sites, uc_a, mutation_strength, distance
 def net_charge(atom_sites):
     return sum([e.q for e in atom_sites])
 
-def perturb_unweighted(curr_val, max_change, var_limits):
+def perturb_unweighted(curr_val, mutation_strength, var_limits):
     # the / 2 is to make sure that if the max_change is the entire variable range (i.e. 100%
     # mutation strength), then if we are in the center of the range, this equivalent to generating
     # a new random number in the range.
+    max_change = mutation_strength * (var_limits[1] - var_limits[0])
     new_val = curr_val + uniform(-max_change, max_change) / 2
     return min(max(new_val, var_limits[0]), var_limits[1])
 
@@ -109,19 +110,19 @@ def mutate_material(parent, config):
         sigl = config["sigma_limits"]
         epsl = config["epsilon_limits"]
         for at in cs.atom_types:
-            at.sigma = perturb_unweighted(at.sigma, ms * (sigl[1] - sigl[0]), sigl)
-            at.epsilon = perturb_unweighted(at.epsilon, ms * (epsl[1] - epsl[0]), epsl)
+            at.sigma = perturb_unweighted(at.sigma, ms, sigl)
+            at.epsilon = perturb_unweighted(at.epsilon, ms, epsl)
 
     if perturb & {"lattice"}:
         ll = config["lattice_constant_limits"]
-        trial_a = perturb_unweighted(cs.a, ms * (ll[1] - ll[0]), ll)
+        trial_a = perturb_unweighted(cs.a, ms, ll)
         cs.a = max(trial_a, cs.min_unit_cell_a(config['minimum_site_distance']))
         if config["lattice_cubic"]:
             cs.b = cs.a
             cs.c = cs.a
         else:
-            cs.b = perturb_unweighted(cs.b, ms * (ll[1] - ll[0]), ll)
-            cs.c = perturb_unweighted(cs.c, ms * (ll[1] - ll[0]), ll)
+            cs.b = perturb_unweighted(cs.b, ms, ll)
+            cs.c = perturb_unweighted(cs.c, ms, ll)
         child.number_density = len(cs.atom_sites) / cs.volume
 
     if perturb & {"atom_sites"}:
