@@ -39,7 +39,7 @@ def write_raspa_file(filename, material, simulation_config):
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(input_data)
 
-def write_output_files(material, simulation_config, output_dir):
+def write_input_files(material, simulation_config, output_dir):
     # Write simulation input-files
     # RASPA input-file
     filename = os.path.join(output_dir, "SurfaceArea.input")
@@ -99,7 +99,7 @@ def run(material, simulation_config, config):
     os.makedirs(output_dir, exist_ok=True)
 
     # Write simulation input-files
-    write_output_files(filename, material, simulation_config)
+    write_input_files(filename, material, simulation_config)
 
     # Run simulations
     while True:

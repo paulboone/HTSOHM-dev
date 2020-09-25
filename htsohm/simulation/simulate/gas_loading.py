@@ -54,7 +54,7 @@ def write_raspa_file(filename, material, simulation_config, restart):
     with open(filename, "w") as raspa_input_file:
         raspa_input_file.write(input_data)
 
-def write_output_files(material, simulation_config, output_dir, restart=False, filename=None):
+def write_input_files(material, simulation_config, output_dir, restart=False, filename=None):
     # Write simulation input-files
     # RASPA input-file
     if filename is None:
@@ -131,8 +131,8 @@ def run(material, simulation_config, config):
     raspa_restart_config = "./{}_loading_restart.input".format(adsorbate)
 
     # RASPA input-files
-    write_output_files(material, simulation_config, output_dir, restart=False, filename=os.path.join(output_dir, raspa_config))
-    write_output_files(material, simulation_config, output_dir, restart=True, filename=os.path.join(output_dir, raspa_restart_config))
+    write_input_files(material, simulation_config, output_dir, restart=False, filename=os.path.join(output_dir, raspa_config))
+    write_input_files(material, simulation_config, output_dir, restart=True, filename=os.path.join(output_dir, raspa_restart_config))
 
     # Run simulations
     slog("Adsorbate        : {}".format(adsorbate))

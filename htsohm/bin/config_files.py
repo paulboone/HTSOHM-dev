@@ -28,7 +28,7 @@ def output_config_files(config_path, material_ids, database_path=None):
             os.makedirs(output_dir, exist_ok=True)
 
             sim = getattr(simulate, simcfg["type"])
-            sim.write_output_files(m, simcfg, output_dir)
+            sim.write_input_files(m, simcfg, output_dir)
 
 
 if __name__ == '__main__':

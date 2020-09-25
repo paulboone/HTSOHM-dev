@@ -39,7 +39,7 @@ def write_input_files(material, simulation_config, output_dir, restart=False, fi
     # Write simulation input-files
     # RASPA input-file
     if filename is None:
-        filename = os.path.join(output_dir, "{}_henrys.input".format(simulation_config['adsorbate']))
+        filename = os.path.join(output_dir, "henrys.input")
     write_raspa_file(filename, material, simulation_config, restart)
     # Pseudomaterial mol-file
     write_mol_file(material, output_dir)
