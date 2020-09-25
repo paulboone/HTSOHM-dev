@@ -38,3 +38,5 @@ def enforce_config_ok(config):
     assert config['selector_type'] in ["simplices-or-hull", "density-bin", "neighbor-bin",
                                         "best", "specific", "random"]
     assert config['structure_parameters']['lattice_cubic'] == True
+    valid_perturbations = {"num_atoms", "atom_type_assignments", "atom_types", "lattice", "atom_sites", "charges"}
+    assert set(config['structure_parameters']['perturb']) <= valid_perturbations
