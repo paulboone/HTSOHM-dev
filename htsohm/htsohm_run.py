@@ -51,7 +51,7 @@ def load_restart_db(gen, num_bins, prop1range, prop2range, session):
     mats = session.query(Material).options(joinedload("void_fraction"), joinedload("gas_loading")) \
                     .filter(Material.generation <= gen).all()
     box_d = np.array([m.id for m in mats])
-    box_r = np.array([(m.void_fraction[0].get_void_fraction(), m.gas_loading[0].absolute_volumetric_loading)
+    box_r = np.array([(m.void_fraction[0].get_void_fraction(), m.henrys_coefficient[0].co2_henrys)
                      for m in mats])
 
     bin_counts = np.zeros((num_bins, num_bins))
@@ -112,7 +112,7 @@ def simulate_generation_worker(parent_id):
 
     print(get_slog())
     return (material.id, (material.void_fraction[0].get_void_fraction(),
-                          material.gas_loading[0].absolute_volumetric_loading))
+                          material.henrys_coefficient[0].co2_henrys))
 
 def parallel_simulate_generation(generator, num_processes, parent_ids, config, gen, children_per_generation):
     worker_metadata = (generator, config, gen)

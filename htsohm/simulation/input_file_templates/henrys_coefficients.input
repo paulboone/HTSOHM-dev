@@ -1,0 +1,38 @@
+SimulationType                  MonteCarlo
+NumberOfCycles                  $NumberOfCycles
+NumberOfInitializationCycles    $NumberOfInitializationCycles
+PrintEvery                      10
+RestartFile                     $Restart
+Movies                          yes
+WriteMoviesEvery                10
+
+
+Forcefield                      $FrameworkName
+CutOff                          $Cutoff
+UseChargesFromMOLFile           yes
+ChargeMethod                    Ewald
+CutOff                          12.8
+
+Framework                       0
+FrameworkName                   $FrameworkName
+InputFileType                   mol
+UnitCells                       $UnitCell
+ExternalTemperature             $ExternalTemperature
+
+Component 0 MoleculeName              CO2
+            MoleculeDefinition        TraPPE
+            IdealGasRosenbluthWeight  $RosenbluthWeight
+            WidomProbability          1.0
+            CreateNumberOfMolecules   0
+
+Component 1 MoleculeName              N2
+            MoleculeDefinition        TraPPE
+            IdealGasRosenbluthWeight  $RosenbluthWeight
+            WidomProbability          1.0
+            CreateNumberOfMolecules   0
+
+Component 2 MoleculeName              water
+            MoleculeDefinition        TraPPE
+            IdealGasRosenbluthWeight  $RosenbluthWeight
+            WidomProbability          1.0
+            CreateNumberOfMolecules   0

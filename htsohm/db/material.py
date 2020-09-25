@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy import ForeignKey, Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 
-from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction, AtomSite, AtomTypes
+from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction, AtomSite, AtomTypes, HenrysCoefficient
 from htsohm.db.structure import Structure
 
 class Material(Base):
@@ -26,6 +26,7 @@ class Material(Base):
     gas_loading       = relationship("GasLoading", cascade="all, delete-orphan")
     surface_area      = relationship("SurfaceArea", cascade="all, delete-orphan")
     void_fraction     = relationship("VoidFraction", cascade="all, delete-orphan")
+    henrys_coefficient = relationship("HenrysCoefficient", cascade="all, delete-orphan")
 
     def __init__(self, parent=None, structure=None, number_density=None):
         """Init material-row.

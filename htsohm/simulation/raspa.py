@@ -41,10 +41,11 @@ def write_mixing_rules(structure, simulation_path):
             ['He',      10.9,       2.64],
             ['H_com',   36.7,       2.958],
             ['Kr',      167.06,     3.924],
-            ['Xe',      110.704,    3.690]
+            ['Xe',      110.704,    3.690],
+            ['Ow',      78.0,     3.154]
     ]
 
-    adsorbate_none_atoms = ['N_com', 'H_h2']
+    adsorbate_none_atoms = ['N_com', 'H_h2', 'Lw', 'Hw']
 
     file_name = os.path.join(simulation_path, 'force_field_mixing_rules.def')
     with open(file_name, "w") as f:
@@ -54,7 +55,7 @@ shifted
 no
 # number of defined interactions
 {0}
-# type interaction, parameters\n""".format(len(structure.atom_sites) + 10))
+# type interaction, parameters\n""".format(len(structure.atom_sites) + len(adsorbate_LJ_atoms) + len(adsorbate_none_atoms)))
 
         # write one atom type per atom site, so we can define per-site charges on the types.
         type_template = "{0:12} lennard-jones {1:.4f} {2:.4f}\n"
@@ -87,7 +88,7 @@ def write_pseudo_atoms(structure, simulation_path):
     with open(file_name, "w") as pseudo_atoms_file:
         pseudo_atoms_file.write(
             "#number of pseudo atoms\n" +
-            "%s\n" % (len(structure.atom_sites) + 10) +
+            "%s\n" % (len(structure.atom_sites) + 13) +
             "#type  print   as  chem    oxidation   mass    charge  polarization    B-factor    radii   " +
                  "connectivity  anisotropic anisotrop-type  tinker-type\n")
 
@@ -105,7 +106,10 @@ def write_pseudo_atoms(structure, simulation_path):
             "H_h2     yes  H   H   0    1.00794    0.468    0.0  1.0  0.7    0  0  relative  0\n" +
             "H_com    no   H   H   0    0.0        0.936    0.0  1.0  0.7    0  0  relative  0\n" +
             "Xe       yes  Xe  Xe  0  131.293      0.0      0.0  1.0  2.459  0  0  relative  0\n" +
-            "Kr       yes  Kr  Kr  0   83.798      0.0      0.0  1.0  2.27   0  0  relative  0\n"
+            "Kr       yes  Kr  Kr  0   83.798      0.0      0.0  1.0  2.27   0  0  relative  0\n" +
+            "Ow       yes  O   O   0   15.9996     0.0      0.0  1.0  0.5    2  0  absolute  0\n" +
+            "Hw       yes  H   H   0    1.0008     0.52     0.0  1.0  1.00   1  0  absolute  0\n" +
+            "Lw       no   L   -   0    0.0       -1.04     0.0  1.0  1.00   1  0  absolute  0\n"
         )
 
 def write_force_field(simulation_path):

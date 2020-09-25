@@ -46,14 +46,16 @@ def bin_graph(config_path, database_path=None, csv_path=None, last_material=None
         db.init_database(db.get_sqlite_dbcs(database_path), void_fraction_subtype=config['void_fraction_subtype'])
         session = db.get_session()
 
-        mats_d = session.query(Material).options(joinedload("void_fraction"), joinedload("gas_loading"))
+        mats_d = session.query(Material).options(joinedload("void_fraction"), joinedload("henrys_coefficient"))
         if last_material:
             mats_d = mats_d.limit(last_material).all()
         else:
             mats_d = mats_d.all()
 
         print("calculating material properties...")
-        mats_r = [(m.void_fraction[0].get_void_fraction(), m.gas_loading[0].absolute_volumetric_loading) for m in mats_d]
+        [print(m.void_fraction[0].get_void_fraction()) for m in mats_d]
+        mats_r = [(m.void_fraction[0].get_void_fraction(), m.henrys_coefficient[0].co2_henrys) for m in mats_d]
+        print(mats_r)
 
 
     last_generation_start = len(mats_r) - last_children
