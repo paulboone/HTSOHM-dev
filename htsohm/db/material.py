@@ -26,7 +26,7 @@ class Material(Base):
     gas_loading       = relationship("GasLoading", cascade="all, delete-orphan")
     surface_area      = relationship("SurfaceArea", cascade="all, delete-orphan")
     void_fraction     = relationship("VoidFraction", cascade="all, delete-orphan")
-    henrys_coefficient = relationship("HenrysCoefficient", cascade="all, delete-orphan")
+    henrys_coefficient = relationship("HenrysCoefficient", backref="material", cascade="all, delete-orphan")
 
     def __init__(self, parent=None, structure=None, number_density=None):
         """Init material-row.
