@@ -52,7 +52,7 @@ def load_restart_db(gen, num_bins, prop1range, prop2range, session):
                     .filter(Material.generation <= gen).all()
     box_d = np.array([m.id for m in mats])
     box_r = np.array([(m.void_fraction[0].get_void_fraction(),
-                        math.log10(max(m.henrys_coefficient[0].co2_henrysv, prop2range[0]))) for m in mats])
+                        math.log10(max(m.henrys_coefficient[0].co2_henrysv, 10.0 ** prop2range[0]))) for m in mats])
 
     bin_counts = np.zeros((num_bins, num_bins))
     bin_materials = empty_lists_2d(num_bins, num_bins)
@@ -112,7 +112,7 @@ def simulate_generation_worker(parent_id):
 
     print(get_slog())
     return (material.id, (material.void_fraction[0].get_void_fraction(),
-                          math.log10(max(material.henrys_coefficient[0].co2_henrysv, config['prop2range'][0]))))
+                          math.log10(max(material.henrys_coefficient[0].co2_henrysv, 10.0 ** config['prop2range'][0]))))
 
 def parallel_simulate_generation(generator, num_processes, parent_ids, config, gen, children_per_generation):
     worker_metadata = (generator, config, gen)
@@ -225,6 +225,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
 
         # track bins
         all_bins = calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
+        print([print(b, all_bins[i]) for i, b in enumerate(new_box_r)])
         new_bins, bins = _update_bins_counts_materials(all_bins, bins, gen * children_per_generation)
 
         # evaluate algorithm effectiveness
