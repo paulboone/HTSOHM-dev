@@ -30,19 +30,21 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
     if show_grid:
         ax.grid(linestyle='-', color='0.8', zorder=0)
 
-    dbinx = prop1range[1] / convergence_bins
-    dbiny = prop2range[1] / convergence_bins
+    dbinx = (prop1range[1] - prop1range[0]) / convergence_bins
+    dbiny = (prop2range[1] - prop2range[0]) / convergence_bins
 
     total_materials = bins.sum()
     bin_rects = []
     for b, bcount in np.ndenumerate(bins):
         if bcount > 0.0:
-            bin_rects.append(Rectangle((b[0] * dbinx, b[1] * dbiny), dbinx, dbiny, \
+            bin_rects.append(Rectangle((b[0] * dbinx + prop1range[0],
+                        prop2range[0] + b[1] * dbiny), dbinx, dbiny,
                         facecolor=str(max(1-bcount/bin_saturated, 0.0)), edgecolor='0.8'))
     pc = PatchCollection(bin_rects, match_original=True)
     ax.add_collection(pc)
 
-    new_bin_rects = [Rectangle((b[0] * dbinx, b[1] * dbiny), dbinx, dbiny) for b in new_bins]
+    new_bin_rects = [Rectangle((b[0] * dbinx + prop1range[0],
+        b[1] * dbiny + prop2range[0]), dbinx, dbiny) for b in new_bins]
     pc2 = PatchCollection(new_bin_rects, facecolor='#82b7b7')
     ax.add_collection(pc2)
 

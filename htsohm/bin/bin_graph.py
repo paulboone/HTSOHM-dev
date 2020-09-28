@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from math import log10
 
 import click
 import numpy as np
@@ -53,9 +54,8 @@ def bin_graph(config_path, database_path=None, csv_path=None, last_material=None
             mats_d = mats_d.all()
 
         print("calculating material properties...")
-        [print(m.void_fraction[0].get_void_fraction()) for m in mats_d]
-        mats_r = [(m.void_fraction[0].get_void_fraction(), m.henrys_coefficient[0].co2_henrys) for m in mats_d]
-        print(mats_r)
+        mats_r = [(m.void_fraction[0].get_void_fraction(),
+            log10(max(m.henrys_coefficient[0].co2_henrys, 10.0 ** prop2range[0]))) for m in mats_d]
 
 
     last_generation_start = len(mats_r) - last_children
