@@ -34,24 +34,24 @@ class HenrysCoefficient(Base):
 
     @property
     def co2_henrysv(self):
-        return henrys_m_to_v(self.co2_henrys)
+        return self.co2_henrys * self.m_to_v
 
     @property
     def co2_henrysv_error(self):
-        return henrys_m_to_v(self.co2_henrys_error * self.m_to_v)
+        return self.co2_henrys_error * self.m_to_v
 
     @property
     def h2o_henrysv(self):
-        return henrys_m_to_v(self.h2o_henrys * self.m_to_v)
+        return self.h2o_henrys * self.m_to_v
 
     @property
     def h2o_henrysv_error(self):
-        return henrys_m_to_v(self.h2o_henrys_error * self.m_to_v)
+        return self.h2o_henrys_error * self.m_to_v
 
     @property
     def n2_henrysv(self):
-        return henrys_m_to_v(self.n2_henrys * self.m_to_v)
+        return self.n2_henrys * self.m_to_v
 
     @property
     def n2_henrysv_error(self):
-        return henrys_m_to_v(self.n2_henrys_error * self.m_to_v)
+        return self.n2_henrys_error * self.m_to_v
