@@ -8,7 +8,6 @@ import subprocess
 import time
 
 from datetime import datetime
-from uuid import uuid4
 from string import Template
 from pathlib import Path
 
@@ -20,22 +19,12 @@ from htsohm.void_fraction import calculate_void_fraction
 from htsohm.slog import slog
 
 def write_raspa_file(filename, material, simulation_config):
-    """Writes RASPA input file for calculating helium void fraction.
-
-    Args:
-        filename (str): path to input file.
-        material_id (str): uuid for material.
-
-    Writes RASPA input-file.
-
-    """
-
     # Load simulation parameters from config
     unit_cells = material.structure.minimum_unit_cells(simulation_config['cutoff'])
     values = {
             "Cutoff"                 : simulation_config['cutoff'],
             "NumberOfCycles"         : simulation_config["simulation_cycles"],
-            "FrameworkName"          : material.uuid,
+            "FrameworkName"          : material.id,
             "ExternalTemperature"    : simulation_config["temperature"],
             "MoleculeName"           : simulation_config["adsorbate"],
             "UnitCell"               : " ".join(map(str, unit_cells))}
@@ -62,17 +51,6 @@ def write_input_files(material, simulation_config, output_dir):
     write_force_field(output_dir)
 
 def parse_output(output_file, material, void_fraction):
-    """Parse output file for void fraction data.
-
-    Args:
-        output_file (str): path to simulation output file.
-        material: material that was simulated
-        void_fraction: current void fraction object. This gets modified to include the result data.
-
-    Returns:
-        nothing
-    """
-
     with open(output_file) as origin:
         for line in origin:
             if not "Average Widom Rosenbluth-weight:" in line:
@@ -81,16 +59,7 @@ def parse_output(output_file, material, void_fraction):
 
 
 def run(material, simulation_config, config):
-    """Runs void fraction simulation.
-
-    Args:
-        material (Material): material record.
-
-    Returns:
-        results (dict): void fraction simulation results.
-
-    """
-    output_dir = "output_{}_{}".format(material.uuid, uuid4())
+    output_dir = "output_{}_{}".format(material.id, simulation_config['name'])
     slog("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 

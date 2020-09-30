@@ -7,7 +7,6 @@ import subprocess
 import shutil
 from string import Template
 import sys
-from uuid import uuid4
 
 import numpy as np
 
@@ -18,15 +17,6 @@ from htsohm.db import GasLoading
 from htsohm.slog import slog
 
 def write_raspa_file(filename, material, simulation_config, restart):
-    """Writes RASPA input file for simulating gas adsorption.
-
-    Args:
-        filename (str): path to input file.
-        material (Material): material record.
-
-    Writes RASPA input-file.
-
-    """
     # Set default void fraction value if non was calculated
     if len(material.void_fraction) == 0 or material.void_fraction[0].void_fraction is None:
         void_fraction = 0.
@@ -40,7 +30,7 @@ def write_raspa_file(filename, material, simulation_config, restart):
             "Cutoff"                        : simulation_config['cutoff'],
             "NumberOfCycles"                : simulation_config["simulation_cycles"],
             "NumberOfInitializationCycles"  : simulation_config["initialization_cycles"] if not restart else 0,
-            "FrameworkName"                 : material.uuid,
+            "FrameworkName"                 : material.id,
             "HeliumVoidFraction"            : void_fraction,
             "ExternalTemperature"           : simulation_config["temperature"],
             "ExternalPressure"              : simulation_config["pressure"],
@@ -70,18 +60,6 @@ def write_input_files(material, simulation_config, output_dir, restart=False, fi
     write_force_field(output_dir)
 
 def parse_output(output_file, material, simulation_config):
-    """Parse output file for gas adsorption data.
-
-    Args:
-        output_file (str): path to simulation output file.
-
-    Returns:
-        results (dict): absolute and excess molar, gravimetric, and volumetric
-            gas loadings, as well as energy of average, van der Waals, and
-            Coulombic host-host, host-adsorbate, and adsorbate-adsorbate
-            interactions.
-
-    """
     gas_loading = GasLoading()
     gas_loading.adsorbate        = simulation_config["adsorbate"]
     gas_loading.pressure         = simulation_config["pressure"]
@@ -115,17 +93,8 @@ def pressure_string(p):
         return str(p)
 
 def run(material, simulation_config, config):
-    """Runs gas loading simulation.
-
-    Args:
-        material_id (Material): material record.
-
-    Returns:
-        results (dict): gas loading simulation results.
-
-    """
     adsorbate = simulation_config["adsorbate"]
-    output_dir = "output_{}_{}".format(material.uuid, uuid4())
+    output_dir = "output_{}_{}".format(material.id, simulation_config['name'])
     os.makedirs(output_dir, exist_ok=True)
     raspa_config = "./{}_loading.input".format(adsorbate)
     raspa_restart_config = "./{}_loading_restart.input".format(adsorbate)

@@ -91,8 +91,8 @@ def perturb_unweighted(curr_val, mutation_strength, var_limits):
 def print_parent_child_diff(parent, child):
     ps = parent.structure
     cs = child.structure
-    slog("PARENT UUID :\t{}".format(parent.uuid))
-    slog("CHILD UUID  :\t{}".format(child.uuid))
+    slog("PARENT ID :\t{}".format(parent.id))
+    slog("CHILD ID  :\t{}".format(child.id))
     slog("lattice constants: (%.2f, %.2f, %.2f) => (%.2f, %.2f, %.2f)" % (ps.a, ps.b, ps.c, cs.a, cs.b, cs.c))
     slog("number of atoms: %.2f => %.2f" % (len(parent.structure.atom_sites),
                                              len(child.structure.atom_sites)))

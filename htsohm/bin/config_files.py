@@ -1,6 +1,5 @@
 from glob import glob
 import os
-from uuid import uuid4
 
 import click
 
@@ -24,7 +23,7 @@ def output_config_files(config_path, material_ids, database_path=None):
 
         for i in config["simulations"]:
             simcfg = config["simulations"][i]
-            output_dir = "output_%d_%s_%s_%d" % (m.id, m.uuid[0:8], simcfg["type"], i)
+            output_dir = "output_%d_%s_%s_%d" % (m.id, simcfg["type"], i)
             os.makedirs(output_dir, exist_ok=True)
 
             sim = getattr(simulate, simcfg["type"])

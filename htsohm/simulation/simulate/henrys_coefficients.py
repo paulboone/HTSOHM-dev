@@ -5,7 +5,6 @@ import subprocess
 import shutil
 from string import Template
 import sys
-from uuid import uuid4
 
 import numpy as np
 
@@ -22,7 +21,7 @@ def write_raspa_file(filename, material, simulation_config, restart):
             "Cutoff"                        : simulation_config['cutoff'],
             "NumberOfCycles"                : simulation_config["simulation_cycles"],
             "NumberOfInitializationCycles"  : simulation_config["initialization_cycles"] if not restart else 0,
-            "FrameworkName"                 : material.uuid,
+            "FrameworkName"                 : material.id,
             "ExternalTemperature"           : simulation_config["temperature"],
             "UnitCell"                      : " ".join(map(str, unit_cells)),
             "RosenbluthWeight"              : simulation_config["rosenbluth_weight"]}
@@ -65,7 +64,7 @@ def parse_output(output_file, simulation_config):
     return gas_henrys_error
 
 def run(material, simulation_config, config):
-    output_dir = "output_{}_{}".format(material.uuid, uuid4())
+    output_dir = "output_{}_{}".format(material.id, simulation_config['name'])
     os.makedirs(output_dir, exist_ok=True)
     slog("Output directory : {}".format(output_dir))
     raspa_config = "./henrys_coefficients.input"

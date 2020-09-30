@@ -1,5 +1,4 @@
 from itertools import product
-import uuid
 
 from sqlalchemy import ForeignKey, Column, Integer, String, Float
 from sqlalchemy.orm import relationship
@@ -11,8 +10,9 @@ class Material(Base):
     __tablename__ = 'materials'
 
     id           = Column(Integer, primary_key=True)
-    uuid         = Column(String(36))
+
     parent_id    = Column(Integer, ForeignKey('materials.id'))
+
     perturbation = Column(String(10))
     generation   = Column(Integer)
 
@@ -37,7 +37,6 @@ class Material(Base):
         Initializes row in materials datatable.
 
         """
-        self.uuid = str(uuid.uuid4())
         if parent:
             self.parent = parent
             self.parent_id = parent.id
@@ -88,7 +87,7 @@ class Material(Base):
         return copy
 
     def exclude_cols(self):
-        return ['uuid', 'id']
+        return ['id']
 
     def __repr__(self):
-        return "(%s: %s p: %s)" % (str(self.id), self.uuid, self.parent_id)
+        return "(%s: p: %s)" % (str(self.id), self.parent_id)
