@@ -20,12 +20,12 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
     ax.set_xlim(prop1range[0], prop1range[1])
     ax.set_ylim(prop2range[0], prop2range[1])
     ax.set_xlabel("Void Fraction")
-    ax.set_ylabel("Methane Loading (V/V)")
+    ax.set_ylabel("Henry's Coefficient [mol / (m3 pa)]")
 
-    ax.set_xticks(prop1range[1] * np.array([0.0, 0.25, 0.5, 0.75, 1.0]))
-    ax.set_yticks(prop2range[1] * np.array([0.0, 0.25, 0.5, 0.75, 1.0]))
-    ax.set_xticks(prop1range[1] * np.array(range(0,convergence_bins + 1))/convergence_bins, minor=True)
-    ax.set_yticks(prop2range[1] * np.array(range(0,convergence_bins + 1))/convergence_bins, minor=True)
+    ax.set_xticks((prop1range[1] - prop1range[0]) * np.array([0.0, 0.25, 0.5, 0.75, 1.0]) + prop1range[0])
+    ax.set_yticks((prop2range[1] - prop2range[0]) * np.array([0.0, 0.25, 0.5, 0.75, 1.0]) + prop2range[0])
+    ax.set_xticks((prop1range[1] - prop1range[0]) * np.array(range(0,convergence_bins + 1))/convergence_bins + prop1range[0], minor=True)
+    ax.set_yticks((prop2range[1] - prop2range[0]) * np.array(range(0,convergence_bins + 1))/convergence_bins + prop2range[0], minor=True)
 
     if show_grid:
         ax.grid(linestyle='-', color='0.8', zorder=0)
