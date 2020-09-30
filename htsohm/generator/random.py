@@ -1,6 +1,6 @@
 from random import choice, random, uniform, randint
 
-from htsohm.db import Material, Structure, AtomTypes, AtomSite
+from htsohm.db import Material, AtomTypes, AtomSite
 from htsohm.pair_distance import min_pair_distance
 
 def random_atom_types(num_atom_types, config):
@@ -43,7 +43,8 @@ def new_material(config, attempts=10):
             b = uniform(*config["lattice_constant_limits"])
             c = uniform(*config["lattice_constant_limits"])
 
-        structure=Structure(
+
+        material=Material(
             a = a, b = b, c = c,
             atom_types = random_atom_types(config["number_of_atom_types"], config),
         )
@@ -51,10 +52,10 @@ def new_material(config, attempts=10):
         number_of_atoms = randint(*config["num_atoms_limits"])
 
         q = random_charges(number_of_atoms, config["charge_limits"][1])
-        structure.atom_sites = random_atom_sites(number_of_atoms, structure.atom_types, q=q)
+        material.atom_sites = random_atom_sites(number_of_atoms, material.atom_types, q=q)
 
-        if structure.min_pair_distance * structure.a > config['minimum_site_distance']:
-            return Material(structure=structure)
+        if material.min_pair_distance * material.a > config['minimum_site_distance']:
+            return material
 
     raise(Exception("Failed to create a material that satisfied min site distance requirements in allowed number of attempts"))
 

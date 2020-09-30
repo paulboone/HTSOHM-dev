@@ -14,7 +14,7 @@ from htsohm.slog import slog
 
 def write_raspa_file(filename, material, simulation_config):
     # Load simulation parameters from config
-    unit_cells = material.structure.minimum_unit_cells(simulation_config['cutoff'])
+    unit_cells = material.minimum_unit_cells(simulation_config['cutoff'])
     values = {
             "Cutoff"            : simulation_config['cutoff'],
             "NumberOfCycles"    : simulation_config["simulation_cycles"],
@@ -37,9 +37,9 @@ def write_input_files(material, simulation_config, output_dir):
     # Pseudomaterial mol-file
     write_mol_file(material, output_dir)
     # Lennard-Jones parameters, force_field_mixing_rules.def
-    write_mixing_rules(material.structure, output_dir)
+    write_mixing_rules(material, output_dir)
     # Pseudoatom definitions, pseudo_atoms.def (placeholder values)
-    write_pseudo_atoms(material.structure, output_dir)
+    write_pseudo_atoms(material, output_dir)
     # Overwritten interactions, force_field.def (none overwritten by default)
     write_force_field(output_dir)
 

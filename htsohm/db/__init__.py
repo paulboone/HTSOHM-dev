@@ -59,7 +59,7 @@ from htsohm.db.surface_area import SurfaceArea
 from htsohm.db.void_fraction import VoidFraction
 from htsohm.db.henrys_coefficient import HenrysCoefficient
 from htsohm.db.material import Material
-from htsohm.db.structure import Structure
+
 
 def delete_extra_materials(delete_after_id):
     __engine__.execute("delete from materials where id > %d" % delete_after_id)
@@ -67,6 +67,5 @@ def delete_extra_materials(delete_after_id):
     __engine__.execute("delete from surface_areas where material_id > %d" % delete_after_id)
     __engine__.execute("delete from void_fractions where material_id > %d" % delete_after_id)
     __engine__.execute("delete from henrys_coefficients where material_id > %d" % delete_after_id)
-    __engine__.execute("delete from structures where material_id > %d" % delete_after_id)
-    __engine__.execute("delete from atom_types where structure_id > %d" % delete_after_id)
-    __engine__.execute("delete from atom_sites where structure_id > %d" % delete_after_id)
+    __engine__.execute("delete from atom_types where material_id > %d" % delete_after_id)
+    __engine__.execute("delete from atom_sites where mateiral_id > %d" % delete_after_id)

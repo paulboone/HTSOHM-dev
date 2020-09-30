@@ -29,7 +29,7 @@ class HenrysCoefficient(Base):
 
     @property
     def m_to_v(self):
-        st = self.material.structure
+        st = self.material
         return henrys_m_to_v(st.volume, len(st.atom_sites), atom_site_mass=12.0)
 
     @property

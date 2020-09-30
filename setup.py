@@ -32,9 +32,6 @@ setup(
               'psm-material-csv = htsohm.bin.output_csv:output_material_csv',
               'psm-csv-add-bin = htsohm.bin.output_csv:csv_add_bin',
               'psm-dof-analysis = htsohm.bin.dof_analysis:dof_analysis',
-              'psm-setup-one-atom-sweep = htsohm.bin.one_atom_sweep_setup:sweep_setup',
-              'psm-setup-cube-pore-sweep = htsohm.bin.cube_pore_sweep_setup:sweep_setup',
-              'psm-run-one-atom-sweep = htsohm.bin.one_atom_sweep_run:run_materials',
           ]
       },
 )

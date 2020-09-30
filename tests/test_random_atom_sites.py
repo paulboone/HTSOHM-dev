@@ -29,7 +29,7 @@ def test_new_material__too_close_sites_fail(config):
 def test_new_material__atom_sites_are_not_too_close(config):
     seed(0)
     m = new_material(config, attempts=2)
-    assert m.structure.min_pair_distance * m.structure.a > config['minimum_site_distance']
+    assert m.min_pair_distance * m.a > config['minimum_site_distance']
 
 def test_find_atom_site_with_minimum_distance__first_site_is_ok():
     assert find_atom_site_with_minimum_distance([], distance=1.0, uc_a = 1.01) is not None

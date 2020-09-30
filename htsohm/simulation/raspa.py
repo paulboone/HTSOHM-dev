@@ -3,20 +3,20 @@ import os
 def write_mol_file(material, simulation_path):
     """Writes .mol file for structural information."""
 
-    s = material.structure
-
     file_name = os.path.join(simulation_path, "{}.mol".format(material.id))
     with open(file_name, "w") as mol_file:
         mol_file.write(
                 " Molecule_name: {}\n".format(material.id) +
                 "\n" +
                 "  Coord_Info: Listed Cartesian None\n" +
-                "        {}\n".format(len(s.atom_sites)))
-        for i in range(len(s.atom_sites)):
-            a = s.atom_sites[i]
+                "        {}\n".format(len(material.atom_sites)))
+        for i in range(len(material.atom_sites)):
+            a = material.atom_sites[i]
             mol_file.write(
                     "{:6} {:10.4f} {:10.4f} {:10.4f}  {:5} {:10.8f}  0  0\n".format(
-                        i + 1, round(a.x * s.a, 4), round(a.y * s.b, 4), round(a.z * s.c, 4),
+                        i + 1, round(a.x * material.a, 4),
+                        round(a.y * material.b, 4),
+                        round(a.z * material.c, 4),
                         str(a.atom_types.atom_type_index()), round(a.q, 8)))
         mol_file.write(
                 "\n" +
@@ -24,14 +24,14 @@ def write_mol_file(material, simulation_path):
                 "\n" +
                 "  Fundcell_Info: Listed\n" +
                 "        {:10.4f}       {:10.4f}       {:10.4f}\n".format(
-                    round(s.a, 4), round(s.b, 4), round(s.c, 4)) +
+                    round(material.a, 4), round(material.b, 4), round(material.c, 4)) +
                 "           90.0000          90.0000          90.0000\n" +
                 "           0.00000          0.00000          0.00000\n" +
                 "        {:10.4f}       {:10.4f}       {:10.4f}\n".format(
-                    round(s.a, 4), round(s.b, 4), round(s.c, 4)) +
+                    round(material.a, 4), round(material.b, 4), round(material.c, 4)) +
                 "\n")
 
-def write_mixing_rules(structure, simulation_path):
+def write_mixing_rules(material, simulation_path):
     """Writes .def file for forcefield information."""
     adsorbate_LJ_atoms = [
             ['N_n2',    36.0,       3.31],
@@ -55,11 +55,11 @@ shifted
 no
 # number of defined interactions
 {0}
-# type interaction, parameters\n""".format(len(structure.atom_sites) + len(adsorbate_LJ_atoms) + len(adsorbate_none_atoms)))
+# type interaction, parameters\n""".format(len(material.atom_sites) + len(adsorbate_LJ_atoms) + len(adsorbate_none_atoms)))
 
         # write one atom type per atom site, so we can define per-site charges on the types.
         type_template = "{0:12} lennard-jones {1:.4f} {2:.4f}\n"
-        for i, a in enumerate(structure.atom_sites):
+        for i, a in enumerate(material.atom_sites):
             f.write(type_template.format(i, a.atom_types.epsilon, a.atom_types.sigma))
         for at in adsorbate_LJ_atoms:
             f.write(type_template.format(at[0], at[1], at[2]))
@@ -72,7 +72,7 @@ no
             "# general mixing rule for Lennard-Jones\n" +
             "Lorentz-Berthelot")
 
-def write_pseudo_atoms(structure, simulation_path):
+def write_pseudo_atoms(material, simulation_path):
     """Writes .def file for chemical information.
 
     Args:
@@ -88,12 +88,12 @@ def write_pseudo_atoms(structure, simulation_path):
     with open(file_name, "w") as pseudo_atoms_file:
         pseudo_atoms_file.write(
             "#number of pseudo atoms\n" +
-            "%s\n" % (len(structure.atom_sites) + 13) +
+            "%s\n" % (len(material.atom_sites) + 13) +
             "#type  print   as  chem    oxidation   mass    charge  polarization    B-factor    radii   " +
                  "connectivity  anisotropic anisotrop-type  tinker-type\n")
 
         atom_type_string = "{:7}  yes  C   C   0   12.0       {:f}  0.0  1.0  1.0    0  0  absolute  0\n"
-        for i, a in enumerate(structure.atom_sites):
+        for i, a in enumerate(material.atom_sites):
             pseudo_atoms_file.write(atom_type_string.format(i, a.q))
 
         pseudo_atoms_file.write(

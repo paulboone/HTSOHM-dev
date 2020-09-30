@@ -1,10 +1,11 @@
 from itertools import product
+import math
 
 from sqlalchemy import ForeignKey, Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 
 from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction, AtomSite, AtomTypes, HenrysCoefficient
-from htsohm.db.structure import Structure
+from htsohm.pair_distance import min_pair_distance, max_pair_distance
 
 class Material(Base):
     __tablename__ = 'materials'
@@ -15,66 +16,95 @@ class Material(Base):
     perturbation = Column(String(10))
     generation   = Column(Integer)
 
+    a = Column(Float)
+    b = Column(Float)
+    c = Column(Float)
+
+
     # relationships
     parent            = relationship("Material", remote_side=[id])
-    structure         = relationship("Structure", uselist=False, backref="material", cascade="all, delete-orphan")
+    atom_sites = relationship("AtomSite", backref="material")
+    atom_types = relationship("AtomTypes", backref="material")
 
     gas_loading       = relationship("GasLoading", cascade="all, delete-orphan")
     surface_area      = relationship("SurfaceArea", cascade="all, delete-orphan")
     void_fraction     = relationship("VoidFraction", cascade="all, delete-orphan")
     henrys_coefficient = relationship("HenrysCoefficient", backref="material", cascade="all, delete-orphan")
 
-    def __init__(self, parent=None, structure=None):
+    def __init__(self, parent=None, a=None, b=None, c=None, atom_sites=[], atom_types=[]):
         if parent:
             self.parent = parent
             self.parent_id = parent.id
-        if structure is None:
-            self.structure = Structure()
-        else:
-            self.structure = structure
 
-    @staticmethod
-    def one_atom_new(sigma, epsilon, a, b, c):
-        structure=Structure(a=a, b=b, c=c,
-                            atom_types=[AtomTypes(sigma=sigma, epsilon=epsilon)])
+        self.a = a
+        self.b = b
+        self.c = c
 
-        structure.atom_sites = [AtomSite(x=1.0, y=1.0, z=1.0, q=0.0,
-                                atom_types=structure.atom_types[0])]
-
-        return Material(structure=structure)
-
-    @staticmethod
-    def cube_pore_new(sigma, epsilon, num_atoms, atom_diameter):
-        # lattice constant a is calculated from number of atoms times the atom_diameter
-        a = num_atoms * atom_diameter
-
-        structure=Structure(a=a, b=a, c=a,
-                            atom_types=[AtomTypes(sigma=sigma, epsilon=epsilon)])
-
-        for xi, yi, zi in product(range(num_atoms), range(num_atoms), range(num_atoms)):
-            # only add indices that are in one of the three boundary planes, i.e index == 0
-            if min(xi, yi, zi) == 0:
-                structure.atom_sites.append(AtomSite(
-                    atom_types=structure.atom_types[0],
-                    x=xi * atom_diameter / a,
-                    y=yi * atom_diameter / a,
-                    z=zi * atom_diameter / a,
-                    q=0.0
-                ))
-
-        return Material(structure=structure)
+        self.atom_sites = atom_sites
+        self.atom_types = atom_types
 
     def clone(self):
         copy = super(Material, self).clone()
         copy.parent = self
         copy.parent_id = self.id
-        copy.structure = self.structure.clone()
+
+        if self.atom_types:
+            for lj in self.atom_types:
+                copy.atom_types.append(lj.clone())
+
+        if self.atom_sites:
+            for atom_site in self.atom_sites:
+                atom_types = copy.atom_types[atom_site.atom_types.atom_type_index()]
+                copy.atom_sites.append(atom_site.clone(atom_types))
+
+
         return copy
 
     def exclude_cols(self):
         return ['id']
 
     def __repr__(self):
-        return "(%s: p: %s)" % (str(self.id), self.parent_id)
+        return "(%s: parent: %s, a: %s )" % (str(self.id), self.parent_id, self.a)
 
-    
+    def minimum_unit_cells(self, cutoff):
+        return (math.ceil(2 * cutoff / self.a),
+                math.ceil(2 * cutoff / self.b),
+                math.ceil(2 * cutoff / self.c))
+
+    @property
+    def volume(self):
+        return self.a * self.b * self.c
+
+    @property
+    def max_pair_distance(self):
+        """in fractional coordinates"""
+        return max_pair_distance([a.xyz for a in self.atom_sites])
+
+    @property
+    def min_pair_distance(self):
+        """in fractional coordinates"""
+        return min_pair_distance([a.xyz for a in self.atom_sites])
+
+    def min_unit_cell_a(self, min_distance):
+        return min_distance / self.min_pair_distance
+
+    @property
+    def number_density(self):
+        return len(self.atom_sites)/self.volume
+
+    @property
+    def total_epsilon(self):
+        return sum([s.atom_types.epsilon for s in self.atom_sites])
+
+    @property
+    def epsilon_density(self):
+        return self.total_epsilon / self.volume
+
+    @property
+    def allq(self):
+        return [a.q for a in self.atom_sites]
+
+    @allq.setter
+    def allq(self, allq):
+        for i, q in enumerate(allq):
+            self.atom_sites[i].q = q

@@ -89,20 +89,16 @@ def perturb_unweighted(curr_val, mutation_strength, var_limits):
     return min(max(new_val, var_limits[0]), var_limits[1])
 
 def print_parent_child_diff(parent, child):
-    ps = parent.structure
-    cs = child.structure
     slog("PARENT ID :\t{}".format(parent.id))
     slog("CHILD ID  :\t{}".format(child.id))
-    slog("lattice constants: (%.2f, %.2f, %.2f) => (%.2f, %.2f, %.2f)" % (ps.a, ps.b, ps.c, cs.a, cs.b, cs.c))
-    slog("number of atoms: %.2f => %.2f" % (len(parent.structure.atom_sites),
-                                             len(child.structure.atom_sites)))
-    parent_ats = ", ".join(["(%.1f, %.1f)" % (ats.epsilon, ats.sigma) for ats in ps.atom_types])
-    child_ats = ", ".join(["(%.1f, %.1f)" % (ats.epsilon, ats.sigma) for ats in cs.atom_types])
+    slog("lattice constants: (%.2f, %.2f, %.2f) => (%.2f, %.2f, %.2f)" % (parent.a, parent.b, parent.c, child.a, child.b, child.c))
+    slog("number of atoms: %.2f => %.2f" % (len(parent.atom_sites), len(child.atom_sites)))
+    parent_ats = ", ".join(["(%.1f, %.1f)" % (ats.epsilon, ats.sigma) for ats in parent.atom_types])
+    child_ats = ", ".join(["(%.1f, %.1f)" % (ats.epsilon, ats.sigma) for ats in child.atom_types])
     slog("atom types: %s => %s" % (parent_ats, child_ats))
 
 def mutate_material(parent, config):
     child = parent.clone()
-    cs = child.structure
 
     perturb = set(config["perturb"])
     if config["perturb_type"] == "random":
@@ -115,62 +111,62 @@ def mutate_material(parent, config):
     slog("Perturbing: %s [%s]" % (child.perturbation, perturb))
     ms = config["mutation_strength"]
 
-    if config["number_of_atom_types"] > len(cs.atom_types):
-        num_atom_types_to_add = config["number_of_atom_types"] - len(cs.atom_types)
+    if config["number_of_atom_types"] > len(child.atom_types):
+        num_atom_types_to_add = config["number_of_atom_types"] - len(child.atom_types)
         slog("Adding %d random atom types so we have number defined in the config" % num_atom_types_to_add)
-        cs.atom_types += random_atom_types(num_atom_types_to_add, config)
+        child.atom_types += random_atom_types(num_atom_types_to_add, config)
 
     if perturb & {"num_atoms"} and random() < ms:
         if random() < 0.5: # remove an atom
-            if len(cs.atom_sites) > config['num_atoms_limits'][0]:
-                site_to_remove = choice(cs.atom_sites)
+            if len(child.atom_sites) > config['num_atoms_limits'][0]:
+                site_to_remove = choice(child.atom_sites)
                 slog("Removing atom site: ", site_to_remove)
-                removed_site = cs.atom_sites.remove(site_to_remove)
-                cs.allq = rebalance_charges(cs.allq, config['charge_limits'])
+                removed_site = child.atom_sites.remove(site_to_remove)
+                child.allq = rebalance_charges(child.allq, config['charge_limits'])
         else: # add an atom
-            if len(cs.atom_sites) < config['num_atoms_limits'][1]:
+            if len(child.atom_sites) < config['num_atoms_limits'][1]:
                 slog("Adding atom site...")
-                atom_position = find_atom_site_with_minimum_distance([s.xyz for s in cs.atom_sites], config['minimum_site_distance'], cs.a)
+                atom_position = find_atom_site_with_minimum_distance([s.xyz for s in child.atom_sites], config['minimum_site_distance'], child.a)
                 if atom_position:
                     # note, the xyz coordinates from random_atom_sites will be replaced by the point found above
-                    new_site = random_atom_sites(1, cs.atom_types, q=[uniform(*config['charge_limits'])])[0]
+                    new_site = random_atom_sites(1, child.atom_types, q=[uniform(*config['charge_limits'])])[0]
                     new_site.xyz = atom_position
-                    cs.atom_sites.append(new_site)
-                    cs.allq = rebalance_charges(cs.allq, config['charge_limits'], exclude_indices=[len(cs.atom_sites) - 1])
+                    child.atom_sites.append(new_site)
+                    child.allq = rebalance_charges(child.allq, config['charge_limits'], exclude_indices=[len(child.atom_sites) - 1])
                 else:
                     slog("Failed to add a new atom.")
 
     if perturb & {"atom_type_assignments"}:
-        for i, atom in enumerate(cs.atom_sites):
+        for i, atom in enumerate(child.atom_sites):
             if random() < ms**2:
-                new_atom_type = choice(cs.atom_types)
+                new_atom_type = choice(child.atom_types)
                 slog("Reassigning atom type for site %d from %d to %d" %
-                    (i, cs.atom_types.index(atom.atom_types), cs.atom_types.index(new_atom_type)))
+                    (i, child.atom_types.index(atom.atom_types), child.atom_types.index(new_atom_type)))
                 atom.atom_types = new_atom_type
 
     if perturb & {"atom_types"}:
         sigl = config["sigma_limits"]
         epsl = config["epsilon_limits"]
-        for at in cs.atom_types:
+        for at in child.atom_types:
             at.sigma = perturb_unweighted(at.sigma, ms, sigl)
             at.epsilon = perturb_unweighted(at.epsilon, ms, epsl)
 
     if perturb & {"lattice"}:
         ll = config["lattice_constant_limits"]
-        trial_a = perturb_unweighted(cs.a, ms, ll)
-        cs.a = max(trial_a, cs.min_unit_cell_a(config['minimum_site_distance']))
+        trial_a = perturb_unweighted(child.a, ms, ll)
+        child.a = max(trial_a, child.min_unit_cell_a(config['minimum_site_distance']))
         if config["lattice_cubic"]:
-            cs.b = cs.a
-            cs.c = cs.a
+            child.b = child.a
+            child.c = child.a
         else:
-            cs.b = perturb_unweighted(cs.b, ms, ll)
-            cs.c = perturb_unweighted(cs.c, ms, ll)
+            child.b = perturb_unweighted(child.b, ms, ll)
+            child.c = perturb_unweighted(child.c, ms, ll)
 
     if perturb & {"atom_sites"}:
-        move_sites(cs.atom_sites, cs.a, ms, config['minimum_site_distance'])
+        move_sites(child.atom_sites, child.a, ms, config['minimum_site_distance'])
 
     if perturb & {"charges"}:
-        cs.allq = mutate_charges(cs.allq, ms, config['charge_limits'])
+        child.allq = mutate_charges(child.allq, ms, config['charge_limits'])
 
     # possibility that the material is unchanged
 

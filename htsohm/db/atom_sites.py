@@ -7,7 +7,7 @@ class AtomSite(Base):
     __tablename__ = "atom_sites"
 
     id = Column(Integer, primary_key=True)
-    structure_id = Column(Integer, ForeignKey("structures.id"), index=True)
+    material_id = Column(Integer, ForeignKey("materials.id"), index=True)
     atom_types_id = Column(Integer, ForeignKey("atom_types.id"))
 
     x = Column(Float)
