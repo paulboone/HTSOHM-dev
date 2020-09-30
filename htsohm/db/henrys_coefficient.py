@@ -4,7 +4,7 @@ from htsohm.db import Base
 
 def henrys_m_to_v(volume, num_atom_sites, atom_site_mass=12.0):
     """
-        henrys_mass in
+        henrys_mass in  mol / (kg * Pa)
         volume in cubic angstroms
         atom_site_mass in g
     """
