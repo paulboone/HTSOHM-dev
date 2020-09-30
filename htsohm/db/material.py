@@ -10,14 +10,10 @@ class Material(Base):
     __tablename__ = 'materials'
 
     id           = Column(Integer, primary_key=True)
-
     parent_id    = Column(Integer, ForeignKey('materials.id'))
 
     perturbation = Column(String(10))
     generation   = Column(Integer)
-
-    # structure properties
-    number_density       = Column(Float)
 
     # relationships
     parent            = relationship("Material", remote_side=[id])
@@ -28,15 +24,7 @@ class Material(Base):
     void_fraction     = relationship("VoidFraction", cascade="all, delete-orphan")
     henrys_coefficient = relationship("HenrysCoefficient", backref="material", cascade="all, delete-orphan")
 
-    def __init__(self, parent=None, structure=None, number_density=None):
-        """Init material-row.
-
-        Args:
-            self (class): row in material table.
-
-        Initializes row in materials datatable.
-
-        """
+    def __init__(self, parent=None, structure=None):
         if parent:
             self.parent = parent
             self.parent_id = parent.id
@@ -44,9 +32,6 @@ class Material(Base):
             self.structure = Structure()
         else:
             self.structure = structure
-
-        if number_density:
-            self.number_density = number_density
 
     @staticmethod
     def one_atom_new(sigma, epsilon, a, b, c):
@@ -91,3 +76,5 @@ class Material(Base):
 
     def __repr__(self):
         return "(%s: p: %s)" % (str(self.id), self.parent_id)
+
+    

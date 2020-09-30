@@ -54,7 +54,7 @@ def new_material(config, attempts=10):
         structure.atom_sites = random_atom_sites(number_of_atoms, structure.atom_types, q=q)
 
         if structure.min_pair_distance * structure.a > config['minimum_site_distance']:
-            return Material(structure=structure, number_density=number_of_atoms / structure.volume)
+            return Material(structure=structure)
 
     raise(Exception("Failed to create a material that satisfied min site distance requirements in allowed number of attempts"))
 

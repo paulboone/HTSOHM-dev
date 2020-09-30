@@ -165,7 +165,6 @@ def mutate_material(parent, config):
         else:
             cs.b = perturb_unweighted(cs.b, ms, ll)
             cs.c = perturb_unweighted(cs.c, ms, ll)
-        child.number_density = len(cs.atom_sites) / cs.volume
 
     if perturb & {"atom_sites"}:
         move_sites(cs.atom_sites, cs.a, ms, config['minimum_site_distance'])
