@@ -31,6 +31,14 @@ class Material(Base):
     void_fraction     = relationship("VoidFraction", cascade="all, delete-orphan")
     henrys_coefficient = relationship("HenrysCoefficient", backref="material", cascade="all, delete-orphan")
 
+    @classmethod
+    def add_data_columns(cls, property_config):
+        print(property_config)
+        for pcfg in property_config:
+            for field in pcfg['fields']:
+                colname = pcfg['prefix'] + field
+                setattr(cls, colname, Column(colname, Float))
+
     def __init__(self, parent=None, a=None, b=None, c=None, atom_sites=[], atom_types=[]):
         if parent:
             self.parent = parent

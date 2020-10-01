@@ -13,7 +13,7 @@ from htsohm.db import Material, AtomSite
 @click.argument('database-path', type=click.Path())
 @click.option('--start-id', default=0, type=int)
 def output_csv(database_path, start_id=0):
-    db.init_database(db.get_sqlite_dbcs(database_path))
+    db.init_database(db.get_sqlite_dbcs(database_path), config["properties"])
     session = db.get_session()
     output_csv_from_db(session, start_id)
 
@@ -43,7 +43,7 @@ def output_csv_from_db(session, start_id=0, output_file=sys.stdout):
 @click.command()
 @click.argument('database-path', type=click.Path())
 def output_atom_sites_csv(database_path):
-    db.init_database(db.get_sqlite_dbcs(database_path))
+    db.init_database(db.get_sqlite_dbcs(database_path), config["properties"])
     session = db.get_session()
     output_atom_sites_csv_from_db(session)
 
@@ -60,7 +60,7 @@ def output_atom_sites_csv_from_db(session, output_file=sys.stdout):
 @click.argument('database-path', type=click.Path())
 @click.argument('ids', nargs=-1, type=int)
 def output_material_csv(database_path, ids):
-    db.init_database(db.get_sqlite_dbcs(database_path))
+    db.init_database(db.get_sqlite_dbcs(database_path), config["properties"])
     session = db.get_session()
     output_materials_csvs_from_db(session, ids)
 

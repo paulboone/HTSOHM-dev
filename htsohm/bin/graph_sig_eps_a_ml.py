@@ -49,7 +49,7 @@ def bin_graph(config_path, csv_path=None, database_path=None):
             mats_by_lj[lj].append([m[1], m[7]]) # lattice a, abs volumetric loading
 
     else:
-        db.init_database(db.get_sqlite_dbcs(database_path))
+        db.init_database(db.get_sqlite_dbcs(database_path), config["properties"])
         session = db.get_session()
         mats = session.query(Material) \
             .options(joinedload("atom_types")) \

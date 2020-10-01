@@ -74,8 +74,7 @@ def init_worker(worker_metadata):
     global gen
     global worker_session
     generator, config, gen = worker_metadata
-    _, worker_session = db.init_database(config["database_connection_string"],
-                        void_fraction_subtype=config['void_fraction_subtype'])
+    _, worker_session = db.init_database(config["database_connection_string"], config["properties"])
     return
 
 def simulate_generation_worker(parent_id):
@@ -147,9 +146,8 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     if max_generations is None:
         max_generations = config['max_generations']
 
-    engine, session = db.init_database(config["database_connection_string"],
-                backup=(load_restart_path != False or restart_generation > 0),
-                void_fraction_subtype=config['void_fraction_subtype'])
+    engine, session = db.init_database(config["database_connection_string"], config['properties'],
+                backup=(load_restart_path != False or restart_generation > 0))
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
     if restart_generation >= 0:

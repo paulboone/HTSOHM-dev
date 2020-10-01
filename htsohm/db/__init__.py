@@ -28,7 +28,7 @@ def get_sqlite_dbcs(database_path=None):
         database_path = dbs[0]
     return "sqlite:///%s" % database_path
 
-def init_database(connection_string, backup=False, void_fraction_subtype="void_fraction"):
+def init_database(connection_string, data_config, backup=False):
     global __engine__
     global __session__
 
@@ -43,10 +43,9 @@ def init_database(connection_string, backup=False, void_fraction_subtype="void_f
     __session__ = sessionmaker(bind=__engine__)()
 
     # Create tables in the engine, if they don't exist already.
+    Material.add_data_columns(data_config)
     Base.metadata.create_all(__engine__)
     Base.metadata.bind = __engine__
-
-    VoidFraction.set_column_for_void_fraction(void_fraction_subtype)
 
     return __engine__, __session__
 

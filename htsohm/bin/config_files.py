@@ -13,7 +13,7 @@ from htsohm.simulation import simulate
 @click.option('--database-path', type=click.Path())
 def output_config_files(config_path, material_ids, database_path=None):
     config = load_config_file(config_path)
-    db.init_database(db.get_sqlite_dbcs(database_path))
+    db.init_database(db.get_sqlite_dbcs(database_path), config["properties"])
     session = db.get_session()
 
     from htsohm.db import Material

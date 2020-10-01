@@ -14,7 +14,7 @@ from htsohm.htsohm_run import calc_bins
 
 def dof_analysis(config_path, output_directory):
     config = load_config_file(config_path)
-    db.init_database(config["database_connection_string"])
+    db.init_database(config["database_connection_string"], config["properties"])
     session = db.get_session()
 
     children_per_generation = config['children_per_generation']

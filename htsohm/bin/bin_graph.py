@@ -44,7 +44,7 @@ def bin_graph(config_path, database_path=None, csv_path=None, last_material=None
             mats_r = mats_r[(epsilon_limits[0] <= mats_r[:,3]) & (mats_r[:,3] <= epsilon_limits[1])]
             print("%d rows after applying epsilon limits" % mats_r.shape[0])
     else:
-        db.init_database(db.get_sqlite_dbcs(database_path), void_fraction_subtype=config['void_fraction_subtype'])
+        db.init_database(db.get_sqlite_dbcs(database_path), config["properties"])
         session = db.get_session()
 
         mats_d = session.query(Material).options(joinedload("void_fraction"), joinedload("henrys_coefficient"))
