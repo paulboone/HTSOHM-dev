@@ -16,7 +16,6 @@ from htsohm.bins import calc_bins
 from htsohm.bin.output_csv import output_csv_from_db, csv_add_bin_column
 from htsohm.db import Material, VoidFraction
 from htsohm.simulation.run_all import run_all_simulations
-# from htsohm.figures import delaunay_figure
 import htsohm.select.triangulation as selector_tri
 import htsohm.select.density_bin as selector_bin
 import htsohm.select.best as selector_best
@@ -204,11 +203,6 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         new_bins, bins = _update_bins_counts_materials(all_bins, set(), 0)
 
         print([print(i, b, all_bins[i]) for i, b in enumerate(box_r)])
-        # output_path = os.path.join(config['output_dir'], "binplot_0.png")
-        # delaunay_figure(box_r, num_bins, output_path, bins=bin_counts, \
-        #                     title="Starting random materials", show_triangulation=False, show_hull=False, \
-        #                     prop1range=prop1range, prop2range=prop2range)
-
         start_gen = 1
 
     if config['generator_type'] == 'random':
@@ -241,31 +235,6 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
             else:
                 last_benchmark_reached = True
 
-        # if config['bin_graph_on'] and (
-        #     (benchmark_just_reached or gen == config['max_generations']) or \
-        #     (config['bin_graph_every'] > 0  and gen % config['bin_graph_every'] == 0)):
-        #
-        #     output_path = os.path.join(config['output_dir'], "binplot_%d.png" % gen)
-        #     delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
-        #                     bins=bin_counts, new_bins=new_bins,
-        #                     title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
-        #                         (gen, len(bins), num_bins ** 2, len(new_bins),
-        #                         100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
-        #                     patches=None, prop1range=prop1range, prop2range=prop2range, \
-        #                     perturbation_methods=["all"]*children_per_generation, show_triangulation=False, show_hull=False)
-        #
-        # if config['tri_graph_on'] and (
-        #     (benchmark_just_reached or gen == config['max_generations']) or \
-        #     (config['tri_graph_every'] > 0  and gen % config['tri_graph_every'] == 0)):
-        #
-        #     output_path = os.path.join(config['output_dir'], "triplot_%d.png" % gen)
-        #     delaunay_figure(box_r, num_bins, output_path, children=new_box_r, parents=parents_r,
-        #                     bins=bin_counts, new_bins=new_bins,
-        #                     title="Generation %d: %d/%d (+%d) %5.2f%% (+%5.2f %%)" %
-        #                         (gen, len(bins), num_bins ** 2, len(new_bins),
-        #                         100*float(len(bins)) / num_bins ** 2, 100*float(len(new_bins)) / num_bins ** 2 ),
-        #                     patches=None, prop1range=prop1range, prop2range=prop2range, \
-        #                     perturbation_methods=["all"]*children_per_generation)
 
         box_d = np.append(box_d, new_box_d, axis=0)
         box_r = np.append(box_r, new_box_r, axis=0)
