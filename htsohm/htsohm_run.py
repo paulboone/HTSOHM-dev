@@ -159,9 +159,6 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     prop1range = config['prop1range']
     prop2range = config['prop2range']
     num_bins = config['number_of_convergence_bins']
-    benchmarks = config['benchmarks']
-    next_benchmark = benchmarks.pop(0)
-    last_benchmark_reached = False
     load_restart_path = config['load_restart_path']
 
     if max_generations is None:
@@ -211,8 +208,6 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         generator_method = generator.mutate.mutate_material
 
     for gen in range(start_gen, max_generations + 1):
-        benchmark_just_reached = False
-
         # mutate materials and simulate properties
         parents_d, parents_r = select_parents(children_per_generation, box_d, box_r, bin_materials, config)
         new_box_d, new_box_r = parallel_simulate_generation(generator_method, num_processes, parents_d,
@@ -226,26 +221,15 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         # evaluate algorithm effectiveness
         bin_fraction_explored = len(bins) / num_bins ** 2
         print_block('GENERATION %s: %5.2f%%' % (gen, bin_fraction_explored * 100))
-        while bin_fraction_explored >= next_benchmark:
-            benchmark_just_reached = True
-            print_block("%s: %5.2f%% exploration accomplished at generation %d" %
-                ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()), bin_fraction_explored * 100, gen))
-            if benchmarks:
-                next_benchmark = benchmarks.pop(0)
-            else:
-                last_benchmark_reached = True
-
 
         box_d = np.append(box_d, new_box_d, axis=0)
         box_r = np.append(box_r, new_box_r, axis=0)
 
         restart_path = os.path.join(config['output_dir'], "restart.txt.npz")
         dump_restart(restart_path, box_d, box_r, bin_counts, bin_materials, bins, gen + 1)
-        if benchmark_just_reached or gen == max_generations:
+        if gen == max_generations:
             shutil.move(restart_path, os.path.join(config['output_dir'], "restart%d.txt.npz" % gen))
 
-        if last_benchmark_reached:
-            break
 
     # with open("pm.csv", 'w', newline='') as f:
     #     output_csv_from_db(session, output_file=f)
