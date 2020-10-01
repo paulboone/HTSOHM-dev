@@ -30,22 +30,6 @@ def print_block(string):
 def empty_lists_2d(x,y):
     return [[[] for j in range(x)] for i in range(y)]
 
-def dump_restart(path, box_d, box_r, bin_counts, bin_materials, bins, gen):
-    np.savez(path, box_d, box_r, bin_counts, bin_materials, bins, gen)
-
-def load_restart(path):
-    if path == "auto":
-        restart_files = glob("*.txt.npz")
-        restart_files.sort(key=os.path.getmtime)
-        if len(restart_files) == 0:
-            raise(Exception("ERROR: no txt.npz restart file in the current directory; auto cannot be used."))
-        path = restart_files[-1]
-        if len(restart_files) > 1:
-            print("WARNING: more than one txt.npz file found in this directory. Using last one: %s" % path)
-
-    npzfile = np.load(path, allow_pickle=True)
-    return [npzfile[v] if npzfile[v].size != 1 else npzfile[v].item() for v in npzfile.files]
-
 def load_restart_db(gen, num_bins, prop1range, prop2range, session):
     mats = session.query(Material).options(joinedload("void_fraction"), joinedload("gas_loading")) \
                     .filter(Material.generation <= gen).all()
@@ -159,7 +143,6 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     prop1range = config['prop1range']
     prop2range = config['prop2range']
     num_bins = config['number_of_convergence_bins']
-    load_restart_path = config['load_restart_path']
 
     if max_generations is None:
         max_generations = config['max_generations']
@@ -174,11 +157,6 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart_db(
             restart_generation, num_bins, prop1range, prop2range, session)
 
-        print("Restarting at generation %d\nThere are currently %d materials" % (start_gen, len(box_r)))
-        check_db_materials_for_restart(len(box_r), session, delete_excess=override_db_errors)
-    elif load_restart_path:
-        print("Restarting from file: %s" % load_restart_path)
-        box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart(load_restart_path)
         print("Restarting at generation %d\nThere are currently %d materials" % (start_gen, len(box_r)))
         check_db_materials_for_restart(len(box_r), session, delete_excess=override_db_errors)
     else:
@@ -224,12 +202,6 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
 
         box_d = np.append(box_d, new_box_d, axis=0)
         box_r = np.append(box_r, new_box_r, axis=0)
-
-        restart_path = os.path.join(config['output_dir'], "restart.txt.npz")
-        dump_restart(restart_path, box_d, box_r, bin_counts, bin_materials, bins, gen + 1)
-        if gen == max_generations:
-            shutil.move(restart_path, os.path.join(config['output_dir'], "restart%d.txt.npz" % gen))
-
 
     # with open("pm.csv", 'w', newline='') as f:
     #     output_csv_from_db(session, output_file=f)
