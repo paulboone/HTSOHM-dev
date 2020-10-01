@@ -142,7 +142,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     children_per_generation = config['children_per_generation']
     prop1range = config['prop1range']
     prop2range = config['prop2range']
-    num_bins = config['number_of_convergence_bins']
+    num_bins = config['num_bins']
 
     if max_generations is None:
         max_generations = config['max_generations']

@@ -22,7 +22,7 @@ def limit_index(v, limits, sweep_points):
 def bin_graph(config_path, csv_path=None, database_path=None):
 
     config = load_config_file(config_path)
-    num_bins = config['number_of_convergence_bins']
+    num_bins = config['num_bins']
     prop1range = config['structure_parameters']['lattice_constant_limits']
     prop2range = config['prop2range']
 

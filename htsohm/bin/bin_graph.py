@@ -27,7 +27,7 @@ def bin_graph(config_path, database_path=None, csv_path=None, last_material=None
 
     prop1range = config['prop1range']
     prop2range = config['prop2range']
-    num_bins = config['number_of_convergence_bins']
+    num_bins = config['num_bins']
 
     # vf_binunits = (prop1range[1] - prop1range[0]) / num_bins
     # ml_binunits = (prop2range[1] - prop2range[0]) / num_bins

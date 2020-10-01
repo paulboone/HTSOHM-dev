@@ -21,7 +21,7 @@ def dof_analysis(config_path, output_directory):
     prop1range = config['prop1range']
     prop2range = config['prop2range']
 
-    num_bins = config['number_of_convergence_bins']
+    num_bins = config['num_bins']
     bin_counts = np.zeros((num_bins, num_bins))
 
     vf_binunits = (prop1range[1] - prop1range[0]) / num_bins
