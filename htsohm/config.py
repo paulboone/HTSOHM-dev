@@ -8,7 +8,6 @@ def default_configuration():
         'keep_configs': False,
         'output_dir': os.getcwd(),
         'void_fraction_subtype': 'raspa',
-        'load_restart_path': False,
         'num_processes': 1,
         'initial_points_random_seed': int(time.time()),
         'structure_parameters': {

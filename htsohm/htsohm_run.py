@@ -147,7 +147,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         max_generations = config['max_generations']
 
     engine, session = db.init_database(config["database_connection_string"], config['properties'],
-                backup=(load_restart_path != False or restart_generation > 0))
+                backup=(restart_generation > 0))
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
     if restart_generation >= 0:
