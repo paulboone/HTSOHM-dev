@@ -15,9 +15,7 @@ def run_all_simulations(material, config):
     corresponding bins to row in database corresponding to the input-material.
     """
     slog("-----------------------------------------------")
-    for simulation_number in config["simulations"]:
-
-        simulation_config = config["simulations"][simulation_number]
+    for simulation_config in config["properties"]:
         slog('Time             : {:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
         slog("Simulation type  : {}".format(simulation_config["type"]))
         getattr(simulate, simulation_config["type"]).run(material, simulation_config, config)
