@@ -15,7 +15,6 @@ from pathlib import Path
 from htsohm.simulation.raspa import write_mol_file, write_mixing_rules
 from htsohm.simulation.raspa import write_pseudo_atoms, write_force_field
 from htsohm.simulation.templates import load_and_subs_template
-from htsohm.db import VoidFraction
 from htsohm.void_fraction import calculate_void_fraction
 from htsohm.slog import slog
 
@@ -51,12 +50,14 @@ def write_input_files(material, simulation_config, output_dir):
     # Overwritten interactions, force_field.def (none overwritten by default)
     write_force_field(output_dir)
 
-def parse_output(output_file, material, void_fraction):
+def parse_output(output_file):
+    vf = None
     with open(output_file) as origin:
         for line in origin:
             if not "Average Widom Rosenbluth-weight:" in line:
                 continue
-            void_fraction.void_fraction = float(line.split()[4])
+            vf = float(line.split()[4])
+    return vf
 
 
 def run(material, simulation_config, config):
@@ -64,19 +65,11 @@ def run(material, simulation_config, config):
     slog("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
-    write_input_files(material, simulation_config, output_dir)
+    if "raspa" in simulation_config["fields"]:
+        slog("Temperature      : {}".format(simulation_config["raspa"]["temperature"]))
+        slog("Probe            : {}".format(simulation_config["raspa"]["adsorbate"]))
 
-    # Run simulations
-    slog("Probe            : {}".format(simulation_config["adsorbate"]))
-    if "do_geo" in simulation_config:
-        slog("Probe radius [geo]: {}".format(simulation_config["probe_radius"]))
-    slog("Temperature      : {}".format(simulation_config["temperature"]))
-
-    void_fraction = VoidFraction()
-    void_fraction.adsorbate = simulation_config["adsorbate"]
-    void_fraction.temperature = simulation_config["temperature"]
-
-    if "do_raspa" in simulation_config and simulation_config["do_raspa"]:
+        write_input_files(material, simulation_config["raspa"], output_dir)
         tbegin = time.perf_counter()
         process = subprocess.run(["simulate", "-i", "./void_fraction.input"], check=True, cwd=output_dir, capture_output=True, text=True)
 
@@ -85,27 +78,21 @@ def run(material, simulation_config, config):
             raise Exception("ERROR: There should only be one data file in the output directory for %s. Check code!" % output_dir)
         output_file = data_files[0]
 
-        # Parse output
-        parse_output(output_file, material, void_fraction)
+        vf_raspa = parse_output(output_file)
+        material.__setattr__("%sraspa" % simulation_config["prefix"], vf_raspa)
         slog("RASPA void fraction simulation time: %5.2f seconds" % (time.perf_counter() - tbegin))
-        slog("RASPA VOID FRACTION : {}".format(void_fraction.void_fraction))
-        if material.parent:
-            slog("(parent VOID FRACTION : {})".format(material.parent.void_fraction[0].void_fraction))
-
+        slog("RASPA VOID FRACTION : {}".format(vf_raspa))
 
     # run geometric void fraction
-    if "do_geo" in simulation_config and simulation_config["do_geo"]:
+    if "geo" in simulation_config["fields"]:
+        slog("Probe radius [geo]: {}".format(simulation_config["geo"]["probe_radius"]))
         tbegin = time.perf_counter()
         atoms = [(a.x * material.a, a.y * material.b, a.z * material.c, a.atom_types.sigma) for a in material.atom_sites]
         box = (material.a, material.b, material.c)
-        void_fraction.void_fraction_geo = calculate_void_fraction(atoms, box, probe_r=simulation_config["probe_radius"])
-        slog("GEOMETRIC void fraction: %f" % void_fraction.void_fraction_geo)
+        vf_geo = calculate_void_fraction(atoms, box, probe_r=simulation_config["geo"]["probe_radius"])
+        material.__setattr__("%sgeo" % simulation_config["prefix"], vf_geo)
+        slog("GEOMETRIC void fraction: %f" % vf_geo)
         slog("GEOMETRIC void fraction simulation time: %5.2f   seconds" % (time.perf_counter() - tbegin))
-    if "do_zeo" in simulation_config:
-        pass
-        # run zeo void fraction here
-
-    material.void_fraction.append(void_fraction)
 
     if not config['keep_configs']:
         shutil.rmtree(output_dir, ignore_errors=True)
