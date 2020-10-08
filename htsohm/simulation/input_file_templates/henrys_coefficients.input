@@ -18,21 +18,3 @@ FrameworkName                   $FrameworkName
 InputFileType                   mol
 UnitCells                       $UnitCell
 ExternalTemperature             $ExternalTemperature
-
-Component 0 MoleculeName              CO2
-            MoleculeDefinition        TraPPE
-            IdealGasRosenbluthWeight  1.00006
-            WidomProbability          1.0
-            CreateNumberOfMolecules   0
-
-Component 1 MoleculeName              N2
-            MoleculeDefinition        TraPPE
-            IdealGasRosenbluthWeight  1.00001
-            WidomProbability          1.0
-            CreateNumberOfMolecules   0
-
-Component 2 MoleculeName              water
-            MoleculeDefinition        TraPPE
-            IdealGasRosenbluthWeight  0.965223
-            WidomProbability          1.0
-            CreateNumberOfMolecules   0

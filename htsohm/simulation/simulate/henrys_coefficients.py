@@ -24,11 +24,19 @@ def write_raspa_file(filename, material, simulation_config, restart):
             "FrameworkName"                 : material.id,
             "ExternalTemperature"           : simulation_config["temperature"],
             "UnitCell"                      : " ".join(map(str, unit_cells)),
-            "RosenbluthWeight"              : simulation_config["rosenbluth_weight"]}
-            # "MoleculeName"                  : simulation_config["adsorbate"],
+            "RosenbluthWeight"              : simulation_config["rosenbluth_weights"]}
 
     # Load template and replace values
     input_data = load_and_subs_template("input_file_templates/henrys_coefficients.input", values)
+
+    for i, ads in enumerate(simulation_config["adsorbates"]):
+        input_data += """
+Component %i MoleculeName  %s
+MoleculeDefinition        TraPPE
+IdealGasRosenbluthWeight  %s
+WidomProbability          1.0
+CreateNumberOfMolecules   0
+""" % (i, ads, simulation_config["rosenbluth_weights"][ads])
 
     # Write simulation input-file
     with open(filename, "w") as raspa_input_file:
