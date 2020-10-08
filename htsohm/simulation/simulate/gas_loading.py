@@ -13,7 +13,6 @@ import numpy as np
 from htsohm.simulation.raspa import write_mol_file, write_mixing_rules
 from htsohm.simulation.raspa import write_pseudo_atoms, write_force_field
 from htsohm.simulation.templates import load_and_subs_template
-from htsohm.db import GasLoading
 from htsohm.slog import slog
 
 def write_raspa_file(filename, material, simulation_config, restart):
@@ -93,6 +92,7 @@ def pressure_string(p):
         return str(p)
 
 def run(material, simulation_config, config):
+    raise "need updating to new database format"
     adsorbate = simulation_config["adsorbate"]
     output_dir = "output_{}_{}".format(material.id, simulation_config['name'])
     os.makedirs(output_dir, exist_ok=True)

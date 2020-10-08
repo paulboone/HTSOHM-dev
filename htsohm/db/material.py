@@ -4,7 +4,7 @@ import math
 from sqlalchemy import ForeignKey, Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 
-from htsohm.db import Base, GasLoading, SurfaceArea, VoidFraction, AtomSite, AtomTypes, HenrysCoefficient
+from htsohm.db import Base, AtomSite, AtomTypes
 from htsohm.pair_distance import min_pair_distance, max_pair_distance
 
 class Material(Base):
@@ -25,11 +25,6 @@ class Material(Base):
     parent            = relationship("Material", remote_side=[id])
     atom_sites = relationship("AtomSite", backref="material")
     atom_types = relationship("AtomTypes", backref="material")
-
-    gas_loading       = relationship("GasLoading", cascade="all, delete-orphan")
-    surface_area      = relationship("SurfaceArea", cascade="all, delete-orphan")
-    void_fraction     = relationship("VoidFraction", cascade="all, delete-orphan")
-    henrys_coefficient = relationship("HenrysCoefficient", backref="material", cascade="all, delete-orphan")
 
     @classmethod
     def add_data_columns(cls, property_config):

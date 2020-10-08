@@ -14,7 +14,7 @@ from sqlalchemy.orm import joinedload
 from htsohm import generator, load_config_file, db
 from htsohm.bins import calc_bins
 from htsohm.bin.output_csv import output_csv_from_db, csv_add_bin_column
-from htsohm.db import Material, VoidFraction
+from htsohm.db import Material
 from htsohm.simulation.run_all import run_all_simulations
 import htsohm.select.triangulation as selector_tri
 import htsohm.select.density_bin as selector_bin
