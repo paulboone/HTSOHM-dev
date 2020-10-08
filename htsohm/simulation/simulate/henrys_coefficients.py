@@ -5,6 +5,7 @@ import subprocess
 import shutil
 from string import Template
 import sys
+from uuid import uuid4
 
 import numpy as np
 
@@ -64,7 +65,7 @@ def parse_output(output_file, simulation_config):
     return gas_henrys_error
 
 def run(material, simulation_config, config):
-    output_dir = "output_{}_{}".format(material.id, simulation_config['name'])
+    output_dir = "output_{}{}".format(simulation_config['prefix'], uuid4())
     os.makedirs(output_dir, exist_ok=True)
     slog("Output directory : {}".format(output_dir))
     raspa_config = "./henrys_coefficients.input"

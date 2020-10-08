@@ -6,6 +6,7 @@ import shutil
 import sys
 import subprocess
 import time
+from uuid import uuid4
 
 from datetime import datetime
 from string import Template
@@ -59,7 +60,7 @@ def parse_output(output_file, material, void_fraction):
 
 
 def run(material, simulation_config, config):
-    output_dir = "output_{}_{}".format(material.id, simulation_config['name'])
+    output_dir = "output_{}{}".format(simulation_config['prefix'], uuid4())
     slog("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 
