@@ -64,6 +64,16 @@ def parse_output(output_file, simulation_config):
                 gas_henrys_error += [m.groups()]
     return gas_henrys_error
 
+def henrys_m_to_v(volume, num_atom_sites, atom_site_mass=12.0):
+    """
+        henrys_mass in  mol / (kg * Pa)
+        volume in cubic angstroms
+        atom_site_mass in g
+    """
+    na = 6.02E+23
+    return (num_atom_sites / na) * (atom_site_mass / 1000) / (volume * 1e-30)
+
+
 def run(material, simulation_config, config):
     output_dir = "output_{}{}".format(simulation_config['prefix'], uuid4())
     os.makedirs(output_dir, exist_ok=True)
@@ -81,21 +91,20 @@ def run(material, simulation_config, config):
     if len(data_files) != 1:
         raise Exception("ERROR: There should only be one data file in the output directory for %s. Check code!" % output_dir)
 
+
+    m_to_v = henrys_m_to_v(material.volume, len(material.atom_sites))
     gas_henrys_error = parse_output(data_files[0], simulation_config)
 
-
-    hc = HenrysCoefficient()
     for (gas, henrys, henrys_error) in gas_henrys_error:
-        if gas == "CO2":
-            hc.co2_henrys = henrys
-            hc.co2_henrys_error = henrys_error
-        elif gas == "N2":
-            hc.n2_henrys = henrys
-            hc.n2_henrys_error = henrys_error
-        elif gas == "water":
-            hc.h2o_henrys = henrys
-            hc.h2o_henrys_error = henrys_error
-    material.henrys_coefficient.append(hc)
+        if gas in simulation_config['adsorbates']:
+            if gas in simulation_config["fields"]:
+                material.__setattr__("%s%s" % (simulation_config["prefix"], gas), henrys)
+            if ("%sv" % gas) in simulation_config["fields"]:
+                material.__setattr__("%s%sv" % (simulation_config["prefix"], gas), henrys * m_to_v)
+            if ("%serror" % gas) in simulation_config["fields"]:
+                material.__setattr__("%s%serror" % (simulation_config["prefix"], gas), henrys_error)
+            if ("%sverror" % gas) in simulation_config["fields"]:
+                material.__setattr__("%s%sverror" % (simulation_config["prefix"], gas), henrys_error * m_to_v)
 
     if not config['keep_configs']:
         shutil.rmtree(output_dir, ignore_errors=True)
