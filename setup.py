@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+from setuptools import setup
 
-from distutils.core import setup
 setup(
     name = 'HTSOHM',
     version = '0.6.0',
@@ -10,13 +9,20 @@ setup(
     url = 'https://github.com/paulboone/htsohm',
     packages = ['htsohm'],
     install_requires=[
-        'numpy',
-        'scipy',
-        'sqlalchemy',
-        'click',
-        'pandas',
-        'pyyaml',
-        'matplotlib',
+        'numpy ~= 1.17',
+        'scipy ~= 1.3',
+        'sqlalchemy >= 1',
+        'click >= 6',
+        'pandas ~=0.25',
+        'pyyaml >= 3',
+    ],
+    extras_require={
+        'plots': [
+            'matplotlib ~= 3.1',
+        ],
+    },
+    tests_requires=[
+        "pytest ~= 6.0"
     ],
     entry_points={
           'console_scripts': [
