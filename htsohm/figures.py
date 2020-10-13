@@ -7,7 +7,7 @@ import numpy as np
 from scipy.spatial import Delaunay
 
 
-def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=[], parents=[],
+def delaunay_figure(props, convergence_bins, output_path, triang=None, children=[], parents=[],
                     bins=[], new_bins=[], title="", patches=None, prop1range=(0.0,1.0),
                     prop2range=(0.0,1.0),perturbation_methods=None, show_grid=True,
                     show_triangulation=True, show_hull=True, bin_saturated=10, bin_scores=None,
@@ -53,16 +53,16 @@ def delaunay_figure(box_r, convergence_bins, output_path, triang=None, children=
             ax.annotate(str(int(score)), ((i + 0.5) * dbinx, (j+0.5) * dbiny), zorder=80, ha="center", va="center", size=9)
 
     if not triang and (show_hull or show_triangulation):
-        triang = Delaunay(box_r)
+        triang = Delaunay(props)
 
     # plot all points as triangulation
     if show_triangulation:
-        ax.triplot(box_r[:,0], box_r[:,1], triang.simplices.copy(), color='#78a7cc', lw=1)
+        ax.triplot(props[:,0], props[:,1], triang.simplices.copy(), color='#78a7cc', lw=1)
 
     # plot hull and labels
     if show_hull:
         hull_point_indices = np.unique(triang.convex_hull.flatten())
-        hull_points = np.array([box_r[p] for p in hull_point_indices])
+        hull_points = np.array([props[p] for p in hull_point_indices])
         ax.plot(hull_points[:,0], hull_points[:,1], color='#78a7cc', marker='o', linestyle='None', zorder=10)
 
     # plot children

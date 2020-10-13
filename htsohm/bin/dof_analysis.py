@@ -37,27 +37,27 @@ def dof_analysis(config_path, output_directory):
     tsv.writerow([""] + list(chain.from_iterable([[t] * 5 for t in perturbation_types])))
     tsv.writerow(["gen"] + list(chain.from_iterable([["#", "∆vf", "∆ml", "dist", "new_bins"] for t in perturbation_types])))
 
-    mats_d = materials.all()
-    mats_r = [(m.void_fraction[0].void_fraction, m.gas_loading[0].absolute_volumetric_loading) for m in mats_d]
+    ids = materials.all()
+    props = [(m.void_fraction[0].void_fraction, m.gas_loading[0].absolute_volumetric_loading) for m in ids]
 
-    new_mats_d = mats_d[0:children_per_generation]
-    new_mats_r = mats_r[0:children_per_generation]
-    new_bins = calc_bins(new_mats_r, num_bins, prop1range=prop1range, prop2range=prop2range)
+    new_ids = ids[0:children_per_generation]
+    new_props = props[0:children_per_generation]
+    new_bins = calc_bins(new_props, num_bins, prop1range=prop1range, prop2range=prop2range)
     for i, (bx, by) in enumerate(new_bins):
         bin_counts[bx,by] += 1
 
     pts = {t:[] for t in perturbation_types}
     gen = 1
-    new_mats_d = mats_d[gen*children_per_generation:(gen + 1)*children_per_generation]
-    new_mats_r = mats_r[gen*children_per_generation:(gen + 1)*children_per_generation]
+    new_ids = ids[gen*children_per_generation:(gen + 1)*children_per_generation]
+    new_props = props[gen*children_per_generation:(gen + 1)*children_per_generation]
     animation = [[[b[0], b[1], -1, -1] for b in new_bins]]
 
-    while len(new_mats_d) > 0:
-        new_bins = calc_bins(new_mats_r, num_bins, prop1range=prop1range, prop2range=prop2range)
+    while len(new_ids) > 0:
+        new_bins = calc_bins(new_props, num_bins, prop1range=prop1range, prop2range=prop2range)
 
         gen_animation = []
         gen_stats = {t:[0, 0.0, 0.0, 0.0, 0] for t in perturbation_types}
-        for i, m in enumerate(new_mats_d):
+        for i, m in enumerate(new_ids):
             m_stats = gen_stats[m.perturbation]
             m_stats[0] += 1
             dvf = (m.void_fraction[0].void_fraction - m.parent.void_fraction[0].void_fraction) / vf_binunits
@@ -83,8 +83,8 @@ def dof_analysis(config_path, output_directory):
         tsv.writerow(row)
 
         gen += 1
-        new_mats_d = mats_d[gen*children_per_generation:(gen + 1)*children_per_generation]
-        new_mats_r = mats_r[gen*children_per_generation:(gen + 1)*children_per_generation]
+        new_ids = ids[gen*children_per_generation:(gen + 1)*children_per_generation]
+        new_props = props[gen*children_per_generation:(gen + 1)*children_per_generation]
         animation.append(gen_animation)
 
     np.save(os.path.join(output_directory, "animation"), animation)

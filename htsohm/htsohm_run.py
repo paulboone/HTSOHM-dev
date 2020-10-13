@@ -33,20 +33,20 @@ def empty_lists_2d(x,y):
 def load_restart_db(gen, num_bins, prop1range, prop2range, session):
     mats = session.query(Material).options(joinedload("void_fraction"), joinedload("gas_loading")) \
                     .filter(Material.generation <= gen).all()
-    box_d = np.array([m.id for m in mats])
-    box_r = np.array([(m.void_fraction[0].get_void_fraction(),
-                        math.log10(max(m.henrys_coefficient[0].co2_henrysv, 10.0 ** prop2range[0]))) for m in mats])
+    ids = np.array([m.id for m in mats])
+    props = np.array([(m.void_fraction[0].get_void_fraction(),
+                        math.log10(max(m.henrys_CO2, 10.0 ** prop2range[0]))) for m in mats])
 
     bin_counts = np.zeros((num_bins, num_bins))
     bin_materials = empty_lists_2d(num_bins, num_bins)
 
-    bins = calc_bins(box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
+    bins = calc_bins(props, num_bins, prop1range=prop1range, prop2range=prop2range)
     for i, (bx, by) in enumerate(bins):
         bin_counts[bx,by] += 1
         bin_materials[bx][by].append(i)
 
     start_gen = gen + 1
-    return box_d, box_r, bin_counts, bin_materials, set(bins), start_gen
+    return ids, props, bin_counts, bin_materials, set(bins), start_gen
 
 def check_db_materials_for_restart(expected_num_materials, session, delete_excess=False):
     """Checks for if there are enough or extra materials in the database."""
@@ -117,22 +117,22 @@ def parallel_simulate_generation(generator, num_processes, parent_ids, config, g
     with Pool(processes=num_processes, initializer=init_worker, initargs=[worker_metadata]) as pool:
         results = pool.map(simulate_generation_worker, parent_ids)
 
-    box_d, box_r = zip(*results)
-    return (np.array(box_d), np.array(box_r))
+    ids, props = zip(*results)
+    return (np.array(ids), np.array(props))
 
-def select_parents(children_per_generation, box_d, box_r, bin_materials, config):
+def select_parents(children_per_generation, ids, props, bin_materials, config):
     if config['generator_type'] == 'random':
         return (None, [])
     elif config['selector_type'] == 'simplices-or-hull':
-        return selector_tri.choose_parents(children_per_generation, box_d, box_r, config['simplices_or_hull'])
+        return selector_tri.choose_parents(children_per_generation, ids, props, config['simplices_or_hull'])
     elif config['selector_type'] == 'density-bin':
-        return selector_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
+        return selector_bin.choose_parents(children_per_generation, ids, props, bin_materials)
     elif config['selector_type'] == 'neighbor-bin':
-        return selector_neighbor_bin.choose_parents(children_per_generation, box_d, box_r, bin_materials)
+        return selector_neighbor_bin.choose_parents(children_per_generation, ids, props, bin_materials)
     elif config['selector_type'] == 'best':
-        return selector_best.choose_parents(children_per_generation, box_d, box_r)
+        return selector_best.choose_parents(children_per_generation, ids, props)
     elif config['selector_type'] == 'specific':
-        return selector_specific.choose_parents(children_per_generation, box_d, box_r, config['selector_specific_id'])
+        return selector_specific.choose_parents(children_per_generation, ids, props, config['selector_specific_id'])
 
 
 def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num_processes=1, max_generations=None):
@@ -163,11 +163,11 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
     if restart_generation >= 0:
         print("Restarting from database using generation: %s" % restart_generation)
-        box_d, box_r, bin_counts, bin_materials, bins, start_gen = load_restart_db(
+        ids, props, bin_counts, bin_materials, bins, start_gen = load_restart_db(
             restart_generation, num_bins, prop1range, prop2range, session)
 
-        print("Restarting at generation %d\nThere are currently %d materials" % (start_gen, len(box_r)))
-        check_db_materials_for_restart(len(box_r), session, delete_excess=override_db_errors)
+        print("Restarting at generation %d\nThere are currently %d materials" % (start_gen, len(props)))
+        check_db_materials_for_restart(len(props), session, delete_excess=override_db_errors)
     else:
         if session.query(Material).count() > 0:
             print("ERROR: cannot have existing materials in the database for a new run")
@@ -176,17 +176,18 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         # generate initial generation of random materials
         print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
         random.seed(config['initial_points_random_seed'])
-        box_d, box_r = parallel_simulate_generation(generator.random.new_material, num_processes, None,
+        ids, props = parallel_simulate_generation(generator.random.new_material, num_processes, None,
                         config, gen=0, children_per_generation=config['children_per_generation'])
         random.seed() # flush the seed so that only the initial points are set, not generated points
 
         # setup initial bins
         bin_counts = np.zeros((num_bins, num_bins))
         bin_materials = empty_lists_2d(num_bins, num_bins)
-        all_bins = calc_bins(box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
+        all_bins = calc_bins(props, num_bins, bin_ranges)
+
         new_bins, bins = _update_bins_counts_materials(all_bins, set(), 0)
 
-        print([print(i, b, all_bins[i]) for i, b in enumerate(box_r)])
+        print([print(i, b, all_bins[i]) for i, b in enumerate(props)])
         start_gen = 1
 
     if config['generator_type'] == 'random':
@@ -196,8 +197,8 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
 
     for gen in range(start_gen, max_generations + 1):
         # mutate materials and simulate properties
-        parents_d, parents_r = select_parents(children_per_generation, box_d, box_r, bin_materials, config)
-        new_box_d, new_box_r = parallel_simulate_generation(generator_method, num_processes, parents_d,
+        parents_d, parents_r = select_parents(children_per_generation, ids, props, bin_materials, config)
+        new_ids, new_props = parallel_simulate_generation(generator_method, num_processes, parents_d,
                                 config, gen=gen, children_per_generation=config['children_per_generation'])
 
         # track bins
@@ -209,8 +210,8 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         bin_fraction_explored = len(bins) / num_bins ** 2
         print_block('GENERATION %s: %5.2f%%' % (gen, bin_fraction_explored * 100))
 
-        box_d = np.append(box_d, new_box_d, axis=0)
-        box_r = np.append(box_r, new_box_r, axis=0)
+        ids = np.append(ids, new_ids, axis=0)
+        props = np.append(props, new_props, axis=0)
 
     # with open("pm.csv", 'w', newline='') as f:
     #     output_csv_from_db(session, output_file=f)

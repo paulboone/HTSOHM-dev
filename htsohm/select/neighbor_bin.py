@@ -3,7 +3,7 @@ from itertools import product
 import numpy as np
 from numpy.random import choice
 
-def choose_parents(num_parents, box_d, box_range, bin_materials, r=1):
+def choose_parents(num_parents, ids, props, bin_materials, r=1):
     all_parent_bins = [coords for coords, mats in np.ndenumerate(bin_materials) if len(mats) > 0]
 
     imax = len(bin_materials)
@@ -25,4 +25,4 @@ def choose_parents(num_parents, box_d, box_range, bin_materials, r=1):
     parent_bins = choice(np.array(eligible_parent_bins, "i,i"), num_parents)
     parent_indices = [choice(bin_materials[bin[0]][bin[1]], 1)[0] for bin in parent_bins]
 
-    return [box_d[i] for i in parent_indices], [box_range[i] for i in parent_indices]
+    return [ids[i] for i in parent_indices], [props[i] for i in parent_indices]
