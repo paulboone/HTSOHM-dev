@@ -77,6 +77,18 @@ def init_worker(worker_metadata):
     _, worker_session = db.init_database(config["database_connection_string"], config["properties"])
     return
 
+def property_tuple(material, properties):
+    results = []
+    for propname in properties:
+        p = getattr(material, propname)
+        if "log10" in properties[propname] and properties[propname]["log10"]:
+            # minimum value of property is start of range
+            min_p = 10.0 ** properties[propname]['range'][0]
+            results += [math.log10(max(p, min_p))]
+        else:
+            results += [p]
+    return tuple(results)
+
 def simulate_generation_worker(parent_id):
     """gets most of its parameters from the global worker_metadata set in the
     parallel_simulate_generation method."""
@@ -93,8 +105,8 @@ def simulate_generation_worker(parent_id):
     worker_session.commit()
 
     print(get_slog())
-    return (material.id, (material.void_fraction[0].get_void_fraction(),
-                          math.log10(max(material.henrys_coefficient[0].co2_henrysv, 10.0 ** config['prop2range'][0]))))
+    return (material.id, property_tuple(material, config["bin_properties"]))
+
 
 def parallel_simulate_generation(generator, num_processes, parent_ids, config, gen, children_per_generation):
     worker_metadata = (generator, config, gen)
@@ -139,10 +151,9 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     print(config)
 
     children_per_generation = config['children_per_generation']
-    prop1range = config['prop1range']
-    prop2range = config['prop2range']
-    num_bins = config['num_bins']
 
+    bin_ranges = [config['bin_properties'][p]["range"] for p in config['bin_properties']]
+    num_bins = config["num_bins"]
     if max_generations is None:
         max_generations = config['max_generations']
 
@@ -190,8 +201,8 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
                                 config, gen=gen, children_per_generation=config['children_per_generation'])
 
         # track bins
-        all_bins = calc_bins(new_box_r, num_bins, prop1range=prop1range, prop2range=prop2range)
-        [print(i, b, all_bins[i]) for i, b in enumerate(new_box_r)]
+        all_bins = calc_bins(new_props, num_bins, bin_ranges)
+        [print(i, b, all_bins[i]) for i, b in enumerate(new_props)]
         new_bins, bins = _update_bins_counts_materials(all_bins, bins, gen * children_per_generation)
 
         # evaluate algorithm effectiveness
