@@ -15,5 +15,8 @@ def calc_bin(value, bound_min, bound_max, bins):
     assigned_bin = max(assigned_bin, 0)
     return int(assigned_bin)
 
-def calc_bins(box_r, num_bins, prop1range=(0.0, 1.0), prop2range=(0.0, 1.0)):
-    return [(calc_bin(b[0], *prop1range, num_bins), calc_bin(b[1], *prop2range, num_bins)) for b in box_r]
+def calc_bins(values, num_bins, ranges):
+    bins = []
+    for matprops in values:
+        bins.append(tuple([calc_bin(p, *ranges[i], num_bins) for i, p in enumerate(matprops)]))
+    return bins
