@@ -197,8 +197,8 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
 
     for gen in range(start_gen, max_generations + 1):
         # mutate materials and simulate properties
-        parents_d, parents_r = select_parents(children_per_generation, ids, props, bin_materials, config)
-        new_ids, new_props = parallel_simulate_generation(generator_method, num_processes, parents_d,
+        parents_ids, parents_props = select_parents(children_per_generation, ids, props, bin_materials, config)
+        new_ids, new_props = parallel_simulate_generation(generator_method, num_processes, parents_ids,
                                 config, gen=gen, children_per_generation=config['children_per_generation'])
 
         # track bins
