@@ -6,7 +6,6 @@ import shutil
 import sys
 import subprocess
 import time
-from uuid import uuid4
 
 from datetime import datetime
 from string import Template
@@ -24,7 +23,7 @@ def write_raspa_file(filename, material, simulation_config):
     values = {
             "Cutoff"                 : simulation_config['cutoff'],
             "NumberOfCycles"         : simulation_config["simulation_cycles"],
-            "FrameworkName"          : material.id,
+            "FrameworkName"          : material.id_or_uuid,
             "ExternalTemperature"    : simulation_config["temperature"],
             "MoleculeName"           : simulation_config["adsorbate"],
             "UnitCell"               : " ".join(map(str, unit_cells))}
@@ -61,7 +60,7 @@ def parse_output(output_file):
 
 
 def run(material, simulation_config, config):
-    output_dir = "output_{}{}".format(simulation_config['prefix'], uuid4())
+    output_dir = "output_{}{}".format(simulation_config['prefix'], material.id_or_uuid)
     slog("Output directory : {}".format(output_dir))
     os.makedirs(output_dir, exist_ok=True)
 

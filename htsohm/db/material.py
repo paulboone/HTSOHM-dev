@@ -1,5 +1,6 @@
 from itertools import product
 import math
+from uuid import uuid4
 
 from sqlalchemy import ForeignKey, Column, Integer, String, Float
 from sqlalchemy.orm import relationship
@@ -73,6 +74,17 @@ class Material(Base):
         return (math.ceil(2 * cutoff / self.a),
                 math.ceil(2 * cutoff / self.b),
                 math.ceil(2 * cutoff / self.c))
+
+    @property
+    def id_or_uuid(self):
+        if self.id is not None:
+            return self.id
+        if hasattr(self, 'uuid'):
+            return self.uuid
+        else:
+            self.uuid = uuid4()
+            return self.uuid
+
 
     @property
     def volume(self):

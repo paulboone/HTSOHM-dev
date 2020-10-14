@@ -29,7 +29,7 @@ def write_raspa_file(filename, material, simulation_config, restart):
             "Cutoff"                        : simulation_config['cutoff'],
             "NumberOfCycles"                : simulation_config["simulation_cycles"],
             "NumberOfInitializationCycles"  : simulation_config["initialization_cycles"] if not restart else 0,
-            "FrameworkName"                 : material.id,
+            "FrameworkName"                 : material.id_or_uuid,
             "HeliumVoidFraction"            : void_fraction,
             "ExternalTemperature"           : simulation_config["temperature"],
             "ExternalPressure"              : simulation_config["pressure"],
@@ -94,7 +94,7 @@ def pressure_string(p):
 def run(material, simulation_config, config):
     raise "need updating to new database format"
     adsorbate = simulation_config["adsorbate"]
-    output_dir = "output_{}_{}".format(material.id, simulation_config['name'])
+    output_dir = "output_{}_{}".format(material.id_or_uuid, simulation_config['name'])
     os.makedirs(output_dir, exist_ok=True)
     raspa_config = "./{}_loading.input".format(adsorbate)
     raspa_restart_config = "./{}_loading_restart.input".format(adsorbate)

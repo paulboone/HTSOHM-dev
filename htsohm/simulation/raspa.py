@@ -3,10 +3,10 @@ import os
 def write_mol_file(material, simulation_path):
     """Writes .mol file for structural information."""
 
-    file_name = os.path.join(simulation_path, "{}.mol".format(material.id))
+    file_name = os.path.join(simulation_path, "{}.mol".format(material.id_or_uuid))
     with open(file_name, "w") as mol_file:
         mol_file.write(
-                " Molecule_name: {}\n".format(material.id) +
+                " Molecule_name: {}\n".format(material.id_or_uuid) +
                 "\n" +
                 "  Coord_Info: Listed Cartesian None\n" +
                 "        {}\n".format(len(material.atom_sites)))
