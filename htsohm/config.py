@@ -26,7 +26,7 @@ def load_config_file(path):
     """
     config = default_configuration()
     with open(path) as config_file:
-         config.update(yaml.load(config_file))
+         config.update(yaml.safe_load(config_file))
 
     enforce_config_ok(config)
 
