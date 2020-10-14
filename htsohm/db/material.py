@@ -33,7 +33,10 @@ class Material(Base):
         for pcfg in property_config:
             for field in pcfg['fields']:
                 colname = pcfg['prefix'] + field
-                setattr(cls, colname, Column(colname, Float))
+                if hasattr(cls, colname):
+                    print("WARNING: attribute %s already exists on Material")
+                else:
+                    setattr(cls, colname, Column(colname, Float))
 
     def __init__(self, parent=None, a=None, b=None, c=None, atom_sites=[], atom_types=[]):
         if parent:

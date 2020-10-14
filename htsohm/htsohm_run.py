@@ -47,21 +47,29 @@ def load_restart_db(gen, num_bins, bin_ranges, config, session):
 
 def check_db_materials_for_restart(expected_num_materials, session, delete_excess=False):
     """Checks for if there are enough or extra materials in the database."""
-    extra_materials = session.query(Material).filter(Material.id > expected_num_materials).all()
-    if len(extra_materials) > 0:
-        print("The database has an extra %d materials in it." % len(extra_materials))
+    num_materials = session.query(Material).count()
+
+    if num_materials < expected_num_materials:
+        print("The database has fewer materials in it than the restart file indicated.")
+        print("Is this the right database and restart file?")
+        sys.exit(1)
+
+    if num_materials > expected_num_materials:
+        print("The database has an extra %d materials in it." % (num_materials - expected_num_materials))
         if (delete_excess):
             print("deleting from materials where id > %d" % expected_num_materials)
             db.delete_extra_materials(expected_num_materials)
         else:
             print("Is this the right database and restart file?")
-            sys.exit(1)
+            raise(Exception("db"))
 
-    num_materials = session.query(Material).count()
-    if num_materials < expected_num_materials:
-        print("The database has fewer materials in it than the restart file indicated.")
-        print("Is this the right database and restart file?")
+    max_id = session.query(Material).order_by(Material.id.desc()).limit(1)[0].id
+    if max_id != expected_num_materials:
+        print("The max id of the materials table is not the same as the number of mateirals. Do "
+            "you have missing rows?")
         sys.exit(1)
+
+    return True
 
 def init_worker(worker_metadata):
     """initialization function for worker that inits the database and gets a worker-specific
@@ -155,16 +163,15 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         max_generations = config['max_generations']
 
     engine, session = db.init_database(config["database_connection_string"], config['properties'],
-                backup=(restart_generation > 0))
+                backup=(restart_generation > 1))
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
-    if restart_generation > 0:
+    if restart_generation > 1:
         print("Restarting from database at generation: %s" % restart_generation)
+        check_db_materials_for_restart((restart_generation - 1)*children_per_generation, session, delete_excess=override_db_errors)
         ids, props, bin_counts, bin_materials, bins = load_restart_db(restart_generation, num_bins, bin_ranges, config, session)
-
+        print("We loaded %d materials from the database" % len(props))
         start_gen = restart_generation
-        print("There are currently %d materials" % len(props))
-        check_db_materials_for_restart(len(props), session, delete_excess=override_db_errors)
     else:
         if session.query(Material).count() > 0:
             print("ERROR: cannot have existing materials in the database for a new run")
@@ -174,7 +181,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         print("applying random seed to initial points: %d" % config['initial_points_random_seed'])
         random.seed(config['initial_points_random_seed'])
         ids, props = parallel_simulate_generation(generator.random.new_material, num_processes, None,
-                        config, gen=0, children_per_generation=config['children_per_generation'])
+                        config, gen=1, children_per_generation=config['children_per_generation'])
         random.seed() # flush the seed so that only the initial points are set, not generated points
 
         # setup initial bins
@@ -185,13 +192,14 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         new_bins, bins = _update_bins_counts_materials(all_bins, set(), 0)
 
         print([print(i, b, all_bins[i]) for i, b in enumerate(props)])
-        start_gen = 1
+        start_gen = 2
 
     if config['generator_type'] == 'random':
         generator_method = generator.random.new_material
     elif config['generator_type'] == 'mutate':
         generator_method = generator.mutate.mutate_material
 
+    # first generation is randomly determined above, so start_gen should always be >= 2.
     for gen in range(start_gen, max_generations + 1):
         # mutate materials and simulate properties
         parents_ids, parents_props = select_parents(children_per_generation, ids, props, bin_materials, config)

@@ -2,8 +2,8 @@ keep_configs: false
 initial_points_random_seed: 17013931
 
 num_bins: 40
-max_generations: 2
-children_per_generation: 5
+max_generations: 1
+children_per_generation: 2
 selector_type: "density-bin"
 generator_type: "mutate"
 
