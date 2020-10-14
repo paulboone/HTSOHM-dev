@@ -30,23 +30,20 @@ def print_block(string):
 def empty_lists_2d(x,y):
     return [[[] for j in range(x)] for i in range(y)]
 
-def load_restart_db(gen, num_bins, prop1range, prop2range, session):
-    mats = session.query(Material).options(joinedload("void_fraction"), joinedload("gas_loading")) \
-                    .filter(Material.generation <= gen).all()
+def load_restart_db(gen, num_bins, bin_ranges, config, session):
+    mats = session.query(Material).filter(Material.generation < gen).all()
     ids = np.array([m.id for m in mats])
-    props = np.array([(m.void_fraction[0].get_void_fraction(),
-                        math.log10(max(m.henrys_CO2, 10.0 ** prop2range[0]))) for m in mats])
+    props = np.array([property_tuple(m, config["bin_properties"]) for m in mats])
 
     bin_counts = np.zeros((num_bins, num_bins))
     bin_materials = empty_lists_2d(num_bins, num_bins)
 
-    bins = calc_bins(props, num_bins, prop1range=prop1range, prop2range=prop2range)
+    bins = calc_bins(props, num_bins, bin_ranges)
     for i, (bx, by) in enumerate(bins):
         bin_counts[bx,by] += 1
         bin_materials[bx][by].append(i)
 
-    start_gen = gen + 1
-    return ids, props, bin_counts, bin_materials, set(bins), start_gen
+    return ids, props, bin_counts, bin_materials, set(bins)
 
 def check_db_materials_for_restart(expected_num_materials, session, delete_excess=False):
     """Checks for if there are enough or extra materials in the database."""
@@ -161,12 +158,12 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
                 backup=(restart_generation > 0))
 
     print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
-    if restart_generation >= 0:
-        print("Restarting from database using generation: %s" % restart_generation)
-        ids, props, bin_counts, bin_materials, bins, start_gen = load_restart_db(
-            restart_generation, num_bins, prop1range, prop2range, session)
+    if restart_generation > 0:
+        print("Restarting from database at generation: %s" % restart_generation)
+        ids, props, bin_counts, bin_materials, bins = load_restart_db(restart_generation, num_bins, bin_ranges, config, session)
 
-        print("Restarting at generation %d\nThere are currently %d materials" % (start_gen, len(props)))
+        start_gen = restart_generation
+        print("There are currently %d materials" % len(props))
         check_db_materials_for_restart(len(props), session, delete_excess=override_db_errors)
     else:
         if session.query(Material).count() > 0:

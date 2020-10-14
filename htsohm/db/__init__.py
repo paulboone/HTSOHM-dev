@@ -59,4 +59,4 @@ from htsohm.db.material import Material
 def delete_extra_materials(delete_after_id):
     __engine__.execute("delete from materials where id > %d" % delete_after_id)
     __engine__.execute("delete from atom_types where material_id > %d" % delete_after_id)
-    __engine__.execute("delete from atom_sites where mateiral_id > %d" % delete_after_id)
+    __engine__.execute("delete from atom_sites where material_id > %d" % delete_after_id)
