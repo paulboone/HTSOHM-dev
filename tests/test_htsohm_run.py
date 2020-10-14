@@ -1,4 +1,4 @@
-
+import importlib
 import importlib.resources
 import os
 import shutil
@@ -6,8 +6,8 @@ import shutil
 import pytest
 from pytest import approx
 
-from htsohm import htsohm_run, db
-from htsohm.db import Material
+from htsohm import htsohm_run, db, load_config_file
+from htsohm.db import Material, init_database
 import tests
 
 
@@ -29,6 +29,10 @@ def gen2_vf_geo(use_tmp_dir):
 def config_path():
     with importlib.resources.path(tests, "material_config.yaml") as config_path:
         yield config_path
+
+@pytest.fixture
+def config(config_path):
+    return load_config_file(config_path)
 
 @pytest.mark.slow
 @pytest.mark.usefixtures("use_tmp_dir")
@@ -61,3 +65,10 @@ def test_htsohm_run__restarts_override_will_delete_extra_materials(gen2_vf_geo, 
     vf_results = [x[0] for x in session.query(Material.vf_geo)]
     assert len(vf_results) == 2
     assert vf_results[0:2] == approx(gen2_vf_geo[0:2], 1e-4)
+
+def test_material__with_properties_fields_creates_the_appropriate_db_columns(config):
+    init_database("sqlite:///:memory:", config['properties'])
+    m = Material()
+    assert set(m.__table__.columns.keys()) == {'id', 'parent_id', 'perturbation', 'a', 'b', 'c',
+        'generation', 'henrys_CO2', 'henrys_CO2error', 'henrys_water', 'henrys_watererror',
+        'henrys_N2', 'henrys_N2error', 'vf_geo', 'vf_raspa'}
