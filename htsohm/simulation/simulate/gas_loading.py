@@ -112,8 +112,12 @@ def run(material, simulation_config, config):
     total_unit_cells = unit_cells[0] * unit_cells[1] * unit_cells[2]
     all_atom_blocks = []
 
-    process = subprocess.run(["simulate", "-i", raspa_config], check=True, cwd=output_dir, capture_output=True, text=True)
-    slog(process.stdout)
+    process = subprocess.run(["simulate", "-i", raspa_config], cwd=output_dir, capture_output=True, text=True)
+    if process.returncode != 0:
+        slog(process.stdout)
+        slog(process.stderr)
+        process.check_returncode()
+
     for i in range(simulation_config['max_restarts'] + 1):
 
         data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
@@ -174,8 +178,11 @@ def run(material, simulation_config, config):
         else:
             slog("\n--")
             slog("restart # %d" % i)
-            process = subprocess.run(["simulate", "-i", raspa_restart_config], check=True, cwd=output_dir, capture_output=True, text=True)
-            slog(process.stdout)
+            process = subprocess.run(["simulate", "-i", raspa_restart_config], cwd=output_dir, capture_output=True, text=True)
+            if process.returncode != 0:
+                slog(process.stdout)
+                slog(process.stderr)
+                process.check_returncode()
 
 
 

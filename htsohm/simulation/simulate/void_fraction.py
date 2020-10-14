@@ -70,7 +70,11 @@ def run(material, simulation_config, config):
 
         write_input_files(material, simulation_config["raspa"], output_dir)
         tbegin = time.perf_counter()
-        process = subprocess.run(["simulate", "-i", "./void_fraction.input"], check=True, cwd=output_dir, capture_output=True, text=True)
+        process = subprocess.run(["simulate", "-i", "./void_fraction.input"], cwd=output_dir, capture_output=True, text=True)
+        if process.returncode != 0:
+            slog(process.stdout)
+            slog(process.stderr)
+            process.check_returncode()
 
         data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
         if len(data_files) != 1:

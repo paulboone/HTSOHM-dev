@@ -80,9 +80,12 @@ def run(material, simulation_config, config):
             output_file = os.path.join(output_dir, "Output", "System_0", filename)
 
             while not Path(output_file).exists():
-                process = subprocess.run(["simulate", "-i", "./SurfaceArea.input"], check=True,
+                process = subprocess.run(["simulate", "-i", "./SurfaceArea.input"],
                         cwd=output_dir, capture_output=True, text=True)
-                slog(process.stdout)
+                if process.returncode != 0:
+                    slog(process.stdout)
+                    slog(process.stderr)
+                    process.check_returncode()
 
             # Parse output
             parse_output(output_file, material, simulation_config)

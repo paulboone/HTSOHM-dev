@@ -90,8 +90,11 @@ def run(material, simulation_config, config):
     write_input_files(material, simulation_config, output_dir, restart=False, filename=os.path.join(output_dir, raspa_config))
 
     # Run simulations
-    process = subprocess.run(["simulate", "-i", raspa_config], check=True, cwd=output_dir, capture_output=True, text=True)
-    slog(process.stdout)
+    process = subprocess.run(["simulate", "-i", raspa_config], cwd=output_dir, capture_output=True, text=True)
+    if process.returncode != 0:
+        slog(process.stdout)
+        slog(process.stderr)
+        process.check_returncode()
 
     data_files = glob(os.path.join(output_dir, "Output", "System_0", "*.data"))
     if len(data_files) != 1:
