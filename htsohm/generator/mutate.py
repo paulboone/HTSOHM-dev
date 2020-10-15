@@ -99,6 +99,8 @@ def print_parent_child_diff(parent, child):
 
 def mutate_material(parent, config):
     child = parent.clone()
+    child.parent = parent
+    child.parent_id = parent.id
 
     perturb = set(config["perturb"])
     if config["perturb_type"] == "random":

@@ -52,8 +52,6 @@ class Material(Base):
 
     def clone(self):
         copy = super(Material, self).clone()
-        copy.parent = self
-        copy.parent_id = self.id
 
         if self.atom_types:
             for lj in self.atom_types:
