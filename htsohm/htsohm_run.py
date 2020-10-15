@@ -44,7 +44,7 @@ def load_restart_db(gen, num_bins, bin_ranges, config, session):
     for i, bin_tuple in enumerate(bins):
         bin_materials[bin_tuple].append(i)
 
-    return ids, props, bin_materials, set(bins)
+    return ids, props, bin_materials
 
 def check_db_materials_for_restart(expected_num_materials, session, delete_excess=False):
     """Checks for if there are enough or extra materials in the database."""
@@ -149,16 +149,12 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     - props: a tuple of properties to bin per material (0 indexed)
     - bin_materials: an n-dimensional matrix (one dimension per bin dimension); typically accessed
         bin_materials[bin_tuple], where each entry is a list of material indices in the bin (0 indexed).
-    - explored_bins: a list of unique bins.
-
     """
-    def _update_bins_counts_materials(all_bins, explored_bins, start_index):
+
+    def _update_bin_materials(all_bins, start_index):
         nonlocal bin_materials
         for i, bin_tuple in enumerate(all_bins):
             bin_materials[bin_tuple].append(i + start_index)
-        new_bins = set(all_bins) - explored_bins
-        return new_bins, explored_bins.union(new_bins)
-
 
     config = load_config_file(config_path)
     os.makedirs(config['output_dir'], exist_ok=True)
@@ -178,7 +174,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     if restart_generation > 1:
         print("Restarting from database at generation: %s" % restart_generation)
         check_db_materials_for_restart((restart_generation - 1)*children_per_generation, session, delete_excess=override_db_errors)
-        ids, props, bin_materials, explored_bins = load_restart_db(restart_generation, num_bins, bin_ranges, config, session)
+        ids, props, bin_materials = load_restart_db(restart_generation, num_bins, bin_ranges, config, session)
         print("We loaded %d materials from the database" % len(props))
         start_gen = restart_generation
     else:
@@ -196,8 +192,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         # setup initial bins
         bin_materials =  matrix_of_empty_lists([num_bins]*len(config["bin_properties"]))
         all_bins = calc_bins(props, num_bins, bin_ranges)
-
-        new_bins, explored_bins = _update_bins_counts_materials(all_bins, set(), 0)
+        _update_bin_materials(all_bins, 0)
 
         print([print(i, b, all_bins[i]) for i, b in enumerate(props)])
         start_gen = 2
@@ -216,10 +211,10 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
 
         # track bins
         all_bins = calc_bins(new_props, num_bins, bin_ranges)
-        [print(i, b, all_bins[i]) for i, b in enumerate(new_props)]
-        new_bins, explored_bins = _update_bins_counts_materials(all_bins, explored_bins, (gen - 1) * children_per_generation)
+        _update_bin_materials(all_bins, (gen - 1) * children_per_generation)
 
         # evaluate algorithm effectiveness
+        explored_bins = [i for i,v in np.ndenumerate(bin_materials) if len(v) > 0]
         bin_fraction_explored = len(explored_bins) / num_bins ** 2
         print_block('GENERATION %s: %5.2f%%' % (gen, bin_fraction_explored * 100))
 
@@ -227,7 +222,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         props = np.append(props, new_props, axis=0)
 
     if return_run_vars:
-        return ids, props, bin_materials, explored_bins
+        return ids, props, bin_materials
     return None
 
     # with open("pm.csv", 'w', newline='') as f:

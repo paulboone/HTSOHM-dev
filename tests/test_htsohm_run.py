@@ -44,24 +44,23 @@ def config(config_path):
 @pytest.mark.slow
 @pytest.mark.usefixtures("use_tmp_dir")
 def test_htsohm_run__runs(config_path):
-    ids, _, bin_materials, bins = htsohm_run(config_path, max_generations=2, return_run_vars=True)
+    ids, _, bin_materials = htsohm_run(config_path, max_generations=2, return_run_vars=True)
 
     # material ids–looked up via all unique bins and bin_materials mats per bin–should be the material ids
     assert set(ids) == set([1, 2, 3, 4])
-    mat_indices_from_bins = flatten([bin_materials[b] for b in bins])
+    explored_bins = [i for i,v in np.ndenumerate(bin_materials) if len(v) > 0]
+    mat_indices_from_bins = flatten([bin_materials[b] for b in explored_bins])
     assert set(mat_indices_from_bins) == set([0, 1, 2, 3])
-
-
-
 
 @pytest.mark.slow
 @pytest.mark.usefixtures("use_tmp_dir")
 def test_htsohm_run__with_many_bin_dimensions_runs(config_multid_bins_path):
-    ids, _, bin_materials, bins = htsohm_run(config_multid_bins_path, max_generations=2, return_run_vars=True)
+    ids, _, bin_materials = htsohm_run(config_multid_bins_path, max_generations=2, return_run_vars=True)
 
     # material ids–looked up via all unique bins and bin_materials mats per bin–should be the material ids
     assert set(ids) == set([1, 2, 3, 4])
-    mat_indices_from_bins = flatten([bin_materials[b] for b in bins])
+    explored_bins = [i for i,v in np.ndenumerate(bin_materials) if len(v) > 0]
+    mat_indices_from_bins = flatten([bin_materials[b] for b in explored_bins])
     assert set(mat_indices_from_bins) == set([0, 1, 2, 3])
 
 @pytest.mark.slow
