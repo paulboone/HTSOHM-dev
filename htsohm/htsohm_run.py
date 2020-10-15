@@ -27,21 +27,24 @@ def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
 
 
-def empty_lists_2d(x,y):
-    return [[[] for j in range(x)] for i in range(y)]
+def matrix_of_empty_lists_like(prototype):
+    m = np.empty_like(prototype, dtype=object)
+    for i in np.ndindex(m.shape):
+        m[i] = list([])
+    return m
 
 def load_restart_db(gen, num_bins, bin_ranges, config, session):
     mats = session.query(Material).filter(Material.generation < gen).all()
     ids = np.array([m.id for m in mats])
     props = np.array([property_tuple(m, config["bin_properties"]) for m in mats])
 
-    bin_counts = np.zeros((num_bins, num_bins))
-    bin_materials = empty_lists_2d(num_bins, num_bins)
+    bin_counts = np.zeros([num_bins]*len(config["bin_properties"]))
+    bin_materials = matrix_of_empty_lists_like(bin_counts)
 
     bins = calc_bins(props, num_bins, bin_ranges)
-    for i, (bx, by) in enumerate(bins):
-        bin_counts[bx,by] += 1
-        bin_materials[bx][by].append(i)
+    for i, bin_tuple in enumerate(bins):
+        bin_counts[bin_tuple] += 1
+        bin_materials[bin_tuple].append(i)
 
     return ids, props, bin_counts, bin_materials, set(bins)
 
@@ -144,9 +147,9 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
 
     def _update_bins_counts_materials(all_bins, bins, start_index):
         nonlocal bin_counts, bin_materials
-        for i, (bx, by) in enumerate(all_bins):
-            bin_counts[bx,by] += 1
-            bin_materials[bx][by].append(i + start_index)
+        for i, bin_tuple in enumerate(all_bins):
+            bin_counts[bin_tuple] += 1
+            bin_materials[bin_tuple].append(i + start_index)
         new_bins = set(all_bins) - bins
         return new_bins, bins.union(new_bins)
 
@@ -185,8 +188,8 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         random.seed() # flush the seed so that only the initial points are set, not generated points
 
         # setup initial bins
-        bin_counts = np.zeros((num_bins, num_bins))
-        bin_materials = empty_lists_2d(num_bins, num_bins)
+        bin_counts = np.zeros([num_bins]*len(config["bin_properties"]))
+        bin_materials =  matrix_of_empty_lists_like(bin_counts)
         all_bins = calc_bins(props, num_bins, bin_ranges)
 
         new_bins, bins = _update_bins_counts_materials(all_bins, set(), 0)

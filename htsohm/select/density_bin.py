@@ -19,7 +19,7 @@ def choose_parent_bins_from_weighted_bin_list(bins, num_parents):
 
     # limit to ALL materials that are within the cutoff. This is necessary because our weighting is
     # based on an integer value here, as opposed to the float values for the convex_hull methods.
-    bins = np.array([x for x in bins if x[1] <= cutoff])
+    bins = np.array([x for x in bins if x[1] <= cutoff], dtype=object)
 
     bin_indices = bins[:, 0]
     bin_weights = bins[:, 1].astype(float)
@@ -35,5 +35,4 @@ def choose_parents(num_parents, ids, props, bin_materials):
     bins = [(i, len(mats)) for i, mats in np.ndenumerate(bin_materials) if len(mats) > 0]
     parent_bins = choose_parent_bins_from_weighted_bin_list(bins, num_parents)
     parent_indices = [choice(bin_materials[bin[0]][bin[1]], 1)[0] for bin in parent_bins]
-
     return [ids[i] for i in parent_indices], [props[i] for i in parent_indices]
