@@ -27,8 +27,8 @@ def print_block(string):
     print('{0}\n{1}\n{0}'.format('=' * 80, string))
 
 
-def matrix_of_empty_lists_like(prototype):
-    m = np.empty_like(prototype, dtype=object)
+def matrix_of_empty_lists(shape):
+    m = np.empty(shape, dtype=object)
     for i in np.ndindex(m.shape):
         m[i] = list([])
     return m
@@ -38,15 +38,13 @@ def load_restart_db(gen, num_bins, bin_ranges, config, session):
     ids = np.array([m.id for m in mats])
     props = np.array([property_tuple(m, config["bin_properties"]) for m in mats])
 
-    bin_counts = np.zeros([num_bins]*len(config["bin_properties"]))
-    bin_materials = matrix_of_empty_lists_like(bin_counts)
+    bin_materials = matrix_of_empty_lists([num_bins]*len(config["bin_properties"]))
 
     bins = calc_bins(props, num_bins, bin_ranges)
     for i, bin_tuple in enumerate(bins):
-        bin_counts[bin_tuple] += 1
         bin_materials[bin_tuple].append(i)
 
-    return ids, props, bin_counts, bin_materials, set(bins)
+    return ids, props, bin_materials, set(bins)
 
 def check_db_materials_for_restart(expected_num_materials, session, delete_excess=False):
     """Checks for if there are enough or extra materials in the database."""
@@ -149,17 +147,14 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     if return_run_vars, htsohm_run returns the main run vars, which are:
     - ids: the database ids. Since this is sqlite which is 1-indexed, this should always be one greater than the index.
     - props: a tuple of properties to bin per material (0 indexed)
-    - bin_counts: an n-dimensional matrix (one dimension per bin dimension); typically accessed
-        bin_counts[bin_tuple], where the values are the number of materials in that bin.
     - bin_materials: an n-dimensional matrix (one dimension per bin dimension); typically accessed
         bin_materials[bin_tuple], where each entry is a list of material indices in the bin (0 indexed).
     - explored_bins: a list of unique bins.
 
     """
     def _update_bins_counts_materials(all_bins, explored_bins, start_index):
-        nonlocal bin_counts, bin_materials
+        nonlocal bin_materials
         for i, bin_tuple in enumerate(all_bins):
-            bin_counts[bin_tuple] += 1
             bin_materials[bin_tuple].append(i + start_index)
         new_bins = set(all_bins) - explored_bins
         return new_bins, explored_bins.union(new_bins)
@@ -183,7 +178,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
     if restart_generation > 1:
         print("Restarting from database at generation: %s" % restart_generation)
         check_db_materials_for_restart((restart_generation - 1)*children_per_generation, session, delete_excess=override_db_errors)
-        ids, props, bin_counts, bin_materials, explored_bins = load_restart_db(restart_generation, num_bins, bin_ranges, config, session)
+        ids, props, bin_materials, explored_bins = load_restart_db(restart_generation, num_bins, bin_ranges, config, session)
         print("We loaded %d materials from the database" % len(props))
         start_gen = restart_generation
     else:
@@ -199,8 +194,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         random.seed() # flush the seed so that only the initial points are set, not generated points
 
         # setup initial bins
-        bin_counts = np.zeros([num_bins]*len(config["bin_properties"]))
-        bin_materials =  matrix_of_empty_lists_like(bin_counts)
+        bin_materials =  matrix_of_empty_lists([num_bins]*len(config["bin_properties"]))
         all_bins = calc_bins(props, num_bins, bin_ranges)
 
         new_bins, explored_bins = _update_bins_counts_materials(all_bins, set(), 0)
@@ -233,7 +227,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         props = np.append(props, new_props, axis=0)
 
     if return_run_vars:
-        return ids, props, bin_counts, bin_materials, explored_bins
+        return ids, props, bin_materials, explored_bins
     return None
 
     # with open("pm.csv", 'w', newline='') as f:
