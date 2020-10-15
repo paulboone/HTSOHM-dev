@@ -1,4 +1,4 @@
-keep_configs: false
+keep_configs: true
 initial_points_random_seed: 17013931
 
 num_bins: 40
@@ -12,7 +12,7 @@ database_connection_string: "sqlite:///pm.db"
 structure_parameters:
   number_of_atom_types: 1
   num_atoms_limits: [1,8]
-  lattice_constant_limits: [2.09, 16.0]
+  lattice_constant_limits: [6.0, 16.0]
   lattice_cubic: true
 
   epsilon_limits: [2.516, 342.176]
@@ -41,7 +41,7 @@ properties:
     raspa:
       temperature: 298
       adsorbate: 'helium'
-      simulation_cycles: 100
+      simulation_cycles: 1
       cutoff: 14
   - type: 'henrys_coefficients'
     prefix: 'henrys_'
@@ -53,6 +53,6 @@ properties:
       water: 1.0
 
     temperature: 298
-    initialization_cycles: 10
-    simulation_cycles: 10
+    initialization_cycles: 1
+    simulation_cycles: 1
     cutoff: 14
