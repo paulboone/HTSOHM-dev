@@ -11,6 +11,7 @@ from htsohm import htsohm_run, db, load_config_file
 from htsohm.db import Material, init_database
 import tests
 
+flatten = lambda l: [item for sublist in l for item in sublist]
 
 @pytest.fixture
 def use_tmp_dir(tmpdir):
@@ -50,7 +51,7 @@ def test_htsohm_run__runs(config_path):
 
     # material ids–looked up via all unique bins and bin_materials mats per bin–should be the material ids
     assert set(ids) == set([1, 2, 3, 4])
-    mat_indices_from_bins = np.array([bin_materials[b] for b in bins]).flatten()
+    mat_indices_from_bins = flatten([bin_materials[b] for b in bins])
     assert set(mat_indices_from_bins) == set([0, 1, 2, 3])
 
 
@@ -66,7 +67,7 @@ def test_htsohm_run__with_many_bin_dimensions_runs(config_multid_bins_path):
 
     # material ids–looked up via all unique bins and bin_materials mats per bin–should be the material ids
     assert set(ids) == set([1, 2, 3, 4])
-    mat_indices_from_bins = np.array([bin_materials[b] for b in bins]).flatten()
+    mat_indices_from_bins = flatten([bin_materials[b] for b in bins])
     assert set(mat_indices_from_bins) == set([0, 1, 2, 3])
 
 @pytest.mark.slow
