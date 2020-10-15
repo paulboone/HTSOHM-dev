@@ -143,7 +143,7 @@ def select_parents(children_per_generation, ids, props, bin_materials, config):
         return selector_specific.choose_parents(children_per_generation, ids, props, config['selector_specific_id'])
 
 
-def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num_processes=1, max_generations=None):
+def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num_processes=1, max_generations=None, return_run_vars=False):
 
     def _update_bins_counts_materials(all_bins, bins, start_index):
         nonlocal bin_counts, bin_materials
@@ -212,7 +212,7 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
         # track bins
         all_bins = calc_bins(new_props, num_bins, bin_ranges)
         [print(i, b, all_bins[i]) for i, b in enumerate(new_props)]
-        new_bins, bins = _update_bins_counts_materials(all_bins, bins, gen * children_per_generation)
+        new_bins, bins = _update_bins_counts_materials(all_bins, bins, (gen - 1) * children_per_generation)
 
         # evaluate algorithm effectiveness
         bin_fraction_explored = len(bins) / num_bins ** 2
@@ -220,6 +220,10 @@ def htsohm_run(config_path, restart_generation=-1, override_db_errors=False, num
 
         ids = np.append(ids, new_ids, axis=0)
         props = np.append(props, new_props, axis=0)
+
+    if return_run_vars:
+        return ids, props, bin_counts, bin_materials, bins
+    return None
 
     # with open("pm.csv", 'w', newline='') as f:
     #     output_csv_from_db(session, output_file=f)

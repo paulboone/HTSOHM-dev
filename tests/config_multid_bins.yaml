@@ -1,0 +1,64 @@
+keep_configs: false
+initial_points_random_seed: 17013931
+
+num_bins: 40
+max_generations: 1
+children_per_generation: 2
+selector_type: "density-bin"
+generator_type: "mutate"
+
+database_connection_string: "sqlite:///pm.db"
+
+structure_parameters:
+  number_of_atom_types: 1
+  num_atoms_limits: [1,8]
+  lattice_constant_limits: [2.09, 16.0]
+  lattice_cubic: true
+
+  epsilon_limits: [2.516, 342.176]
+  sigma_limits: [2.105, 4.366]
+  charge_limits: [-1.0, 1.0]
+
+  perturb_type: "all"
+  perturb: ["num_atoms", "atom_types", "lattice", "atom_sites", "charges"]
+
+  mutation_strength: 0.10
+  minimum_site_distance: 0.0
+
+bin_properties:
+  vf_geo:
+    range: [0.0, 1.0]
+  henrys_CO2:
+    log10: True
+    range: [-4, +8]
+  henrys_N2:
+    log10: True
+    range: [-4, +8]
+  henrys_water:
+    log10: True
+    range: [-4, +8]
+
+properties:
+  - type: 'void_fraction'
+    prefix: 'vf_'
+    fields: ['geo', 'raspa']
+    geo:
+      probe_radius: 1.0 # He radius from our pseudo_atoms file
+    raspa:
+      temperature: 298
+      adsorbate: 'helium'
+      simulation_cycles: 1
+      cutoff: 14
+  - type: 'henrys_coefficients'
+    prefix: 'henrys_'
+    adsorbates: ['CO2', 'N2', 'water']
+    fields: ['CO2', 'CO2error', 'N2', 'N2error', 'water', 'watererror']
+    rosenbluth_weights:
+      CO2: 1.0
+      N2: 1.0
+      water: 1.0
+
+    temperature: 298
+    initialization_cycles: 1
+    simulation_cycles: 1
+    cutoff: 14

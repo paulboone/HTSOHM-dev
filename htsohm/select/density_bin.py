@@ -34,5 +34,5 @@ def choose_parent_bins_from_weighted_bin_list(bins, num_parents):
 def choose_parents(num_parents, ids, props, bin_materials):
     bins = [(i, len(mats)) for i, mats in np.ndenumerate(bin_materials) if len(mats) > 0]
     parent_bins = choose_parent_bins_from_weighted_bin_list(bins, num_parents)
-    parent_indices = [choice(bin_materials[bin[0]][bin[1]], 1)[0] for bin in parent_bins]
+    parent_indices = [choice(bin_materials[bin_tuple], 1)[0] for bin_tuple in parent_bins]
     return [ids[i] for i in parent_indices], [props[i] for i in parent_indices]

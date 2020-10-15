@@ -3,6 +3,7 @@ import importlib.resources
 import os
 import shutil
 
+import numpy as np
 import pytest
 from pytest import approx
 
@@ -31,13 +32,42 @@ def config_path():
         yield config_path
 
 @pytest.fixture
+def config_multid_bins_path():
+    with importlib.resources.path(tests, "config_multid_bins.yaml") as config_path:
+        yield config_path
+
+@pytest.fixture
 def config(config_path):
     return load_config_file(config_path)
 
 @pytest.mark.slow
 @pytest.mark.usefixtures("use_tmp_dir")
 def test_htsohm_run__runs(config_path):
-    htsohm_run(config_path, max_generations=2)
+    ids, _, bin_counts, bin_materials, bins = htsohm_run(config_path, max_generations=2, return_run_vars=True)
+
+    # sum of all bins should equal the number of materials
+    assert bin_counts.sum() == 4
+
+    # material ids–looked up via all unique bins and bin_materials mats per bin–should be the material ids
+    assert set(ids) == set([1, 2, 3, 4])
+    mat_indices_from_bins = np.array([bin_materials[b] for b in bins]).flatten()
+    assert set(mat_indices_from_bins) == set([0, 1, 2, 3])
+
+
+
+
+@pytest.mark.slow
+@pytest.mark.usefixtures("use_tmp_dir")
+def test_htsohm_run__with_many_bin_dimensions_runs(config_multid_bins_path):
+    ids, _, bin_counts, bin_materials, bins = htsohm_run(config_multid_bins_path, max_generations=2, return_run_vars=True)
+
+    # sum of all bins should equal the number of materials
+    assert bin_counts.sum() == 4
+
+    # material ids–looked up via all unique bins and bin_materials mats per bin–should be the material ids
+    assert set(ids) == set([1, 2, 3, 4])
+    mat_indices_from_bins = np.array([bin_materials[b] for b in bins]).flatten()
+    assert set(mat_indices_from_bins) == set([0, 1, 2, 3])
 
 @pytest.mark.slow
 def test_htsohm_run__restarts_ok(gen2_vf_geo, config_path):
