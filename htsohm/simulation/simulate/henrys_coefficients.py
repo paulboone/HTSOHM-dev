@@ -67,7 +67,10 @@ def parse_output(output_file, simulation_config):
         for line in f:
             m=re.match(henrys_re, line)
             if m:
-                gas_henrys_error += [m.groups()]
+                matches = list(m.groups())
+                matches[1] = float(matches[1])
+                matches[2] = float(matches[2])
+                gas_henrys_error += [matches]
     return gas_henrys_error
 
 def henrys_m_to_v(volume, num_atom_sites, atom_site_mass=12.0):
@@ -104,7 +107,7 @@ def run(material, simulation_config, config):
     m_to_v = henrys_m_to_v(material.volume, len(material.atom_sites))
     gas_henrys_error = parse_output(data_files[0], simulation_config)
 
-    for (gas, henrys, henrys_error) in gas_henrys_error:
+    for gas, henrys, henrys_error in gas_henrys_error:
         if gas in simulation_config['adsorbates']:
             if gas in simulation_config["fields"]:
                 material.__setattr__("%s%s" % (simulation_config["prefix"], gas), henrys)
