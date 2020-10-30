@@ -9,13 +9,12 @@ import numpy as np
 from htsohm.htsohm_run import calc_bins
 
 
-def delaunay_figure(ax, convergence_bins, bins=[], prop1range=(0.0,1.0), prop2range=(0.0,1.0)):
+def delaunay_figure(ax, convergence_bins, bins=[], prop1range=(0.0,1.0), prop2range=(0.0,1.0), cmname="Greys", alpha=1.0):
     """modified from figures.py"""
     bin_saturated=20
 
     ax.set_xlim(prop1range[0], prop1range[1])
     ax.set_ylim(prop2range[0], prop2range[1])
-
 
     # ax.axes.xaxis.set_ticklabels([])
     # ax.axes.yaxis.set_ticklabels([])
@@ -31,29 +30,25 @@ def delaunay_figure(ax, convergence_bins, bins=[], prop1range=(0.0,1.0), prop2ra
     dbinx = prop1range[1] / convergence_bins
     dbiny = prop2range[1] / convergence_bins
 
-    cm = matplotlib.cm.get_cmap("Greys")
+    cm = matplotlib.cm.get_cmap(cmname)
     total_materials = bins.sum()
     bin_rects = []
     for b, bcount in np.ndenumerate(bins):
         if bcount > 0.0:
             bin_rects.append(Rectangle((b[0] * dbinx, b[1] * dbiny), dbinx, dbiny, \
-                        facecolor=cm(0.2 + bcount/bin_saturated), edgecolor=None))
+                        facecolor=cm(0.2 + bcount/bin_saturated), edgecolor=None, alpha=alpha))
             # grayscale str(max(0.9-bcount/bin_saturated, 0.0))
     pc = PatchCollection(bin_rects, match_original=True)
     ax.add_collection(pc)
-
 
     # new_bin_rects = [Rectangle((b[0] * dbinx, b[1] * dbiny), dbinx, dbiny) for b in new_bins]
     # pc2 = PatchCollection(new_bin_rects, facecolor='#82b7b7')
     # ax.add_collection(pc2)
 
 
-
 @click.command()
 @click.argument('csv-paths', nargs=-1)
 def figure2_bin_graph(csv_paths=("reference", "random16")):
-
-
     prop1range = [0.0, 1.0]   # VF
     prop2range = [0.0, 800.0] # ML
     num_bins = 40
