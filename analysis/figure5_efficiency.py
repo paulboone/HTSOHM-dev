@@ -5,7 +5,7 @@ import click
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
-# from matplotlib import cm
+from matplotlib import cm
 import pandas as pd
 
 # fsl = fs = 8
@@ -46,13 +46,14 @@ def figure5_efficiency():
     fig = plt.figure(figsize=(6.69, 2.0), tight_layout=True)
     # fig = plt.figure(figsize=(3.75,8.25), tight_layout=True)
 
+
     ax = fig.add_subplot(1, 4, 1)
     ax.set_ylabel("Bins Explored")
     legend_labels = ["1", "1-2", "1-4"]
     g1 = setup_plot(["types_1.csv", "reference.csv", "types_4.csv"])
-    ax.plot(g1.num, g1["types_1.csv"],      lw=1 )
+    ax.plot(g1.num, g1["types_1.csv"], lw=1)
     ax.plot(g1.num, g1["reference.csv"], lw=1, color="black")
-    ax.plot(g1.num, g1["types_4.csv"],     lw=1 )
+    ax.plot(g1.num, g1["types_4.csv"], lw=1)
     # ax.legend(legend_labels, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., facecolor='white', framealpha=1)
     ax.set_title("Atom Types")
 
@@ -60,23 +61,24 @@ def figure5_efficiency():
     legend_labels = ["1", "1-2", "1-4", "1-8"]
     g1 = setup_plot(["atoms_1.csv", "atoms_2.csv", "reference.csv", "atoms_8.csv"])
     ax.axes.yaxis.set_ticklabels([])
-    ax.plot(g1.num, g1["atoms_1.csv"],      lw=1 )
-    ax.plot(g1.num, g1["atoms_2.csv"],     lw=1 )
+    ax.plot(g1.num, g1["atoms_1.csv"], lw=1)
+    ax.plot(g1.num, g1["atoms_2.csv"], lw=1)
     ax.plot(g1.num, g1["reference.csv"], lw=1, color="black")
-    ax.plot(g1.num, g1["atoms_8.csv"],     lw=1 )
+    ax.plot(g1.num, g1["atoms_8.csv"], lw=1)
     # ax.legend(legend_labels, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., facecolor='white', framealpha=1)
     ax.set_title("Atom Sites")
 
     ax = fig.add_subplot(1, 4, 3)
+    c = cm.get_cmap("tab10")
     legend_labels = ["5%", "10%", "20%", "40%", "20% alt", "random"]
     g1 = setup_plot(["ms_5.csv", "ms_10.csv", "reference.csv", "ms_40.csv", "ms_20_questionable_perturbation.csv", "random8.csv"])
     ax.axes.yaxis.set_ticklabels([])
-    ax.plot(g1.num, g1["ms_5.csv"],      lw=1 )
-    ax.plot(g1.num, g1["ms_10.csv"],     lw=1 )
+    ax.plot(g1.num, g1["ms_5.csv"], lw=1, color=c(0))
+    ax.plot(g1.num, g1["ms_10.csv"], lw=1, color=c(1))
     ax.plot(g1.num, g1["reference.csv"], lw=1, color="black")
-    ax.plot(g1.num, g1["ms_20_questionable_perturbation.csv"], lw=1, color="pink")
-    ax.plot(g1.num, g1["ms_40.csv"],     lw=1 )
-    ax.plot(g1.num, g1["random8.csv"],    lw=1, color="grey" )
+    ax.plot(g1.num, g1["ms_20_questionable_perturbation.csv"], lw=1, color="grey")
+    ax.plot(g1.num, g1["ms_40.csv"], lw=1, color=c(2))
+    ax.plot(g1.num, g1["random8.csv"], lw=1, color=c(5))
     # ax.legend(legend_labels, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., facecolor='white', framealpha=1)
     ax.set_title("Mutation Strength")
 
