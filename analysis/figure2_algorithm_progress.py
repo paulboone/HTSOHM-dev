@@ -9,9 +9,8 @@ import numpy as np
 from htsohm.htsohm_run import calc_bins
 
 
-def delaunay_figure(ax, convergence_bins, bins=[], prop1range=(0.0,1.0), prop2range=(0.0,1.0), cmname="Greys", alpha=1.0):
+def delaunay_figure(ax, convergence_bins, bins=[], prop1range=(0.0,1.0), prop2range=(0.0,1.0), cmname="Greys", alpha=1.0, bin_saturated=20):
     """modified from figures.py"""
-    bin_saturated=20
 
     ax.set_xlim(prop1range[0], prop1range[1])
     ax.set_ylim(prop2range[0], prop2range[1])
