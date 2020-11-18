@@ -1,5 +1,0 @@
-bokeh
-pythreejs
-matplotlib
-pandas
-numpy
