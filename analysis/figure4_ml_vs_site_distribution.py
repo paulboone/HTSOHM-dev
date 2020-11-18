@@ -25,7 +25,7 @@ matplotlib.rc('font', **font)
 @click.command()
 @click.argument('csv-path', type=click.File())
 def figure4_ml_vs_max_pair_distance(csv_path):
-    fig = plt.figure(figsize=(8.5 / 2.54, 8.5 / 2.54))
+    fig = plt.figure(figsize=(4.6, 4.6))
 
     cm = matplotlib.cm.get_cmap("viridis")
     # cm = cmocean.cm.thermal
@@ -58,7 +58,7 @@ def figure4_ml_vs_max_pair_distance(csv_path):
 
     # fig.subplots_adjust(wspace=0.05, hspace=0.05)
     output_path = "figure4.png"
-    fig.savefig(output_path, dpi=600, bbox_inches='tight')
+    fig.savefig(output_path, dpi=1200, bbox_inches='tight')
     plt.close(fig)
 
 if __name__ == '__main__':

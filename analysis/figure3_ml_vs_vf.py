@@ -48,7 +48,10 @@ def figure3_ml_vs_vf(csv_path):
     ax.set_xlabel('Void Fraction', fontsize=fsl)
     ax.set_ylabel('Methane Loading [V/V]', fontsize=fsl)
 
-    # fig.subplots_adjust(wspace=0.05, hspace=0.05)
+
+    # cb = fig.colorbar(sc, ax=ax)
+    # cb.ax.tick_params(labelsize=fs)
+
     output_path = "figure3.png"
 
     fig.savefig(output_path, dpi=1200, bbox_inches='tight')
