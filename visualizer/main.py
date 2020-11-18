@@ -12,8 +12,6 @@ from bokeh.sampledata.autompg import autompg_clean as m
 from bokeh.transform import linear_cmap
 from bokeh.models.widgets import Slider
 
-from pseudomaterial_render import show_pseudomaterial
-
 # constants
 num_ch4_a3 = 2.69015E-05 # from methane-comparison.xlsx
 epsilon_max = 500
@@ -121,19 +119,6 @@ def create_figure(m, m_source, columns):
     if mapper:
         color_bar = ColorBar(color_mapper=mapper['transform'], width=8,  location=(0,0))
         p.add_layout(color_bar, 'right')
-
-    #
-    # def plot_on_selection(attr, old, new):
-    #     print(attr, old, new)
-    #     # for i in new:
-    #     #     show_pseudomaterial(m.iloc[i].id)
-    #     #
-    #     if len(new) > 0:
-    #         renderer = show_pseudomaterial(m.iloc[0].id, atoms, epsilon_max)
-    #         print(renderer)
-
-    # m_source.selected.on_change('indices', plot_on_selection)
-
 
     return p
 
