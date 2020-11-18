@@ -21,13 +21,25 @@ data_files = {k:sorted([splitext(basename(f))[0] for f in glob("./data/%s/*.csv"
 def load_data(path):
     print("loading new data from %s" % path)
     m = pd.read_csv(path)
-    m.rename(columns={'void_fraction': 'void_fraction_raspa'}, inplace=True)
+    m.rename(columns={'a'                                   : 'lattice size',
+                      'atom_sites'                          : 'num atoms',
+                      'bin12'                               : 'bin: void fraction',
+                      'bin13'                               : 'bin: methane loading',
+                      'number_density'                      : "number density",
+                      'total_epsilon'                       : "total epsilon",
+                      'epsilon_density'                     : "epsilon density",
+                      'void_fraction'                       : "void fraction raspa",
+                      'void_fraction_geo'                   : "void fraction geo",
+                      'absolute_volumetric_loading'         : "absolute volumetric loading",
+                      'absolute_volumetric_loading_error'   : "absolute volumetric loading error",
+                      'max_pair_distance'                   : "max pair distance"
+                     }, inplace=True)
 
     m['volume_plotsize'] = (1/3)*m['volume']**(1/2)
-    m['atom_sites_plotsize'] = m.atom_sites * 4
-    m['ch4_uc'] = m.absolute_volumetric_loading  * (num_ch4_a3 * m.volume)
-    m['epsilon_density_log'] = np.log(m.epsilon_density)
-    m['number_density_log'] = np.log(m.number_density)
+    m['num atoms_plotsize'] = m["num atoms"] * 4
+    m['CH4 / uc'] = m["absolute volumetric loading"]  * (num_ch4_a3 * m.volume)
+    m['epsilon density [log]'] = np.log(m["epsilon density"])
+    m['number density [log]'] = np.log(m["number density"])
 
     del m['b']
     del m['c']
@@ -38,7 +50,7 @@ def load_data(path):
 
     columns = sorted(m.columns)
     columns.remove('volume_plotsize')
-    columns.remove('atom_sites_plotsize')
+    columns.remove('num atoms_plotsize')
     columns.remove('id')
     columns.remove('parent_id')
 
@@ -50,14 +62,14 @@ def load_data(path):
 m, m_source, columns = load_data("./data/parameter-explorations/reference baseline.csv")
 
 colormap_overrides = {
-    'atom_sites': dict(palette=Viridis8),
-    'max_pair_distance': dict(palette=Viridis5, low=0, high=0.5)
+    'num atoms': dict(palette=Viridis8),
+    'max pair distance': dict(palette=Viridis5, low=0, high=0.5)
     # 'epsilon_density': dict(palette=Viridis5, low=0, high=0.5)
 }
 
 range_defaults = {
-    "absolute_volumetric_loading": (0,800),
-    "void_fraction_geo": (0,1)
+    "absolute volumetric loading": (0,800),
+    "void fraction geo": (0,1)
 }
 
 def create_figure(m, m_source, columns):
@@ -146,16 +158,16 @@ dataset.on_change('value', update_dataset)
 data = Select(title='Data source', value='reference baseline', options=data_files['parameter-explorations'])
 data.on_change('value', update_data)
 
-x = Select(title='X-Axis', value='void_fraction_geo', options=columns)
+x = Select(title='X-Axis', value='void fraction geo', options=columns)
 x.on_change('value', update)
 
-y = Select(title='Y-Axis', value='absolute_volumetric_loading', options=columns)
+y = Select(title='Y-Axis', value='absolute volumetric loading', options=columns)
 y.on_change('value', update)
 
 size = Select(title='Size', value='volume', options=['None'] + columns)
 size.on_change('value', update)
 
-color = Select(title='Color', value='atom_sites', options=['None'] + columns)
+color = Select(title='Color', value='num atoms', options=['None'] + columns)
 color.on_change('value', update)
 
 slider = Slider(start=0, end=500, value=500, step=50, title="Generation")
