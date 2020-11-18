@@ -18,7 +18,7 @@ rc('font', **font)
 
 
 @click.command()
-def figure1_ime_vs_random():
+def figure_ime_vs_random_efficiency():
     print("loading data...")
 
 
@@ -75,10 +75,10 @@ def figure1_ime_vs_random():
     ax.annotate("1062 bins @ 25000", xy=(25000, 1062), xycoords="data",
         textcoords="offset points", xytext=(0, 10), horizontalalignment='left', verticalalignment='bottom',
         arrowprops=arrow_args)
-    fig.savefig("figure1_ime_vs_random.png", dpi=1200)
+    fig.savefig("figure_ime_vs_random.png", dpi=1200)
     plt.close(fig)
 
 
 
 if __name__ == '__main__':
-    figure1_ime_vs_random()
+    figure_ime_vs_random_efficiency()

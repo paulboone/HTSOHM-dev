@@ -47,7 +47,7 @@ def delaunay_figure(ax, convergence_bins, bins=[], prop1range=(0.0,1.0), prop2ra
 
 @click.command()
 @click.argument('csv-paths', nargs=-1)
-def figure2_bin_graph(csv_paths=("reference", "random16")):
+def figure_ime_vs_random_progress(csv_paths=("reference", "random16")):
     prop1range = [0.0, 1.0]   # VF
     prop2range = [0.0, 800.0] # ML
     num_bins = 40
@@ -73,9 +73,9 @@ def figure2_bin_graph(csv_paths=("reference", "random16")):
 
     fig.subplots_adjust(wspace=0.05, hspace=0.05)
 
-    output_path = "figure2-%s.png" % "-".join(csv_paths)
+    output_path = "figure-%s.png" % "-".join(csv_paths)
     fig.savefig(output_path, dpi=1200, bbox_inches='tight')
     plt.close(fig)
 
 if __name__ == '__main__':
-    figure2_bin_graph()
+    figure_ime_vs_random_progress()

@@ -22,7 +22,7 @@ rc('font', **font)
 
 
 @click.command()
-def figure5_efficiency():
+def figure_efficiency():
     print("loading data...")
 
 
@@ -92,10 +92,10 @@ def figure5_efficiency():
     # ax.legend(legend_labels, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., facecolor='white', framealpha=1)
     ax.set_title("Sigma / Epsilon")
 
-    fig.savefig("figure5.png", dpi=1200)
+    fig.savefig("figure.png", dpi=1200)
     plt.close(fig)
 
 
 
 if __name__ == '__main__':
-    figure5_efficiency()
+    figure_efficiency()

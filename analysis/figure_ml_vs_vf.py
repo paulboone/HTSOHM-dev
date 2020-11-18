@@ -16,7 +16,7 @@ rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 
 @click.command()
 @click.argument('csv-path', type=click.File())
-def figure3_ml_vs_vf(csv_path):
+def figure_ml_vs_vf(csv_path):
     num_bins = 40
 
     # figure has to be a little "oversized" so that mpl makes it big enough to fill a 1-column fig.
@@ -52,10 +52,10 @@ def figure3_ml_vs_vf(csv_path):
     # cb = fig.colorbar(sc, ax=ax)
     # cb.ax.tick_params(labelsize=fs)
 
-    output_path = "figure3.png"
+    output_path = "figure.png"
 
     fig.savefig(output_path, dpi=1200, bbox_inches='tight')
     plt.close(fig)
 
 if __name__ == '__main__':
-    figure3_ml_vs_vf()
+    figure_ml_vs_vf()

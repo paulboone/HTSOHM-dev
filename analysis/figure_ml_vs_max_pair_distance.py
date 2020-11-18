@@ -24,7 +24,7 @@ matplotlib.rc('font', **font)
 
 @click.command()
 @click.argument('csv-path', type=click.File())
-def figure4_ml_vs_max_pair_distance(csv_path):
+def figure_ml_vs_max_pair_distance(csv_path):
     fig = plt.figure(figsize=(4.6, 4.6))
 
     cm = matplotlib.cm.get_cmap("viridis")
@@ -57,9 +57,9 @@ def figure4_ml_vs_max_pair_distance(csv_path):
     ax.set_ylabel('Methane Loading [V/V]', fontsize=fsl)
 
     # fig.subplots_adjust(wspace=0.05, hspace=0.05)
-    output_path = "figure4.png"
+    output_path = "figure.png"
     fig.savefig(output_path, dpi=1200, bbox_inches='tight')
     plt.close(fig)
 
 if __name__ == '__main__':
-    figure4_ml_vs_max_pair_distance()
+    figure_ml_vs_max_pair_distance()

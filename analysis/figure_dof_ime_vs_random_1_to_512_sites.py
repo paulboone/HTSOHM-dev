@@ -6,7 +6,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
 import numpy as np
 
-from analysis.figure2_algorithm_progress import delaunay_figure
+from analysis.figure_ime_vs_random_progress import delaunay_figure
 
 def csv_bin_counts(csv_path, num_bins, max_rows=None):
     bins = np.loadtxt(csv_path  , delimiter=',', skiprows=1, usecols=(16, 17), max_rows=max_rows, dtype=int)
@@ -67,7 +67,7 @@ def bin_graph_overlay(ax, csv_path_ms, csv_path_random, last_material=None):
 
 @click.command()
 @click.option('-o', '--output-path', type=click.Path(), default=None)
-def figure2_bin_graph(output_path):
+def figure_dof_ime_vs_random(output_path):
     prop1range = [0.0, 1.0]   # VF
     prop2range = [0.0, 800.0] # ML
     num_bins = 40
@@ -97,4 +97,4 @@ def figure2_bin_graph(output_path):
     plt.close(fig)
 
 if __name__ == '__main__':
-    figure2_bin_graph()
+    figure_dof_ime_vs_random()
