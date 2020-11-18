@@ -1,4 +1,5 @@
 from glob import glob
+from os.path import basename, splitext
 
 import numpy as np
 import pandas as pd
@@ -16,7 +17,9 @@ from pseudomaterial_render import show_pseudomaterial
 # constants
 num_ch4_a3 = 2.69015E-05 # from methane-comparison.xlsx
 epsilon_max = 500
-data_files = sorted(glob("./data/*.csv"))
+
+datasets = ["parameter-explorations", "degrees-of-freedom", "random-long"]
+data_files = {k:sorted([splitext(basename(f))[0] for f in glob("./data/%s/*.csv" % k)]) for k in datasets}
 
 # read data and cleanup
 def load_data(path):
@@ -49,7 +52,7 @@ def load_data(path):
     return m, m_source, columns
 
 
-m, m_source, columns = load_data("./data/reference.csv")
+m, m_source, columns = load_data("./data/parameter-explorations/reference baseline.csv")
 
 colormap_overrides = {
     'atom_sites': dict(palette=Viridis8),
@@ -140,11 +143,13 @@ def slider_on_change(attr, old, gen):
     layout.children[1] = create_figure(m2, m2_source, columns)
     print('generation updated')
 
+def update_dataset(attr, old, new):
+    data.options = data_files[new]
+    print("dataset updated")
 
 def update_data(attr, old, new):
     global m, m_source, columns
-
-    m, m_source, columns = load_data(data.value)
+    m, m_source, columns = load_data("./data/%s/%s.csv" % (dataset.value, data.value))
     layout.children[1] = create_figure(m, m_source, columns)
     print('data and layout updated')
 
@@ -153,7 +158,10 @@ def update(attr, old, new):
     layout.children[1] = create_figure(m, m_source, columns)
     print('layout updated')
 
-data = Select(title='Data source', value='./data/reference.csv', options=data_files)
+dataset = Select(title='Dataset', value='parameter-explorations', options=datasets)
+dataset.on_change('value', update_dataset)
+
+data = Select(title='Data source', value='reference baseline', options=data_files['parameter-explorations'])
 data.on_change('value', update_data)
 
 x = Select(title='X-Axis', value='void_fraction_geo', options=columns)
@@ -171,7 +179,7 @@ color.on_change('value', update)
 slider = Slider(start=0, end=500, value=500, step=50, title="Generation")
 slider.on_change('value', slider_on_change)
 
-controls = column(data, x, y, color, size, slider, width=200)
+controls = column(dataset, data, x, y, color, size, slider, width=200)
 layout = row(controls, create_figure(m, m_source, columns))
 
 
