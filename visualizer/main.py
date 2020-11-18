@@ -14,9 +14,6 @@ from bokeh.models.widgets import Slider
 # constants
 num_ch4_a3 = 2.69015E-05 # from methane-comparison.xlsx
 
-datasets = ["parameter-explorations", "degrees-of-freedom", "random-long"]
-data_files = {k:sorted([splitext(basename(f))[0] for f in glob("./data/%s/*.csv" % k)]) for k in datasets}
-
 # read data and cleanup
 def load_data(path):
     print("loading new data from %s" % path)
@@ -57,9 +54,6 @@ def load_data(path):
     print(m.head())
     print(columns)
     return m, m_source, columns
-
-
-m, m_source, columns = load_data("./data/parameter-explorations/reference baseline.csv")
 
 colormap_overrides = {
     'num atoms': dict(palette=Viridis8),
@@ -138,24 +132,36 @@ def slider_on_change(attr, old, gen):
     print('generation updated')
 
 def update_dataset(attr, old, new):
+    print("loading dataset: ", new)
     data.options = data_files[new]
+    data.value = default_data_file[new]
     print("dataset updated")
 
 def update_data(attr, old, new):
     global m, m_source, columns
-    m, m_source, columns = load_data("./data/%s/%s.csv" % (dataset.value, data.value))
+    m, m_source, columns = load_data("./data/%s/%s.csv" % (dataset.value, new))
     layout.children[1] = create_figure(m, m_source, columns)
     print('data and layout updated')
-
 
 def update(attr, old, new):
     layout.children[1] = create_figure(m, m_source, columns)
     print('layout updated')
 
-dataset = Select(title='Dataset', value='parameter-explorations', options=datasets)
+
+datasets = ["parameter-explorations", "degrees-of-freedom", "random-long"]
+data_files = {k:sorted([splitext(basename(f))[0] for f in glob("./data/%s/*.csv" % k)]) for k in datasets}
+default_data_file = {
+    "parameter-explorations": "reference baseline",
+    "degrees-of-freedom": "IME   1site",
+    "random-long": "random 500K materials"
+}
+
+m, m_source, columns = load_data("./data/parameter-explorations/reference baseline.csv")
+
+dataset = Select(title='Dataset', value="parameter-explorations", options=datasets)
 dataset.on_change('value', update_dataset)
 
-data = Select(title='Data source', value='reference baseline', options=data_files['parameter-explorations'])
+data = Select(title='Data source', value=default_data_file['parameter-explorations'], options=data_files['parameter-explorations'])
 data.on_change('value', update_data)
 
 x = Select(title='X-Axis', value='void fraction geo', options=columns)
@@ -164,7 +170,7 @@ x.on_change('value', update)
 y = Select(title='Y-Axis', value='absolute volumetric loading', options=columns)
 y.on_change('value', update)
 
-size = Select(title='Size', value='volume', options=['None'] + columns)
+size = Select(title='Size', value='lattice size', options=['None'] + columns)
 size.on_change('value', update)
 
 color = Select(title='Color', value='num atoms', options=['None'] + columns)
