@@ -55,7 +55,7 @@ class Structure(Base):
         return self.a * self.b * self.c
 
     @property
-    def site_distribution(self):
+    def max_pair_distance(self):
         return max_pair_distance([(a.x, a.y, a.z) for a in self.atom_sites])
 
     @property
