@@ -6,15 +6,13 @@ import pandas as pd
 
 from bokeh.layouts import column, row
 from bokeh.models import Select, ColumnDataSource, ColorBar
-from bokeh.palettes import Spectral5, Viridis5, Viridis8
+from bokeh.palettes import Viridis5, Viridis8
 from bokeh.plotting import curdoc, figure
-from bokeh.sampledata.autompg import autompg_clean as m
 from bokeh.transform import linear_cmap
 from bokeh.models.widgets import Slider
 
 # constants
 num_ch4_a3 = 2.69015E-05 # from methane-comparison.xlsx
-epsilon_max = 500
 
 datasets = ["parameter-explorations", "degrees-of-freedom", "random-long"]
 data_files = {k:sorted([splitext(basename(f))[0] for f in glob("./data/%s/*.csv" % k)]) for k in datasets}
@@ -33,7 +31,6 @@ def load_data(path):
 
     del m['b']
     del m['c']
-    # del m['Unnamed: 0']
 
     m_source = ColumnDataSource(m)
 
