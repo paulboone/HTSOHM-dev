@@ -97,6 +97,9 @@ def mutate_material(parent, config):
             number_of_atoms = max(number_of_atoms, ceil(config["density_limits"][0] * cs.volume))
             number_of_atoms = min(number_of_atoms, floor(config["density_limits"][1] * cs.volume))
 
+            # also, number of atoms must be >= 1
+            number_of_atoms = max(number_of_atoms, 1)
+
             slog("# atoms %d => %d (after enforcing density_limits on rounding to int)" % (len(cs.atom_sites), number_of_atoms))
             delta_atoms = number_of_atoms - len(cs.atom_sites)
 

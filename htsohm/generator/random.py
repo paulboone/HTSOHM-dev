@@ -43,6 +43,9 @@ def new_material(config):
         number_of_atoms = max(number_of_atoms, ceil(config["density_limits"][0] * structure.volume))
         number_of_atoms = min(number_of_atoms, floor(config["density_limits"][1] * structure.volume))
 
+        # also, number of atoms must be >= 1
+        number_of_atoms = max(number_of_atoms, 1)
+
     structure.atom_sites = random_atom_sites(number_of_atoms, structure.atom_types)
 
     return Material(structure=structure, number_density=number_of_atoms / structure.volume)
