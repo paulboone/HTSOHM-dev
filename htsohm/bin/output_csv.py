@@ -27,13 +27,13 @@ def output_csv_from_db(session, start_id=0, output_file=sys.stdout):
     f = csv.writer(output_file, lineterminator="\n")
     f.writerow(["id", "parent_id", "generation", "a", "b", "c", "volume", "atom_sites", "number_density",
                 "total_epsilon", "epsilon_density", "void_fraction", "void_fraction_geo",
-                "absolute_volumetric_loading", "absolute_volumetric_loading_error", "max_pair_distance"])
+                "absolute_volumetric_loading", "absolute_volumetric_loading_error", "max_pair_distance", "min_pair_distance", "min_pair_distance_angstroms"])
     for m in mats:
         f.writerow([m.id, m.parent_id, m.generation, m.structure.a, m.structure.b, m.structure.c, m.structure.volume,
             len(m.structure.atom_sites),  m.structure.number_density, m.structure.total_epsilon, m.structure.epsilon_density,
             m.void_fraction[0].void_fraction, m.void_fraction[0].void_fraction_geo,
             m.gas_loading[0].absolute_volumetric_loading, m.gas_loading[0].absolute_volumetric_loading_error,
-            m.structure.max_pair_distance
+            m.structure.max_pair_distance, m.structure.min_pair_distance, m.structure.min_pair_distance * m.structure.a
         ])
 
 
